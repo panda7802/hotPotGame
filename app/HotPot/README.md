@@ -1,2 +1,28 @@
-# hello-world
-Hello world new project template.
+# 火锅叠叠消 V0.1
+
+基于 **Cocos Creator 3.8.8 + TypeScript** 的竖屏叠层点选三消 MVP。
+
+## 运行
+
+1. 使用 Cocos Creator 3.8.8 打开本目录。
+2. 等待首次资源导入完成。
+3. 打开 `assets/scene/main.scene`，点击预览。
+
+顶部左右箭头可直接切换 10 个测试关卡。发亮牌可点击，变暗牌表示仍被上层覆盖。
+
+## 代码位置
+
+- `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
+- `assets/scripts/data/GameData.ts`：食材、10 关配置、可复现牌堆与遮挡关系生成。
+- `tools/validate-levels.cjs`：关卡结构与可解路径验证。
+
+## V0.1 内容
+
+- 720 × 1280 竖屏布局
+- 6 种食材的矢量占位美术
+- 2～4 层的几何覆盖判定
+- 点击入托盘、同类自动排序、三个自动消除
+- 7 格托盘、胜利/失败面板、重新开始
+- 10 个数据驱动测试关卡（18～78 张牌）
+
+音效、订单、火锅特殊牌、道具和存档未纳入 V0.1。原 3D Hello World 素材已不被主场景引用，不会进入按场景引用构建的正式包。
