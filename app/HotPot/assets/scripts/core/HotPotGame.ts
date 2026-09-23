@@ -1,6 +1,7 @@
 import {
-    _decorator, BlockInputEvents, Color, Component, Graphics, Label, Node,
-    ResolutionPolicy, tween, UITransform, UIOpacity, Vec3, view,
+    _decorator, BlockInputEvents, Color, Component, Graphics, ImageAsset, Label, Node,
+    ResolutionPolicy, resources, Sprite, SpriteFrame, Texture2D, tween,
+    UITransform, UIOpacity, Vec3, view,
 } from 'cc';
 import {
     createLevel, getIngredient, IngredientType, LevelData, LEVELS, TileData,
@@ -95,6 +96,7 @@ export class HotPotGame extends Component {
     private locked = false;
     private gameEnded = false;
     private combo = 0;
+    private ingredientFrames = new Map<IngredientType, SpriteFrame>();
 
     private board!: Node;
     private trayNode!: Node;
@@ -108,7 +110,46 @@ export class HotPotGame extends Component {
             if (child.name !== 'Camera') child.destroy();
         });
         this.buildShell();
-        this.loadLevel(0);
+        this.loadPlaceholderImages(() => this.loadLevel(0));
+    }
+
+    private loadPlaceholderImages(done: () => void): void {
+        const imageTypes: IngredientType[] = [
+            'beef', 'shrimp', 'vegetable', 'mushroom', 'corn', 'fish',
+        ];
+        const expected = new Set<string>(imageTypes);
+        const addTexture = (name: string, texture: Texture2D): void => {
+            const normalizedName = name.replace(/\.(jpg|jpeg|png)$/i, '');
+            if (!expected.has(normalizedName)) return;
+            const frame = new SpriteFrame();
+            frame.texture = texture;
+            this.ingredientFrames.set(normalizedName as IngredientType, frame);
+        };
+
+        resources.loadDir('ingredients', Texture2D, (textureError, textures) => {
+            if (!textureError) textures.forEach((texture) => addTexture(texture.name, texture));
+            if (this.ingredientFrames.size === imageTypes.length) {
+                done();
+                return;
+            }
+
+            resources.loadDir('ingredients', ImageAsset, (imageError, images) => {
+                if (!imageError) {
+                    images.forEach((image) => {
+                        const texture = new Texture2D();
+                        texture.image = image;
+                        addTexture(image.name, texture);
+                    });
+                }
+                if (this.ingredientFrames.size !== imageTypes.length) {
+                    console.error(
+                        `[HotPotGame] 食材图片加载不完整：${this.ingredientFrames.size}/${imageTypes.length}`,
+                        textureError || imageError,
+                    );
+                }
+                done();
+            });
+        });
     }
 
     private buildShell(): void {
@@ -195,40 +236,25 @@ export class HotPotGame extends Component {
         const ingredient = getIngredient(type);
         const graphics = drawRoundRect(node, TILE_WIDTH, TILE_HEIGHT, 13,
             blocked ? '#B99A79' : '#FFF9E9', blocked ? '#806D59' : '#D98556', blocked ? 2 : 4);
-        graphics.fillColor = hex(blocked ? '#9C8B74' : '#EAD5B5');
-        graphics.circle(-16, 5, 24); graphics.fill();
-        graphics.fillColor = hex(blocked ? '#7E7567' : ingredient.color);
-        this.drawFoodShape(graphics, type, -16, 5);
-        const name = makeLabel(node, ingredient.name, 20, blocked ? '#6F6255' : ingredient.dark,
-            new Vec3(22, 1), 48, 46);
+        if (this.ingredientFrames.has(type)) {
+            this.addIngredientImage(node, type, blocked, 66, 52);
+        } else {
+            makeLabel(node, '?', 34, blocked ? '#6F6255' : ingredient.dark, Vec3.ZERO, 60, 54);
+        }
         opacity(node, blocked ? 172 : 255);
-        opacity(name.node, blocked ? 150 : 255);
     }
 
-    private drawFoodShape(graphics: Graphics, type: IngredientType, x: number, y: number): void {
-        if (type === 'beef') {
-            graphics.ellipse(x, y, 34, 22); graphics.fill();
-            graphics.strokeColor = hex('#FFE1D1'); graphics.lineWidth = 3;
-            graphics.moveTo(x - 10, y + 2); graphics.bezierCurveTo(x - 3, y + 10, x + 5, y - 8, x + 11, y + 3); graphics.stroke();
-        } else if (type === 'shrimp') {
-            graphics.lineWidth = 9; graphics.strokeColor = hex('#FF8B62');
-            graphics.arc(x, y + 2, 14, Math.PI * 0.2, Math.PI * 1.75, false); graphics.stroke();
-            graphics.fillColor = hex('#FFF0D8'); graphics.circle(x + 12, y + 7, 3); graphics.fill();
-        } else if (type === 'vegetable') {
-            graphics.circle(x - 7, y + 5, 11); graphics.circle(x + 6, y + 8, 12); graphics.circle(x, y - 3, 13); graphics.fill();
-            graphics.strokeColor = hex('#E9F3C8'); graphics.lineWidth = 3; graphics.moveTo(x, y - 14); graphics.lineTo(x, y + 12); graphics.stroke();
-        } else if (type === 'mushroom') {
-            graphics.ellipse(x, y + 6, 34, 22); graphics.fill();
-            graphics.fillColor = hex('#F4DFC2'); graphics.roundRect(x - 5, y - 14, 10, 17, 4); graphics.fill();
-        } else if (type === 'corn') {
-            graphics.roundRect(x - 9, y - 17, 18, 34, 8); graphics.fill();
-            graphics.strokeColor = hex('#FFF0A2'); graphics.lineWidth = 2;
-            graphics.moveTo(x - 8, y - 6); graphics.lineTo(x + 8, y - 6); graphics.moveTo(x - 8, y + 5); graphics.lineTo(x + 8, y + 5); graphics.stroke();
-        } else {
-            graphics.ellipse(x, y, 35, 18); graphics.fill();
-            graphics.moveTo(x + 14, y); graphics.lineTo(x + 25, y + 10); graphics.lineTo(x + 25, y - 10); graphics.close(); graphics.fill();
-            graphics.fillColor = hex('#F4FBFF'); graphics.circle(x - 9, y + 3, 3); graphics.fill();
-        }
+    private addIngredientImage(parent: Node, type: IngredientType, blocked: boolean,
+        width: number, height: number): void {
+        const frame = this.ingredientFrames.get(type);
+        if (!frame) return;
+        const image = new Node('IngredientImage');
+        parent.addChild(image);
+        transform(image, width, height);
+        const sprite = image.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.spriteFrame = frame;
+        sprite.color = blocked ? hex('#B2A28F') : Color.WHITE;
     }
 
     private findTile(id: string): TileData | undefined {
@@ -348,13 +374,11 @@ export class HotPotGame extends Component {
             if (this.tray[i]) {
                 (slot as Node & { trayType?: IngredientType }).trayType = this.tray[i];
                 const ingredient = getIngredient(this.tray[i]);
-                const food = new Node('TrayFood');
-                slot.addChild(food);
-                food.setPosition(0, 8);
-                const graphics = food.addComponent(Graphics);
-                graphics.fillColor = hex(ingredient.color);
-                this.drawFoodShape(graphics, this.tray[i], 0, 0);
-                makeLabel(slot, ingredient.name, 17, ingredient.dark, new Vec3(0, -27), 68, 24);
+                if (this.ingredientFrames.has(this.tray[i])) {
+                    this.addIngredientImage(slot, this.tray[i], false, 68, 54);
+                } else {
+                    makeLabel(slot, '?', 32, ingredient.dark, Vec3.ZERO, 56, 48);
+                }
             } else {
                 makeLabel(slot, String(i + 1), 18, '#B78E68', Vec3.ZERO, 40, 24);
             }

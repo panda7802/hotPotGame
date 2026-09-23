@@ -1,0 +1,43 @@
+{
+  "ver": "1.0.27",
+  "importer": "image",
+  "imported": true,
+  "uuid": "e31553de-8f7e-4011-aacf-37081719a51e",
+  "files": [
+    ".jpg",
+    ".json"
+  ],
+  "subMetas": {
+    "6c48a": {
+      "importer": "texture",
+      "uuid": "e31553de-8f7e-4011-aacf-37081719a51e@6c48a",
+      "displayName": "fish",
+      "id": "6c48a",
+      "name": "texture",
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {},
+      "userData": {
+        "wrapModeS": "clamp-to-edge",
+        "wrapModeT": "clamp-to-edge",
+        "minfilter": "linear",
+        "magfilter": "linear",
+        "mipfilter": "none",
+        "premultiplyAlpha": false,
+        "anisotropy": 0,
+        "isUuid": true,
+        "imageUuidOrDatabaseUri": "e31553de-8f7e-4011-aacf-37081719a51e",
+        "visible": false
+      }
+    }
+  },
+  "userData": {
+    "type": "texture",
+    "redirect": "e31553de-8f7e-4011-aacf-37081719a51e@6c48a",
+    "hasAlpha": false,
+    "fixAlphaTransparencyArtifacts": false
+  }
+}

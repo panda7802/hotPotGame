@@ -14,12 +14,26 @@
 
 - `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
 - `assets/scripts/data/GameData.ts`：食材、10 关配置、可复现牌堆与遮挡关系生成。
+- `assets/resources/ingredients/`：6 种食材的 JPG 占位图。
 - `tools/validate-levels.cjs`：关卡结构与可解路径验证。
+
+## 食材图片映射
+
+| 编号 | 文件 | 食材 |
+| --- | --- | --- |
+| 01 | `beef.jpg` | 牛肉 |
+| 02 | `shrimp.jpg` | 鲜虾 |
+| 03 | `vegetable.jpg` | 青菜 |
+| 04 | `mushroom.jpg` | 蘑菇 |
+| 05 | `corn.jpg` | 玉米 |
+| 06 | `fish.jpg` | 鱼片 |
+
+正式美术可直接覆盖对应的同名 JPG，建议继续保持 4:3 比例。
 
 ## V0.1 内容
 
 - 720 × 1280 竖屏布局
-- 6 种食材的矢量占位美术
+- 6 种食材的 JPG 占位美术
 - 2～4 层的几何覆盖判定
 - 点击入托盘、同类自动排序、三个自动消除
 - 7 格托盘、胜利/失败面板、重新开始
