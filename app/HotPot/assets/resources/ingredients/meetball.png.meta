@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "72905c43-4670-4a06-b2cd-16f7311a7e83",
+  "uuid": "e27a810b-36f4-4383-852c-2ab083b13b2f",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "72905c43-4670-4a06-b2cd-16f7311a7e83@6c48a",
-      "displayName": "vegetable",
+      "uuid": "e27a810b-36f4-4383-852c-2ab083b13b2f@6c48a",
+      "displayName": "meetball",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "72905c43-4670-4a06-b2cd-16f7311a7e83",
+        "imageUuidOrDatabaseUri": "e27a810b-36f4-4383-852c-2ab083b13b2f",
         "visible": false
       },
       "ver": "1.0.22",
@@ -37,6 +37,6 @@
     "type": "texture",
     "fixAlphaTransparencyArtifacts": true,
     "hasAlpha": true,
-    "redirect": "72905c43-4670-4a06-b2cd-16f7311a7e83@6c48a"
+    "redirect": "e27a810b-36f4-4383-852c-2ab083b13b2f@6c48a"
   }
 }

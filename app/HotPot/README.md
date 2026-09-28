@@ -24,7 +24,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 
 - `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
 - `assets/scripts/data/GameData.ts`：食材、10 关配置、可复现牌堆与遮挡关系生成。
-- `assets/resources/ingredients/`：6 种食材的透明 PNG 图片。
+- `assets/resources/ingredients/`：13 种食材的透明 PNG 图片；单关最多使用 10 种。
 - `assets/resources/backgrounds/`：无雾气的整页、棋盘和右下角静态火锅背景资源。
 - `assets/resources/audio/`：背景音乐、三消、过关和失败的 MP3 音频。
 - `tools/validate-levels.cjs`：关卡结构与可解路径验证。
@@ -42,17 +42,25 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 | 04 | `mushroom.png` | 蘑菇 |
 | 05 | `corn.png` | 玉米 |
 | 06 | `fish.png` | 鱼片 |
+| 07 | `egg.png` | 鹌鹑蛋 |
+| 08 | `jzg.png` | 金针菇 |
+| 09 | `meetball.png` | 肉丸 |
+| 10 | `ou.png` | 莲藕 |
+| 11 | `tomato.png` | 番茄 |
+| 12 | `toufu.png` | 豆腐 |
+| 13 | `ydf.png` | 油豆腐 |
 
 正式美术可直接覆盖对应的同名 PNG。微信小游戏版本建议统一使用 `384 × 288`、保持 4:3 比例和透明背景，避免主包被原始大图撑大。
 
 ## V0.1 内容
 
 - 720 × 1280 竖屏布局
-- 6 种食材的透明 PNG 美术
+- 13 种可轮换食材的透明 PNG 美术，单关使用 3～10 种
 - 2～4 层的几何覆盖判定
 - 点击进入托盘、同类食材自动归并、三个同类食材自动消除，并带补位动画
-- 7 格托盘、胜利/失败面板、重新开始
-- 10 个数据驱动测试关卡（18～78 张牌）
+- 7 格托盘、胜利/失败面板、带二次确认的重新开始
+- 第 3 关起提供撤回、移出、洗牌道具，每关各 1 次
+- 10 个数据驱动测试关卡（18～120 张牌），第 3 关起使用 8 行牌阵
 - 首次触摸后循环播放背景音乐，并播放三消、过关和失败音效
 
-订单、火锅特殊牌、道具和存档未纳入 V0.1。原 3D Hello World 素材已不被主场景引用，不会进入按场景引用构建的正式包。
+订单、火锅特殊牌、存档和广告未纳入 V0.1。原 3D Hello World 素材已不被主场景引用，不会进入按场景引用构建的正式包。

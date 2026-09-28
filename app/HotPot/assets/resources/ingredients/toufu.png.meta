@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "72905c43-4670-4a06-b2cd-16f7311a7e83",
+  "uuid": "ee47d3af-19d5-440b-87d2-30c6e385e7f3",
   "files": [
     ".json",
     ".png"
@@ -10,8 +10,8 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "72905c43-4670-4a06-b2cd-16f7311a7e83@6c48a",
-      "displayName": "vegetable",
+      "uuid": "ee47d3af-19d5-440b-87d2-30c6e385e7f3@6c48a",
+      "displayName": "toufu",
       "id": "6c48a",
       "name": "texture",
       "userData": {
@@ -22,7 +22,7 @@
         "mipfilter": "none",
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "72905c43-4670-4a06-b2cd-16f7311a7e83",
+        "imageUuidOrDatabaseUri": "ee47d3af-19d5-440b-87d2-30c6e385e7f3",
         "visible": false
       },
       "ver": "1.0.22",
@@ -37,6 +37,6 @@
     "type": "texture",
     "fixAlphaTransparencyArtifacts": true,
     "hasAlpha": true,
-    "redirect": "72905c43-4670-4a06-b2cd-16f7311a7e83@6c48a"
+    "redirect": "ee47d3af-19d5-440b-87d2-30c6e385e7f3@6c48a"
   }
 }

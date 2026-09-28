@@ -57,13 +57,35 @@ assert.deepStrictEqual(
 );
 assert.deepStrictEqual(insertGroupedAndResolve(['beef', 'beef', 'shrimp'], 'beef'), ['shrimp']);
 
+const seenIngredientTypes = new Set();
 data.LEVELS.forEach((config, index) => {
     const level = data.createLevel(index);
     assert.strictEqual(level.total, config.layers.reduce((sum, count) => sum + count, 0));
     assert.strictEqual(config.traySize, 7);
+    assert(config.typeCount >= 1 && config.typeCount <= 10, 'each level must use between one and ten ingredient types');
+    assert.strictEqual(new Set(level.tiles.map((tile) => tile.type)).size, config.typeCount,
+        `level ${config.level} must use exactly ${config.typeCount} ingredient types`);
+    if (index >= 2) {
+        assert.strictEqual(config.rows, 8, `level ${config.level} must use the eight-row layout`);
+        config.layers.forEach((_, layerIndex) => {
+            const rowYs = Array.from(new Set(level.tiles
+                .filter((tile) => tile.layer === layerIndex)
+                .map((tile) => tile.y))).sort((a, b) => a - b);
+            assert.strictEqual(rowYs.length, 8, `level ${config.level} layer ${layerIndex} must contain eight rows`);
+            for (let row = 1; row < rowYs.length; row += 1) {
+                assert(rowYs[row] - rowYs[row - 1] - data.EIGHT_ROW_IMAGE_HEIGHT >= data.EIGHT_ROW_IMAGE_HEIGHT * 0.1,
+                    `level ${config.level} layer ${layerIndex} image gap must be at least 10% of image height`);
+            }
+        });
+    }
     config.layers.forEach((count) => assert.strictEqual(count % 3, 0));
     level.tiles.forEach((tile) => {
-        assert(Math.abs(tile.x) <= 300 && Math.abs(tile.y) <= 220, 'tile outside board');
+        seenIngredientTypes.add(tile.type);
+        const tileScale = config.rows === 8 ? 0.82 : 1;
+        assert(Math.abs(tile.x) + 92 * 1.2 * tileScale / 2 <= 344 &&
+            Math.abs(tile.y) + 76 * 1.2 * tileScale / 2 <= 420, 'tile outside board');
+        if (index >= 2) assert(Math.abs(tile.y) + data.EIGHT_ROW_IMAGE_HEIGHT / 2 <= 420,
+            'enlarged image outside board');
         tile.blockedBy.forEach((id) => {
             const blocker = level.tiles.find((candidate) => candidate.id === id);
             assert(blocker && blocker.layer > tile.layer, 'blocker must be higher');
@@ -89,6 +111,10 @@ data.LEVELS.forEach((config, index) => {
     }
     assert.strictEqual(tray.length, 0);
     console.log(`Level ${config.level}: ${level.total} tiles / ${config.layers.length} layers / OK`);
+});
+
+data.INGREDIENTS.forEach((ingredient) => {
+    assert(seenIngredientTypes.has(ingredient.id), `ingredient ${ingredient.id} is never used by any level`);
 });
 
 console.log('All V0.1 levels are structurally valid and have a verified solution route.');
