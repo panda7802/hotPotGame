@@ -21,7 +21,7 @@ import {
     Vec3,
     view,
 } from 'cc';
-import {createLevel, getIngredient, INGREDIENTS, IngredientType, LevelData, LEVELS, TileData,} from '../data/GameData';
+import {createLevel, getIngredient, INGREDIENTS, IngredientType, LevelData, LEVELS, TileData, selectBombTargets,} from '../data/GameData';
 
 const {ccclass} = _decorator;
 const DESIGN_WIDTH = 720;
@@ -29,16 +29,21 @@ const DESIGN_HEIGHT = 1520;
 const TILE_WIDTH = 92 * 1.2;
 const TILE_HEIGHT = 76 * 1.2;
 const TILE_IMAGE_WIDTH = 88 * 1.2;
-const TILE_IMAGE_HEIGHT = 68 * 1.2;
+const TILE_IMAGE_HEIGHT = TILE_HEIGHT - 4;
 const EIGHT_ROW_TILE_SCALE = 0.82;
-const TRAY_IMAGE_WIDTH = 78 * 1.2;
-const TRAY_IMAGE_HEIGHT = 62 * 1.2;
-const TRAY_SPACING = 99;
+const TRAY_IMAGE_WIDTH = 80;
+const TRAY_IMAGE_HEIGHT = 72;
+const TRAY_SPACING = 94;
 const TRAY_START_X = -3 * TRAY_SPACING;
 const IMAGE_CROP_X = 0.04;
 const IMAGE_CROP_Y = 0.06;
 type GameAudio = 'bgm' | 'match' | 'win' | 'lose';
-type ToolType = 'undo' | 'remove' | 'shuffle';
+type ToolType = 'undo' | 'bomb' | 'shuffle';
+// 图集按从左到右、从上到下排列；独立于关卡食材顺序。
+const HANDPAINTED_TYPES: IngredientType[] = [
+    'beef', 'shrimp', 'vegetable', 'mushroom', 'corn', 'fish', 'egg',
+    'jzg', 'meetball', 'ou', 'tomato', 'toufu', 'ydf',
+];
 
 interface MoveSnapshot {
     tray: IngredientType[];
@@ -78,6 +83,109 @@ function drawRoundRect(node: Node, width: number, height: number, radius: number
     return graphics;
 }
 
+/** A 方案的奶油色厚牌：阴影、浅棕侧边与干净牌面，保持原点击区域。 */
+function drawFoodTile(node: Node, width: number, height: number, blocked = false): void {
+    transform(node, width, height);
+    const graphics = node.getComponent(Graphics) || node.addComponent(Graphics);
+    graphics.clear();
+    const layer = (offsetY: number, inset: number, fill: string, alpha = 255): void => {
+        const color = hex(fill);
+        color.a = alpha;
+        graphics.fillColor = color;
+        graphics.roundRect(-width / 2 + inset, -height / 2 + offsetY + inset,
+            width - inset * 2, height - inset * 2, 12);
+        graphics.fill();
+    };
+    layer(-7, 1, '#4B2B17', 28);
+    layer(-4, 0, blocked ? '#9D866B' : '#B99A72');
+    layer(0, 0, blocked ? '#BCAF97' : '#D5BE99');
+    layer(1, 1.5, blocked ? '#D8CBB5' : '#FFF5DF');
+    // 顶边轻微提亮，不使用粗描边或整张白色背景。
+    graphics.strokeColor = hex(blocked ? '#E0D5C2' : '#FFFCF2');
+    graphics.lineWidth = 1;
+    graphics.moveTo(-width / 2 + 13, height / 2 - 2);
+    graphics.lineTo(width / 2 - 13, height / 2 - 2);
+    graphics.stroke();
+}
+
+/** 木框、凹槽和漆面按钮共用的层叠材质；纹理不经过文字区域。 */
+function drawTavernPanel(node: Node, width: number, height: number,
+                         style: 'wood' | 'slot' | 'red' | 'cream'): void {
+    const palettes = {
+        wood: ['#63331C', '#A86A35', '#E6B56C', '#B4773B'],
+        slot: ['#B17A43', '#4E2918', '#6A3D23', '#784727'],
+        red: ['#87321E', '#B43D23', '#F0AC68', '#CC4D2D'],
+        cream: ['#9B6F3E', '#D6AF71', '#FFF2CB', '#F2D7A3'],
+    };
+    const colors = palettes[style];
+    const g = drawRoundRect(node, width, height, 18, colors[0]);
+    const layer = (inset: number, offsetY: number, fill: string): void => {
+        g.fillColor = hex(fill);
+        g.roundRect(-width / 2 + inset, -height / 2 + inset + offsetY,
+            width - inset * 2, height - inset * 2, Math.max(7, 18 - inset));
+        g.fill();
+    };
+    layer(2, 2, colors[1]);
+    layer(5, 3, colors[2]);
+    layer(7, 1, colors[3]);
+    if (style === 'wood' || style === 'slot') {
+        g.strokeColor = hex(style === 'wood' ? '#915927' : '#62351D');
+        g.lineWidth = 1;
+        for (let i = 0; i < 4; i += 1) {
+            const y = -height / 2 + 13 + i * (height - 26) / 3;
+            g.moveTo(-width / 2 + 12, y);
+            g.bezierCurveTo(-width / 4, y + 2, width / 4, y - 2, width / 2 - 12, y);
+        }
+        g.stroke();
+    } else {
+        g.strokeColor = hex(style === 'red' ? '#F08758' : '#FFF6D9');
+        g.lineWidth = 2;
+        g.moveTo(-width / 2 + 23, height / 2 - 12);
+        g.lineTo(width / 2 - 23, height / 2 - 12);
+        g.stroke();
+    }
+}
+
+function drawControlIcon(icon: Node, restart: boolean, enabled = true): void {
+    const g = icon.getComponent(Graphics) || icon.addComponent(Graphics);
+    g.clear();
+    g.strokeColor = hex(restart ? '#FFF2D0' : '#6A3B20');
+    g.fillColor = g.strokeColor;
+    g.lineWidth = 5;
+    if (restart) {
+        g.moveTo(13, 9);
+        g.bezierCurveTo(-4, 26, -25, 7, -12, -10);
+        g.bezierCurveTo(-4, -20, 12, -16, 16, -5);
+        g.stroke();
+        g.moveTo(13, 9); g.lineTo(1, 10); g.lineTo(12, 21); g.close(); g.fill();
+    } else {
+        g.moveTo(-15, -6); g.lineTo(-8, -6); g.lineTo(2, -15);
+        g.lineTo(2, 15); g.lineTo(-8, 6); g.lineTo(-15, 6); g.close(); g.fill();
+        if (enabled) {
+            g.moveTo(8, -8); g.bezierCurveTo(15, -3, 15, 3, 8, 8);
+            g.moveTo(14, -14); g.bezierCurveTo(25, -6, 25, 6, 14, 14);
+        } else {
+            g.moveTo(9, -7); g.lineTo(21, 7);
+            g.moveTo(9, 7); g.lineTo(21, -7);
+        }
+        g.stroke();
+    }
+}
+
+function styleTavernButton(button: Node, restart: boolean): void {
+    drawTavernPanel(button, 292, 82, restart ? 'red' : 'cream');
+    const label = button.getChildByName('Label')!.getComponent(Label)!;
+    label.node.setPosition(23, 1);
+    transform(label.node, 212, 58);
+    label.color = hex(restart ? '#FFF2D0' : '#6A3B20');
+    label.isBold = true;
+    const icon = new Node('ControlIcon');
+    button.addChild(icon);
+    icon.setPosition(-110, 1);
+    transform(icon, 44, 44);
+    drawControlIcon(icon, restart);
+}
+
 function makeLabel(parent: Node, text: string, fontSize: number, textColor: string,
                    position: Vec3, width = 0, height = 0, wrap = false): Label {
     const node = new Node('Label');
@@ -101,7 +209,7 @@ function makeButton(parent: Node, text: string, position: Vec3, width: number, h
     const node = new Node(`Button_${text}`);
     parent.addChild(node);
     node.setPosition(position);
-    drawRoundRect(node, width, height, 20, fill, '#8F2F22', 4);
+    drawRoundRect(node, width, height, 20, fill);
     makeLabel(node, text, 30, '#FFF8E7', new Vec3(0, 1), width - 18, height - 12);
     node.on(Node.EventType.TOUCH_START, () => {
         tween(node).stop();
@@ -143,7 +251,7 @@ export class HotPotGame extends Component {
     private progressLabel!: Label;
     private toastLabel!: Label;
     private toolButtons = new Map<ToolType, Node>();
-    private toolUses: Record<ToolType, number> = {undo: 0, remove: 0, shuffle: 0};
+    private toolUses: Record<ToolType, number> = {undo: 0, bomb: 0, shuffle: 0};
     private lastMoveSnapshot: MoveSnapshot | null = null;
     private viewportHeight = DESIGN_HEIGHT;
     private verticalSpread = 0;
@@ -175,7 +283,7 @@ export class HotPotGame extends Component {
         });
         this.buildShell();
         this.setupAudio();
-        this.loadPlaceholderImages(() => this.loadLevel(0));
+        this.loadIngredientImages(() => this.loadLevel(0));
     }
 
     onDestroy(): void {
@@ -224,6 +332,8 @@ export class HotPotGame extends Component {
     private toggleSound(): void {
         this.soundEnabled = !this.soundEnabled;
         this.soundButtonLabel.string = this.soundEnabled ? '声音：开' : '声音：关';
+        const soundIcon = this.soundButtonLabel.node.parent?.getChildByName('ControlIcon');
+        if (soundIcon) drawControlIcon(soundIcon, false, this.soundEnabled);
         this.effectSource.volume = this.soundEnabled ? 1 : 0;
         if (this.soundEnabled) this.startBgmIfReady();
         else {
@@ -244,6 +354,43 @@ export class HotPotGame extends Component {
         }
     }
 
+    private loadIngredientImages(done: () => void): void {
+        resources.load('ingredients/handpainted-atlas/texture', Texture2D, (error, texture) => {
+            if (!this.node.isValid) return;
+            if (error || !texture || texture.width !== texture.height || texture.width < 4) {
+                console.warn('[HotPotGame] 手绘图集不可用，使用原食材图片', error);
+                this.loadPlaceholderImages(done);
+                return;
+            }
+            const cell = texture.width / 4;
+            HANDPAINTED_TYPES.forEach((type, index) => {
+                // 原图集的金针菇格不再使用，茶树菇由独立资源覆盖。
+                if (type === 'jzg') return;
+                const frame = new SpriteFrame();
+                frame.texture = texture;
+                const column = index % 4;
+                const row = Math.floor(index / 4);
+                const left = Math.round(column * cell);
+                const top = Math.round(row * cell);
+                frame.rect = new Rect(left, top,
+                    Math.round((column + 1) * cell) - left,
+                    Math.round((row + 1) * cell) - top);
+                this.ingredientFrames.set(type, frame);
+            });
+            resources.load('ingredients/jzg/texture', Texture2D, (mushroomError, mushroomTexture) => {
+                if (!this.node.isValid) return;
+                if (!mushroomError && mushroomTexture) {
+                    const frame = new SpriteFrame();
+                    frame.texture = mushroomTexture;
+                    this.ingredientFrames.set('jzg', frame);
+                } else {
+                    console.error('[HotPotGame] 无法加载茶树菇图片', mushroomError);
+                }
+                done();
+            });
+        });
+    }
+
     private loadPlaceholderImages(done: () => void): void {
         const imageTypes: IngredientType[] = INGREDIENTS.map((ingredient) => ingredient.id);
         let pending = imageTypes.length;
@@ -252,7 +399,7 @@ export class HotPotGame extends Component {
                 if (!error && texture) {
                     const frame = new SpriteFrame();
                     frame.texture = texture;
-                    if (texture.width > 0 && texture.height > 0) {
+                    if (type !== 'jzg' && texture.width > 0 && texture.height > 0) {
                         const cropX = Math.round(texture.width * IMAGE_CROP_X);
                         const cropY = Math.round(texture.height * IMAGE_CROP_Y);
                         frame.rect = new Rect(
@@ -276,68 +423,64 @@ export class HotPotGame extends Component {
         const background = new Node('WarmBackground');
         this.node.addChild(background);
         drawRoundRect(background, DESIGN_WIDTH + 40, this.viewportHeight + 40, 0, '#FFF0D4');
-        this.drawPageDecorations(background);
         this.loadIllustratedBackdrop(background);
 
-        const topGlow = new Node('TopGlow');
-        this.node.addChild(topGlow);
-        topGlow.setPosition(0, 535 + this.topSpread);
-        drawRoundRect(topGlow, DESIGN_WIDTH + 40, 270, 0, '#D94A32');
-        opacity(topGlow, 138);
-        this.drawHeaderDecorations(topGlow);
-
-        makeLabel(this.node, '火锅叠叠消', 52, '#81271D', new Vec3(3, 570 + this.topSpread), 500, 70);
-        makeLabel(this.node, '火锅叠叠消', 52, '#FFF3CF', new Vec3(0, 576 + this.topSpread), 500, 70);
-        this.levelLabel = makeLabel(this.node, '', 27, '#FFEFC1', new Vec3(0, 505 + this.topSpread), 440, 44);
-        makeButton(this.node, '‹', new Vec3(-292, 508 + this.topSpread), 72, 66, '#F47B49', () => this.previousLevel());
-        makeButton(this.node, '›', new Vec3(292, 508 + this.topSpread), 72, 66, '#F47B49', () => this.nextLevel());
+        const title = makeLabel(this.node, '锅里捞啥', 60, '#FFF3CF',
+            new Vec3(0, 576 + this.topSpread), 480, 82);
+        title.isBold = true;
+        this.loadTitleArtwork(title);
+        const levelBar = new Node('LevelBar');
+        this.node.addChild(levelBar);
+        levelBar.setPosition(0, 480 + this.topSpread);
+        drawRoundRect(levelBar, 536, 58, 16, '#F5DEB2');
+        this.levelLabel = makeLabel(levelBar, '', 27, '#63351F', Vec3.ZERO, 440, 44);
+        makeButton(this.node, '‹', new Vec3(-300, 480 + this.topSpread), 60, 58, '#934C2A', () => this.previousLevel());
+        makeButton(this.node, '›', new Vec3(300, 480 + this.topSpread), 60, 58, '#934C2A', () => this.nextLevel());
 
         const rulePill = new Node('RulePill');
         this.node.addChild(rulePill);
-        rulePill.setPosition(0, 432 + this.topSpread);
-        drawRoundRect(rulePill, 640, 64, 30, '#FFF9EA', '#E16A43', 3);
-        this.progressLabel = makeLabel(rulePill, '', 23, '#963A26', Vec3.ZERO, 600, 44);
+        rulePill.setPosition(0, 422 + this.topSpread);
+        transform(rulePill, 640, 64);
+        this.progressLabel = makeLabel(rulePill, '', 26, '#713B2C', Vec3.ZERO, 600, 44);
 
         this.board = new Node('Board');
         this.node.addChild(this.board);
         // 棋盘向下扩展，同时保持顶部与关卡信息条约 30px 的视觉间隔。
-        this.board.setPosition(0, -48 + this.topSpread);
+        this.board.setPosition(0, -36 + this.topSpread);
         transform(this.board, 680, 830);
 
-        const boardBack = new Node('BoardBack');
-        this.board.addChild(boardBack);
-        drawRoundRect(boardBack, 688, 840, 40, '#FFF7E7', '#EBA05E', 5);
-        const insetFrame = new Node('BoardInsetFrame');
-        boardBack.addChild(insetFrame);
-        transform(insetFrame, 660, 820);
-        const insetGraphics = insetFrame.addComponent(Graphics);
-        insetGraphics.strokeColor = hex('#F7CE91');
-        insetGraphics.lineWidth = 3;
-        insetGraphics.roundRect(-330, -410, 660, 820, 31);
-        insetGraphics.stroke();
+        // 背景图本身已有纸纹棋盘，不再叠加浅色面板。
+
 
         this.trayNode = new Node('Tray');
         this.node.addChild(this.trayNode);
-        this.trayNode.setPosition(0, -415);
-        drawRoundRect(this.trayNode, 704, 120, 24, '#9D4729', '#71311F', 5);
+        this.trayNode.setPosition(0, -440);
+        drawTavernPanel(this.trayNode, 688, 124, 'wood');
 
         this.toolBar = new Node('ToolBar');
         this.node.addChild(this.toolBar);
-        this.toolBar.setPosition(0, -515);
-        this.toolButtons.set('undo', this.makeToolButton('undo', new Vec3(-180, 0),
-            '#D47745', () => this.useUndoTool()));
-        this.toolButtons.set('remove', this.makeToolButton('remove', Vec3.ZERO,
-            '#B76645', () => this.useRemoveTool()));
-        this.toolButtons.set('shuffle', this.makeToolButton('shuffle', new Vec3(180, 0),
-            '#C98A3F', () => this.useShuffleTool()));
+        this.toolBar.setPosition(0, -556);
+        this.toolButtons.set('undo', this.makeToolButton('undo', new Vec3(-224, 0),
+            '#875139', () => this.useUndoTool()));
+        this.toolButtons.set('bomb', this.makeToolButton('bomb', Vec3.ZERO,
+            '#875139', () => this.useBombTool()));
+        this.toolButtons.set('shuffle', this.makeToolButton('shuffle', new Vec3(224, 0),
+            '#875139', () => this.useShuffleTool()));
         this.toolBar.active = false;
 
-        this.toastLabel = makeLabel(this.node, '', 30, '#FFFFFF', new Vec3(0, -248), 570, 48);
+        const toastBack = new Node('ToastBackground');
+        this.node.addChild(toastBack);
+        toastBack.setPosition(0, -619);
+        drawRoundRect(toastBack, 650, 38, 12, '#FFF1D4');
+        opacity(toastBack, 0);
+        this.toastLabel = makeLabel(toastBack, '', 24, '#713B2C', Vec3.ZERO, 630, 36);
         opacity(this.toastLabel.node, 0);
-        makeButton(this.node, '重新开始', new Vec3(-130, -590 - this.bottomSpread), 240, 76, '#ED4A32',
+        const restartButton = makeButton(this.node, '重新开始', new Vec3(-158, -676 - this.bottomSpread), 292, 82, '#C84730',
             () => this.showRestartConfirmation());
-        const soundButton = makeButton(this.node, '声音：开', new Vec3(150, -590 - this.bottomSpread),
-            220, 76, '#B88261', () => this.toggleSound());
+        styleTavernButton(restartButton, true);
+        const soundButton = makeButton(this.node, '声音：开', new Vec3(158, -676 - this.bottomSpread),
+            292, 82, '#F2D7A3', () => this.toggleSound());
+        styleTavernButton(soundButton, false);
         this.soundButtonLabel = soundButton.getChildByName('Label')!.getComponent(Label)!;
 
         // 移动中的食物牌统一放在最后创建的顶层容器，避免被棋盘、托盘和按钮边框遮挡。
@@ -346,9 +489,32 @@ export class HotPotGame extends Component {
         transform(this.foodTransitionLayer, DESIGN_WIDTH, this.viewportHeight);
     }
 
-    /** 加载经过压缩的静态插画背景和右下角独立火锅。 */
+    /** D 方案透明字标；资源未就绪时保留可读的文字标题。 */
+    private loadTitleArtwork(fallback: Label): void {
+        resources.load('backgrounds/title-d/texture', Texture2D, (error, texture) => {
+            if (!fallback.node.isValid) return;
+            if (error || !texture || texture.width <= 0 || texture.height <= 0) {
+                console.warn('[HotPotGame] 标题图加载失败，保留文字标题', error);
+                return;
+            }
+            const frame = new SpriteFrame();
+            frame.texture = texture;
+            const artwork = new Node('TitleArtwork');
+            this.node.addChild(artwork);
+            artwork.setSiblingIndex(fallback.node.getSiblingIndex());
+            artwork.setPosition(fallback.node.position);
+            const scale = Math.min(500 / texture.width, 132 / texture.height);
+            transform(artwork, texture.width * scale, texture.height * scale);
+            const sprite = artwork.addComponent(Sprite);
+            sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+            sprite.spriteFrame = frame;
+            fallback.node.active = false;
+        });
+    }
+
+    /** 烟火小馆整页背景：红布顶棚、纸感棋盘与木桌。 */
     private loadIllustratedBackdrop(parent: Node): void {
-        resources.load('backgrounds/hotpot-bg/texture', Texture2D, (error, texture) => {
+        resources.load('backgrounds/tavern-bg/texture', Texture2D, (error, texture) => {
             if (error || !texture || !parent.isValid) {
                 console.error('[HotPotGame] 无法加载火锅背景', error);
                 return;
@@ -364,22 +530,6 @@ export class HotPotGame extends Component {
             sprite.spriteFrame = frame;
         });
 
-        resources.load('backgrounds/hotpot-corner/texture', Texture2D, (error, texture) => {
-            if (error || !texture || !parent.isValid) {
-                console.error('[HotPotGame] 无法加载右下角火锅', error);
-                return;
-            }
-            const frame = new SpriteFrame();
-            frame.texture = texture;
-            const hotpot = new Node('CornerHotpot');
-            parent.addChild(hotpot);
-            hotpot.setPosition(235, -505 - this.verticalSpread);
-            transform(hotpot, 470, 470);
-            const sprite = hotpot.addComponent(Sprite);
-            sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-            sprite.spriteFrame = frame;
-            opacity(hotpot, 246);
-        });
     }
 
     /** 加载最终模板对应的棋盘插画，失败时仍保留代码绘制的备用火锅。 */
@@ -513,7 +663,7 @@ export class HotPotGame extends Component {
         this.combo = 0;
         this.lastMoveSnapshot = null;
         const toolsEnabled = this.levelIndex >= 2;
-        this.toolUses = toolsEnabled ? {undo: 1, remove: 1, shuffle: 1} : {undo: 0, remove: 0, shuffle: 0};
+        this.toolUses = toolsEnabled ? {undo: 1, bomb: 1, shuffle: 1} : {undo: 0, bomb: 0, shuffle: 0};
         this.toolBar.active = toolsEnabled;
         this.updateToolButtons();
         this.effectSource?.stop();
@@ -545,16 +695,14 @@ export class HotPotGame extends Component {
     private drawTile(node: Node, type: IngredientType, blocked: boolean): void {
         node.children.slice().forEach((child) => child.destroy());
         const ingredient = getIngredient(type);
-        const graphics = drawRoundRect(node, TILE_WIDTH, TILE_HEIGHT, 13,
-            blocked ? '#B99A79' : '#FFF9E9', blocked ? '#806D59' : '#D98556', blocked ? 2 : 4);
+        drawFoodTile(node, TILE_WIDTH, TILE_HEIGHT, blocked);
         if (this.ingredientFrames.has(type)) {
-            const imageScale = this.levelIndex >= 2 ? 1.2 : 1;
             this.addIngredientImage(node, type, blocked,
-                TILE_IMAGE_WIDTH * imageScale, TILE_IMAGE_HEIGHT * imageScale);
+                TILE_IMAGE_WIDTH, TILE_IMAGE_HEIGHT);
         } else {
             makeLabel(node, '?', 34, blocked ? '#6F6255' : ingredient.dark, Vec3.ZERO, 60, 54);
         }
-        opacity(node, blocked ? 172 : 255);
+        opacity(node, 255);
     }
 
     private addIngredientImage(parent: Node, type: IngredientType, blocked: boolean,
@@ -563,11 +711,14 @@ export class HotPotGame extends Component {
         if (!frame) return;
         const image = new Node('IngredientImage');
         parent.addChild(image);
-        transform(image, width * 1.15, height * 1.15);
+        // 按裁切后的资源比例等比适配，避免方形手绘图标被压扁。
+        const scale = Math.min(width / frame.rect.width, height / frame.rect.height);
+        transform(image, frame.rect.width * scale, frame.rect.height * scale);
         const sprite = image.addComponent(Sprite);
         sprite.sizeMode = Sprite.SizeMode.CUSTOM;
         sprite.spriteFrame = frame;
-        sprite.color = blocked ? hex('#B2A28F') : Color.WHITE;
+        // 中性明暗保留食材本身的色相，避免全部染成黄褐色后难以辨认。
+        sprite.color = blocked ? hex('#B9B9B9') : Color.WHITE;
     }
 
     private findTile(id: string): TileData | undefined {
@@ -767,6 +918,7 @@ export class HotPotGame extends Component {
     }
 
     private renderTray(): void {
+        this.updateProgress();
         // destroy 在帧末才生效，先移出托盘，确保消除动画只选中本次创建的三个节点。
         this.trayNode.children.slice().forEach((child) => {
             child.removeFromParent();
@@ -778,7 +930,7 @@ export class HotPotGame extends Component {
             const slot = new Node(`TraySlot_${i}`);
             this.trayNode.addChild(slot);
             slot.setPosition(TRAY_START_X + i * TRAY_SPACING, 0);
-            drawRoundRect(slot, 82 * 1.2, 84 * 1.2, 15, '#FFF4E5', '#7B3927', 2);
+            drawTavernPanel(slot, 90, 100, 'slot');
         }
 
         // 第二层放真实食材节点；全部位于固定槽位之上，并可直接执行左移动画。
@@ -788,6 +940,7 @@ export class HotPotGame extends Component {
             this.trayNode.addChild(item);
             item.setPosition(TRAY_START_X + i * TRAY_SPACING, 0);
             transform(item, 82 * 1.2, 84 * 1.2);
+            drawFoodTile(item, 80, 78);
             (item as Node & { trayType?: IngredientType }).trayType = type;
             const ingredient = getIngredient(type);
             if (this.ingredientFrames.has(type)) {
@@ -804,19 +957,22 @@ export class HotPotGame extends Component {
 
     private updateProgress(): void {
         const open = this.levelData.tiles.filter((tile) => this.isTileSelectable(tile)).length;
-        this.progressLabel.string = `剩余食材 ${this.remainingTiles()} / ${this.levelData.total}    当前可拿 ${open} 张`;
+        this.progressLabel.string = `剩余 ${this.remainingTiles()} / ${this.levelData.total}    ·    可拿 ${open} 张`;
     }
 
     private makeToolButton(type: ToolType, position: Vec3, fill: string, callback: () => void): Node {
-        const button = makeButton(this.toolBar, '', position, 150, 58, fill, callback);
+        const button = makeButton(this.toolBar, '', position, 208, 84, fill, callback);
         button.name = `Tool_${type}`;
         const icon = new Node('ToolIcon');
         button.addChild(icon);
-        icon.setPosition(-8, 0);
+        icon.setPosition(-62, 0);
+        icon.setScale(0.7, 0.7, 1);
+        const names: Record<ToolType, string> = {undo: '撤回', bomb: '炸', shuffle: '洗牌'};
+        makeLabel(button, names[type], 27, '#FFF8E7', new Vec3(2, 0), 68, 40);
         transform(icon, 64, 44);
         const g = icon.addComponent(Graphics);
         g.strokeColor = hex('#FFF8E7');
-        g.lineWidth = 4;
+        g.lineWidth = 6;
         const arrow = (x: number, y: number, direction: number): void => {
             g.moveTo(x - direction * 10, y + 9);
             g.lineTo(x, y);
@@ -829,16 +985,13 @@ export class HotPotGame extends Component {
             g.bezierCurveTo(29, 10, 29, -16, 5, -16);
             g.lineTo(-3, -16);
             arrow(-24, 10, -1);
-        } else if (type === 'remove') {
-            // 方块从托盘向外移出的箭头。
-            g.roundRect(-27, -5, 20, 22, 4);
-            g.moveTo(-29, -10);
-            g.lineTo(-29, -19);
-            g.lineTo(3, -19);
-            g.lineTo(3, -10);
-            g.moveTo(1, 8);
-            g.lineTo(29, 8);
-            arrow(29, 8, 1);
+        } else if (type === 'bomb') {
+            // 圆形炸弹、引线与火花。
+            g.circle(-3, -5, 17);
+            g.moveTo(5, 10);
+            g.bezierCurveTo(4, 24, 19, 13, 20, 25);
+            g.moveTo(24, 21); g.lineTo(30, 24);
+            g.moveTo(20, 29); g.lineTo(21, 35);
         } else {
             // 两条交叉箭头。
             g.moveTo(-28, -14);
@@ -851,14 +1004,14 @@ export class HotPotGame extends Component {
         g.stroke();
         const badge = new Node('UsesBadge');
         button.addChild(badge);
-        badge.setPosition(52, 14);
-        drawRoundRect(badge, 26, 26, 13, '#71311F');
-        makeLabel(badge, '1', 18, '#FFF8E7', Vec3.ZERO, 24, 24);
+        badge.setPosition(72, 0);
+        drawRoundRect(badge, 30, 30, 15, '#653A28');
+        makeLabel(badge, '1', 21, '#FFF8E7', Vec3.ZERO, 28, 28);
         return button;
     }
 
     private updateToolButtons(): void {
-        (['undo', 'remove', 'shuffle'] as ToolType[]).forEach((type) => {
+        (['undo', 'bomb', 'shuffle'] as ToolType[]).forEach((type) => {
             const button = this.toolButtons.get(type);
             if (!button) return;
             const label = button.getChildByName('UsesBadge')?.getChildByName('Label')?.getComponent(Label);
@@ -900,19 +1053,22 @@ export class HotPotGame extends Component {
         this.showToast('已撤回上一次拿取', '#D86A3B');
     }
 
-    private useRemoveTool(): void {
-        if (!this.canUseTool('remove')) return;
-        if (this.tray.length === 0) {
-            this.showToast('托盘里还没有食材', '#8A4B34');
+    private useBombTool(): void {
+        if (!this.canUseTool('bomb')) return;
+        const targets = selectBombTargets(this.levelData.tiles);
+        if (targets.length === 0) {
+            this.showToast('棋盘上没有满 3 张的同类食材', '#8A4B34');
             return;
         }
-        const removeCount = Math.min(3, this.tray.length);
-        this.tray.splice(this.tray.length - removeCount, removeCount);
+        targets.forEach((tile) => { tile.removed = true; });
+        // 清空旧撤回快照，防止撤回拿牌时复活已经炸掉的牌。
         this.lastMoveSnapshot = null;
-        this.toolUses.remove -= 1;
-        this.renderTray();
+        this.toolUses.bomb -= 1;
+        this.rebuildBoardTiles();
+        this.updateProgress();
         this.updateToolButtons();
-        this.showToast(`已移出 ${removeCount} 张食材`, '#D86A3B');
+        this.playEffect('match', 0.82);
+        this.showToast(`炸掉 ${targets.length} 张${getIngredient(targets[0].type).name}`, '#A14425');
         if (this.remainingTiles() === 0 && this.tray.length === 0) this.endGame(true);
     }
 
@@ -959,6 +1115,9 @@ export class HotPotGame extends Component {
         this.toastLabel.string = message;
         this.toastLabel.color = hex(textColor);
         const alpha = opacity(this.toastLabel.node, 255);
+        const backgroundAlpha = opacity(this.toastLabel.node.parent!, 245);
+        tween(backgroundAlpha).stop();
+        tween(backgroundAlpha).delay(0.75).to(0.35, {opacity: 0}).start();
         tween(alpha).stop();
         tween(alpha).delay(0.75).to(0.35, {opacity: 0}).start();
     }
@@ -973,7 +1132,7 @@ export class HotPotGame extends Component {
 
         const panel = new Node('RestartConfirmPanel');
         overlay.addChild(panel);
-        drawRoundRect(panel, 560, 310, 38, '#FFF5DD', '#D8784C', 5);
+        drawRoundRect(panel, 560, 310, 32, '#FFF9EF');
         makeLabel(panel, '确认重新开始？', 42, '#8D3426', new Vec3(0, 82), 470, 62);
         makeLabel(panel, '本关当前进度将会清空', 24, '#8A6557', new Vec3(0, 25), 450, 42);
         makeButton(panel, '取消', new Vec3(-130, -80), 210, 66, '#B88A6B',
@@ -1005,7 +1164,7 @@ export class HotPotGame extends Component {
         overlay.addChild(panel);
         panel.setPosition(0, 35);
         panel.setScale(0.75, 0.75, 1);
-        drawRoundRect(panel, 570, 500, 42, '#FFF1D2', '#D3764E', 5);
+        drawRoundRect(panel, 570, 500, 32, '#FFF9EF');
         makeLabel(panel, won ? '锅底见啦！' : '托盘满啦！', 48,
             won ? '#C94836' : '#8B3D32', new Vec3(0, 150), 500, 70);
         makeLabel(panel, won ? '所有食材都已经下锅\n下一关会有更多叠层' :

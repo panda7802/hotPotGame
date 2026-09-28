@@ -22,6 +22,25 @@ vm.runInNewContext(`(function(module,exports){${compiled.outputText}\n})(module,
     console,
 });
 const data = moduleObject.exports;
+// 炸道具：仅操作棋盘剩余牌，不会重复选择或改变输入数据。
+const bombTiles = (type, count, removed = false) => Array.from({length: count}, (_, index) => ({
+    id: `${type}-${removed}-${index}`, type, removed, x: 0, y: 0, layer: 0, blockedBy: [],
+}));
+for (const count of [0, 1, 2, 3, 4, 5, 6, 7, 12]) {
+    const tiles = bombTiles('beef', count);
+    const targets = data.selectBombTargets(tiles, () => 0.25);
+    assert.strictEqual(targets.length, count >= 6 ? 6 : count >= 3 ? 3 : 0);
+    assert.strictEqual(new Set(targets.map(tile => tile.id)).size, targets.length);
+    assert(tiles.every(tile => !tile.removed), 'selection must not mutate the board');
+}
+const mixedBombTiles = [...bombTiles('beef', 2), ...bombTiles('shrimp', 5), ...bombTiles('corn', 9, true)];
+const mixedTargets = data.selectBombTargets(mixedBombTiles, () => 0.99);
+assert.strictEqual(mixedTargets.length, 3);
+assert(mixedTargets.every(tile => tile.type === 'shrimp' && !tile.removed),
+    'bomb must skip insufficient types and already selected tiles');
+const coveredTiles = bombTiles('fish', 6).map(tile => ({...tile, blockedBy: ['upper-tile']}));
+assert.strictEqual(data.selectBombTargets(coveredTiles, () => 0.5).length, 6,
+    'covered but unselected tiles are eligible');
 assert.strictEqual(data.LEVELS.length, 10, 'V0.1 must contain ten levels');
 
 function insertGrouped(tray, type) {

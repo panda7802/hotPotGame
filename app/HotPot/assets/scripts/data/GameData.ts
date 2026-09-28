@@ -43,7 +43,7 @@ export const INGREDIENTS: IngredientConfig[] = [
     {id: 'corn', name: '玉米', color: '#F2C94C', dark: '#D49A28'},
     {id: 'fish', name: '鱼片', color: '#79B8D1', dark: '#427F9E'},
     {id: 'egg', name: '鹌鹑蛋', color: '#F0E3BF', dark: '#A7854E'},
-    {id: 'jzg', name: '金针菇', color: '#E8D9B0', dark: '#9A7A48'},
+    {id: 'jzg', name: '茶树菇', color: '#A4602B', dark: '#63321C'},
     {id: 'meetball', name: '肉丸', color: '#C98C62', dark: '#8A543A'},
     {id: 'ou', name: '莲藕', color: '#E3C69C', dark: '#9A7857'},
     {id: 'tomato', name: '番茄', color: '#E7543E', dark: '#A52F28'},
@@ -110,14 +110,22 @@ function buildPositions(count: number, layerIndex: number, targetRows?: number):
         {x: 38, y: -2}, {x: 0, y: 0},
     ];
     const baseOffset = offsets[layerIndex % offsets.length];
-    const offset = targetRows ? {x: baseOffset.x, y: Math.round(baseOffset.y * 0.15)} : baseOffset;
+    // 八行牌阵每层沿不同方向错开，让下层露出牌角与侧边。
+    // 纵向偏移限制在 16px 内，为最上/下排保留棋盘边距。
+    const stackedOffsets = [
+        {x: -28, y: -16}, {x: 0, y: 0},
+        {x: 28, y: 16}, {x: -12, y: 8},
+    ];
+    const offset = targetRows ? stackedOffsets[layerIndex % stackedOffsets.length] : baseOffset;
     const result: Array<{ x: number; y: number }> = [];
     for (let i = 0; i < count; i += 1) {
         const row = Math.floor(i / columns);
         const itemsInRow = Math.min(columns, count - row * columns);
         const col = i - row * columns;
+        // 相邻行左右交错，不改变同层行距，也不依赖随机数。
+        const rowStagger = targetRows ? (row % 2 === 0 ? -10 : 10) : 0;
         result.push({
-            x: (col - (itemsInRow - 1) / 2) * spacingX + offset.x,
+            x: (col - (itemsInRow - 1) / 2) * spacingX + offset.x + rowStagger,
             y: ((rows - 1) / 2 - row) * spacingY + offset.y,
         });
     }
@@ -161,4 +169,19 @@ export function createLevel(levelIndex: number): LevelData {
 
 export function getIngredient(type: IngredientType): IngredientConfig {
     return INGREDIENTS.find((item) => item.id === type) || INGREDIENTS[0];
+}
+
+/** 只选择棋盘上未拿取的牌（含被遮挡的牌），不修改棋盘或托盘。 */
+export function selectBombTargets(tiles: TileData[], random: () => number = Math.random): TileData[] {
+    const groups = new Map<IngredientType, TileData[]>();
+    tiles.filter((tile) => !tile.removed).forEach((tile) => {
+        const group = groups.get(tile.type) || [];
+        group.push(tile);
+        groups.set(tile.type, group);
+    });
+    const eligible = Array.from(groups.values()).filter((group) => group.length >= 3);
+    if (eligible.length === 0) return [];
+    const candidates = eligible[Math.floor(random() * eligible.length)].slice();
+    const count = candidates.length >= 6 ? 6 : 3;
+    return shuffle(candidates, random).slice(0, count);
 }

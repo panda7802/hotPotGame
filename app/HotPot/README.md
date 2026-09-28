@@ -1,6 +1,8 @@
-# 火锅叠叠消 V0.1
+# 锅里捞啥 V0.1
 
 基于 **Cocos Creator 3.8.8 + TypeScript** 的竖屏叠层点选三消 MVP。
+
+项目现状、最近提交和界面调整说明见 `../../doc/项目现状与界面布局.md`。
 
 ## 运行
 
@@ -24,8 +26,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 
 - `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
 - `assets/scripts/data/GameData.ts`：食材、10 关配置、可复现牌堆与遮挡关系生成。
-- `assets/resources/ingredients/`：13 种食材的透明 PNG 图片；单关最多使用 10 种。
-- `assets/resources/backgrounds/`：无雾气的整页、棋盘和右下角静态火锅背景资源。
+- `assets/resources/ingredients/`：默认加载 `handpainted-atlas.png` 中的 13 种手绘食材；原有单张 PNG 保留作加载失败时的备用，单关最多使用 10 种。
+- `assets/resources/backgrounds/`：当前加载 `tavern-bg.png` 烟火小馆背景，旧背景保留。
 - `assets/resources/audio/`：背景音乐、三消、过关和失败的 MP3 音频。
 - `tools/validate-levels.cjs`：关卡结构与可解路径验证。
 - `tools/build-wechat.ps1`：构建微信小游戏并可直接用微信开发者工具打开。
@@ -43,23 +45,26 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 | 05 | `corn.png` | 玉米 |
 | 06 | `fish.png` | 鱼片 |
 | 07 | `egg.png` | 鹌鹑蛋 |
-| 08 | `jzg.png` | 金针菇 |
+| 08 | `jzg.png` | 茶树菇（保留原资源名） |
 | 09 | `meetball.png` | 肉丸 |
 | 10 | `ou.png` | 莲藕 |
 | 11 | `tomato.png` | 番茄 |
 | 12 | `toufu.png` | 豆腐 |
 | 13 | `ydf.png` | 油豆腐 |
 
-正式美术可直接覆盖对应的同名 PNG。微信小游戏版本建议统一使用 `384 × 288`、保持 4:3 比例和透明背景，避免主包被原始大图撑大。
+当前手绘图集为透明 4 × 4 等分网格，前 13 格按上表顺序排列，末三格留空。第 8 格旧金针菇已停用，统一使用独立的 `jzg.png` 茶树菇。代码按实际像素大小取整切分，每张图等比适配牌面。更新其余默认美术请修改 `handpainted-atlas.png`；其他同名单张 PNG 仅影响备用图片。
+
+烟火小馆背景和图集由内置 ImageGen 生成，资源和生成说明见 `../../doc/烟火小馆美术接入.md`。发布微信版本前应检查主包体积并按实际构建结果配置纹理压缩或资源分包。
 
 ## V0.1 内容
 
-- 720 × 1280 竖屏布局
+- 720 × 1520 竖屏设计尺寸，短屏完整缩放显示，长屏扩展顶部和底部空间
+- 无描边的棋盘容器、独立七格托盘、带文字和次数的道具按钮；食材牌仅保留辨认叠层的细轮廓
 - 13 种可轮换食材的透明 PNG 美术，单关使用 3～10 种
 - 2～4 层的几何覆盖判定
 - 点击进入托盘、同类食材自动归并、三个同类食材自动消除，并带补位动画
 - 7 格托盘、胜利/失败面板、带二次确认的重新开始
-- 第 3 关起提供撤回、移出、洗牌道具，每关各 1 次
+- 第 3 关起提供撤回、炸、洗牌道具，每关各 1 次
 - 10 个数据驱动测试关卡（18～120 张牌），第 3 关起使用 8 行牌阵
 - 首次触摸后循环播放背景音乐，并播放三消、过关和失败音效
 
