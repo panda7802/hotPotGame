@@ -2,7 +2,7 @@
 
 基于 **Cocos Creator 3.8.8 + TypeScript** 的竖屏叠层点选三消 MVP。
 
-项目现状、最近提交和界面调整说明见 `../../doc/项目现状与界面布局.md`。
+跨电脑接手请先看 [设计与开发交接](../../doc/锅里捞啥-设计与开发交接.md) 和 [本轮改动记录](../../doc/锅里捞啥-改动记录-2026-09-28.md)。`项目现状与界面布局.md` 是早期阶段记录，部分布局和道具已更新。
 
 ## 运行
 
@@ -26,8 +26,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 
 - `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
 - `assets/scripts/data/GameData.ts`：食材、10 关配置、可复现牌堆与遮挡关系生成。
-- `assets/resources/ingredients/`：默认加载 `handpainted-atlas.png` 中的 13 种手绘食材；原有单张 PNG 保留作加载失败时的备用，单关最多使用 10 种。
-- `assets/resources/backgrounds/`：当前加载 `tavern-bg.png` 烟火小馆背景，旧背景保留。
+- `assets/resources/ingredients/`：默认从 `handpainted-atlas.png` 加载 12 种手绘食材，茶树菇独立加载 `jzg.png`；其他单张 PNG 保留作备用，单关最多使用 10 种。
+- `assets/resources/backgrounds/`：当前加载 `tavern-bg.png` 烟火小馆背景和 `title-d.png` 透明标题，旧背景保留。
 - `assets/resources/audio/`：背景音乐、三消、过关和失败的 MP3 音频。
 - `tools/validate-levels.cjs`：关卡结构与可解路径验证。
 - `tools/build-wechat.ps1`：构建微信小游戏并可直接用微信开发者工具打开。
@@ -59,12 +59,13 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 ## V0.1 内容
 
 - 720 × 1520 竖屏设计尺寸，短屏完整缩放显示，长屏扩展顶部和底部空间
-- 无描边的棋盘容器、独立七格托盘、带文字和次数的道具按钮；食材牌仅保留辨认叠层的细轮廓
+- 纸纹背景直接作为棋盘底，奶油色立体食材牌、木质七格托盘、带文字和次数的道具按钮
 - 13 种可轮换食材的透明 PNG 美术，单关使用 3～10 种
 - 2～4 层的几何覆盖判定
 - 点击进入托盘、同类食材自动归并、三个同类食材自动消除，并带补位动画
 - 7 格托盘、胜利/失败面板、带二次确认的重新开始
 - 第 3 关起提供撤回、炸、洗牌道具，每关各 1 次
+- “炸”从棋盘剩余食材中随机选一种：至少 6 张消除 6 张，3～5 张消除 3 张；不足 3 张不参与选择，无可选种类不扣次数，不影响托盘
 - 10 个数据驱动测试关卡（18～120 张牌），第 3 关起使用 8 行牌阵
 - 首次触摸后循环播放背景音乐，并播放三消、过关和失败音效
 
