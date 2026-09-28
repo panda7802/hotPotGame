@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "d4a73684-fc94-4d5d-a56f-ed93bce0f985",
+  "uuid": "340a6f53-9934-4565-9850-df81b0c06470",
   "files": [
     ".jpg",
     ".json"
@@ -10,34 +10,33 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "d4a73684-fc94-4d5d-a56f-ed93bce0f985@6c48a",
-      "displayName": "corn",
+      "uuid": "340a6f53-9934-4565-9850-df81b0c06470@6c48a",
+      "displayName": "hotpot-bg",
       "id": "6c48a",
       "name": "texture",
-      "ver": "1.0.22",
-      "imported": true,
-      "files": [
-        ".json"
-      ],
-      "subMetas": {},
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
         "minfilter": "linear",
         "magfilter": "linear",
         "mipfilter": "none",
-        "premultiplyAlpha": false,
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "d4a73684-fc94-4d5d-a56f-ed93bce0f985",
+        "imageUuidOrDatabaseUri": "340a6f53-9934-4565-9850-df81b0c06470",
         "visible": false
-      }
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
     }
   },
   "userData": {
     "type": "texture",
-    "redirect": "d4a73684-fc94-4d5d-a56f-ed93bce0f985@6c48a",
+    "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": false,
-    "fixAlphaTransparencyArtifacts": false
+    "redirect": "340a6f53-9934-4565-9850-df81b0c06470@6c48a"
   }
 }

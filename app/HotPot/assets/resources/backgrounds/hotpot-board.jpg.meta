@@ -2,7 +2,7 @@
   "ver": "1.0.27",
   "importer": "image",
   "imported": true,
-  "uuid": "c94cc62d-fd7d-48e2-a7c9-3f2ee6d03519",
+  "uuid": "b7c4ce19-eefa-4684-aa97-7a115a735bee",
   "files": [
     ".jpg",
     ".json"
@@ -10,34 +10,33 @@
   "subMetas": {
     "6c48a": {
       "importer": "texture",
-      "uuid": "c94cc62d-fd7d-48e2-a7c9-3f2ee6d03519@6c48a",
-      "displayName": "mushroom",
+      "uuid": "b7c4ce19-eefa-4684-aa97-7a115a735bee@6c48a",
+      "displayName": "hotpot-board",
       "id": "6c48a",
       "name": "texture",
-      "ver": "1.0.22",
-      "imported": true,
-      "files": [
-        ".json"
-      ],
-      "subMetas": {},
       "userData": {
         "wrapModeS": "clamp-to-edge",
         "wrapModeT": "clamp-to-edge",
         "minfilter": "linear",
         "magfilter": "linear",
         "mipfilter": "none",
-        "premultiplyAlpha": false,
         "anisotropy": 0,
         "isUuid": true,
-        "imageUuidOrDatabaseUri": "c94cc62d-fd7d-48e2-a7c9-3f2ee6d03519",
+        "imageUuidOrDatabaseUri": "b7c4ce19-eefa-4684-aa97-7a115a735bee",
         "visible": false
-      }
+      },
+      "ver": "1.0.22",
+      "imported": true,
+      "files": [
+        ".json"
+      ],
+      "subMetas": {}
     }
   },
   "userData": {
     "type": "texture",
-    "redirect": "c94cc62d-fd7d-48e2-a7c9-3f2ee6d03519@6c48a",
+    "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": false,
-    "fixAlphaTransparencyArtifacts": false
+    "redirect": "b7c4ce19-eefa-4684-aa97-7a115a735bee@6c48a"
   }
 }

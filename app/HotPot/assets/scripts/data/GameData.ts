@@ -32,27 +32,27 @@ export interface LevelData {
 }
 
 export const INGREDIENTS: IngredientConfig[] = [
-    { id: 'beef', name: '牛肉', color: '#D9574F', dark: '#9E302F' },
-    { id: 'shrimp', name: '鲜虾', color: '#FF8B62', dark: '#D85A45' },
-    { id: 'vegetable', name: '青菜', color: '#65B85A', dark: '#368744' },
-    { id: 'mushroom', name: '蘑菇', color: '#C69A72', dark: '#8B654E' },
-    { id: 'corn', name: '玉米', color: '#F2C94C', dark: '#D49A28' },
-    { id: 'fish', name: '鱼片', color: '#79B8D1', dark: '#427F9E' },
+    {id: 'beef', name: '牛肉', color: '#D9574F', dark: '#9E302F'},
+    {id: 'shrimp', name: '鲜虾', color: '#FF8B62', dark: '#D85A45'},
+    {id: 'vegetable', name: '青菜', color: '#65B85A', dark: '#368744'},
+    {id: 'mushroom', name: '蘑菇', color: '#C69A72', dark: '#8B654E'},
+    {id: 'corn', name: '玉米', color: '#F2C94C', dark: '#D49A28'},
+    {id: 'fish', name: '鱼片', color: '#79B8D1', dark: '#427F9E'},
 ];
 
 // Each layer is made from complete triples. A top-to-bottom solution always
 // exists, while imperfect choices can still fill the seven-slot tray.
 export const LEVELS: LevelConfig[] = [
-    { level: 1, title: '初识火锅', typeCount: 3, layers: [9, 9], traySize: 7 },
-    { level: 2, title: '三鲜开胃', typeCount: 4, layers: [15, 15], traySize: 7 },
-    { level: 3, title: '小菜叠盘', typeCount: 4, layers: [15, 15, 15], traySize: 7 },
-    { level: 4, title: '红汤沸腾', typeCount: 4, layers: [15, 15, 18], traySize: 7 },
-    { level: 5, title: '筷下生风', typeCount: 4, layers: [18, 18, 18], traySize: 7 },
-    { level: 6, title: '五味争鲜', typeCount: 5, layers: [21, 21, 18], traySize: 7 },
-    { level: 7, title: '叠叠红锅', typeCount: 5, layers: [15, 15, 15, 15], traySize: 7 },
-    { level: 8, title: '逼仄一格', typeCount: 5, layers: [15, 15, 18, 18], traySize: 7 },
-    { level: 9, title: '六味齐聚', typeCount: 6, layers: [18, 18, 18, 18], traySize: 7 },
-    { level: 10, title: '火锅大满贯', typeCount: 6, layers: [18, 18, 21, 21], traySize: 7 },
+    {level: 1, title: '初识火锅', typeCount: 3, layers: [9, 9], traySize: 7},
+    {level: 2, title: '三鲜开胃', typeCount: 4, layers: [15, 15], traySize: 7},
+    {level: 3, title: '小菜叠盘', typeCount: 4, layers: [15, 15, 15], traySize: 7},
+    {level: 4, title: '红汤沸腾', typeCount: 4, layers: [15, 15, 18], traySize: 7},
+    {level: 5, title: '筷下生风', typeCount: 4, layers: [18, 18, 18], traySize: 7},
+    {level: 6, title: '五味争鲜', typeCount: 5, layers: [21, 21, 18], traySize: 7},
+    {level: 7, title: '叠叠红锅', typeCount: 5, layers: [15, 15, 15, 15], traySize: 7},
+    {level: 8, title: '逼仄一格', typeCount: 5, layers: [15, 15, 18, 18], traySize: 7},
+    {level: 9, title: '六味齐聚', typeCount: 6, layers: [18, 18, 18, 18], traySize: 7},
+    {level: 10, title: '火锅大满贯', typeCount: 6, layers: [18, 18, 21, 21], traySize: 7},
 ];
 
 function seededRandom(seed: number): () => number {
@@ -89,8 +89,8 @@ function buildPositions(count: number, layerIndex: number): Array<{ x: number; y
     const spacingX = columns === 6 ? 96 : 108;
     const spacingY = 90;
     const offsets = [
-        { x: -27, y: -18 }, { x: 24, y: 17 }, { x: -11, y: 39 },
-        { x: 38, y: -2 }, { x: 0, y: 0 },
+        {x: -27, y: -18}, {x: 24, y: 17}, {x: -11, y: 39},
+        {x: 38, y: -2}, {x: 0, y: 0},
     ];
     const offset = offsets[layerIndex % offsets.length];
     const result: Array<{ x: number; y: number }> = [];
@@ -135,7 +135,7 @@ export function createLevel(levelIndex: number): LevelData {
             }
         }
     }
-    return { config, tiles, total: tiles.length };
+    return {config, tiles, total: tiles.length};
 }
 
 export function getIngredient(type: IngredientType): IngredientConfig {

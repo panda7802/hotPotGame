@@ -10,13 +10,13 @@ const typescript = require(path.join(creatorRoot, 'resources', 'app.asar.unpacke
 const sourcePath = path.join(__dirname, '..', 'assets', 'scripts', 'data', 'GameData.ts');
 const source = fs.readFileSync(sourcePath, 'utf8');
 const compiled = typescript.transpileModule(source, {
-    compilerOptions: { module: typescript.ModuleKind.CommonJS, target: typescript.ScriptTarget.ES2019 },
+    compilerOptions: {module: typescript.ModuleKind.CommonJS, target: typescript.ScriptTarget.ES2019},
     fileName: sourcePath,
     reportDiagnostics: true,
 });
 assert.strictEqual((compiled.diagnostics || []).length, 0, 'GameData.ts transpilation failed');
 
-const moduleObject = { exports: {} };
+const moduleObject = {exports: {}};
 vm.runInNewContext(`(function(module,exports){${compiled.outputText}\n})(module,module.exports);`, {
     module: moduleObject,
     console,
