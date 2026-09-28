@@ -24,6 +24,39 @@ vm.runInNewContext(`(function(module,exports){${compiled.outputText}\n})(module,
 const data = moduleObject.exports;
 assert.strictEqual(data.LEVELS.length, 10, 'V0.1 must contain ten levels');
 
+function insertGrouped(tray, type) {
+    let insertAt = tray.length;
+    for (let i = tray.length - 1; i >= 0; i -= 1) {
+        if (tray[i] === type) {
+            insertAt = i + 1;
+            break;
+        }
+    }
+    tray.splice(insertAt, 0, type);
+    return insertAt;
+}
+
+function insertGroupedAndResolve(tray, type) {
+    insertGrouped(tray, type);
+    for (let i = 0; i <= tray.length - 3; i += 1) {
+        if (tray[i] === tray[i + 1] && tray[i] === tray[i + 2]) {
+            tray.splice(i, 3);
+            break;
+        }
+    }
+    return tray;
+}
+
+// 回归测试：新牛肉先归并到两张牛肉后，再触发三消，虾保留在托盘中。
+const groupedTray = ['beef', 'beef', 'shrimp'];
+assert.strictEqual(insertGrouped(groupedTray, 'beef'), 2, 'new beef must join the existing beef group');
+assert.deepStrictEqual(
+    groupedTray,
+    ['beef', 'beef', 'beef', 'shrimp'],
+    'tray must automatically group identical ingredients',
+);
+assert.deepStrictEqual(insertGroupedAndResolve(['beef', 'beef', 'shrimp'], 'beef'), ['shrimp']);
+
 data.LEVELS.forEach((config, index) => {
     const level = data.createLevel(index);
     assert.strictEqual(level.total, config.layers.reduce((sum, count) => sum + count, 0));
@@ -49,8 +82,7 @@ data.LEVELS.forEach((config, index) => {
             tiles.forEach((tile) => {
                 assert(!tile.blockedBy.some((id) => !level.tiles.find((item) => item.id === id).removed));
                 tile.removed = true;
-                tray.push(type);
-                if (tray.filter((item) => item === type).length === 3) tray = tray.filter((item) => item !== type);
+                insertGroupedAndResolve(tray, type);
                 assert(tray.length < config.traySize, 'verified route overflowed tray');
             });
         });

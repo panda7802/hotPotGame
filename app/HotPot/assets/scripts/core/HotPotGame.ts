@@ -126,13 +126,13 @@ export class HotPotGame extends Component {
 
     private board!: Node;
     private trayNode!: Node;
+    private foodTransitionLayer!: Node;
     private levelLabel!: Label;
     private progressLabel!: Label;
     private toastLabel!: Label;
     private viewportHeight = DESIGN_HEIGHT;
     private verticalSpread = 0;
     private topSpread = 0;
-    private boardSpread = 0;
     private bottomSpread = 0;
 
     onLoad(): void {
@@ -150,7 +150,6 @@ export class HotPotGame extends Component {
             const safeTop = Math.max(0, visibleSize.height - safeArea.y - safeArea.height);
             const safeBottom = Math.max(0, safeArea.y);
             this.topSpread = Math.max(0, this.verticalSpread - safeTop - 18);
-            this.boardSpread = Math.max(this.topSpread, this.verticalSpread * 0.75);
             this.bottomSpread = Math.max(0, this.verticalSpread - safeBottom - 18);
         }
         this.node.children.slice().forEach((child) => {
@@ -267,7 +266,8 @@ export class HotPotGame extends Component {
 
         this.board = new Node('Board');
         this.node.addChild(this.board);
-        this.board.setPosition(0, 112 + this.boardSpread);
+        // 棋盘跟随顶部安全区移动，并与上方关卡信息条保留约 30px 的视觉间隔。
+        this.board.setPosition(0, 82 + this.topSpread);
         transform(this.board, 680, 570);
 
         const boardBack = new Node('BoardBack');
@@ -314,7 +314,7 @@ export class HotPotGame extends Component {
         trayCard.setPosition(0, -338);
         drawRoundRect(trayCard, 700, 232, 34, '#FFF8E9', '#F2C88F', 3);
 
-        makeLabel(this.node, '✦  托盘  ·  凑齐 3 个自动消除  ✦', 24, '#9B3D28', new Vec3(0, -249), 630, 40);
+        makeLabel(this.node, '✦  托盘  ·  同类归并，凑齐 3 个消除  ✦', 24, '#9B3D28', new Vec3(0, -249), 630, 40);
         this.trayNode = new Node('Tray');
         this.node.addChild(this.trayNode);
         this.trayNode.setPosition(0, -337);
@@ -324,6 +324,11 @@ export class HotPotGame extends Component {
         this.toastLabel = makeLabel(this.node, '', 30, '#FFFFFF', new Vec3(0, -480), 570, 48);
         opacity(this.toastLabel.node, 0);
         makeButton(this.node, '重新开始', new Vec3(0, -565 - this.bottomSpread), 280, 76, '#ED4A32', () => this.restartLevel());
+
+        // 移动中的食物牌统一放在最后创建的顶层容器，避免被棋盘、托盘和按钮边框遮挡。
+        this.foodTransitionLayer = new Node('FoodTransitionLayer');
+        this.node.addChild(this.foodTransitionLayer);
+        transform(this.foodTransitionLayer, DESIGN_WIDTH, this.viewportHeight);
     }
 
     /** 加载经过压缩的静态插画背景和右下角独立火锅。 */
@@ -495,6 +500,7 @@ export class HotPotGame extends Component {
         this.board.children.slice().forEach((child) => {
             if (child.name.startsWith('Tile_')) child.destroy();
         });
+        this.foodTransitionLayer.children.slice().forEach((child) => child.destroy());
         this.levelLabel.string = `第 ${this.levelData.config.level} / 10 关  ·  ${this.levelData.config.title}`;
         this.levelData.tiles.forEach((tile) => this.createTileNode(tile));
         this.refreshTileStates();
@@ -578,16 +584,21 @@ export class HotPotGame extends Component {
 
         this.locked = true;
         tile.removed = true;
-        this.insertIntoTray(tile.type);
-        const targetIndex = this.tray.lastIndexOf(tile.type);
+        const targetIndex = this.insertIntoTray(tile.type);
         const targetX = -288 + Math.min(targetIndex, 6) * 96;
         const trayUI = this.trayNode.getComponent(UITransform)!;
         const boardUI = this.board.getComponent(UITransform)!;
-        const world = trayUI.convertToWorldSpaceAR(new Vec3(targetX, 0));
-        const local = boardUI.convertToNodeSpaceAR(world);
-        node.setSiblingIndex(this.board.children.length - 1);
+        const transitionUI = this.foodTransitionLayer.getComponent(UITransform)!;
+        const startWorld = boardUI.convertToWorldSpaceAR(node.position);
+        const targetWorld = trayUI.convertToWorldSpaceAR(new Vec3(targetX, 0));
+
+        // 脱离棋盘并保持屏幕位置不变；此后整段移动轨迹都处于界面最上层。
+        node.setParent(this.foodTransitionLayer);
+        node.setPosition(transitionUI.convertToNodeSpaceAR(startWorld));
+        node.setSiblingIndex(this.foodTransitionLayer.children.length - 1);
+        const targetLocal = transitionUI.convertToNodeSpaceAR(targetWorld);
         tween(node).to(0.08, {scale: new Vec3(0.9, 0.9, 1)})
-            .to(0.2, {position: local, scale: new Vec3(0.72, 0.72, 1)}, {easing: 'cubicOut'})
+            .to(0.2, {position: targetLocal, scale: new Vec3(0.72, 0.72, 1)}, {easing: 'cubicOut'})
             .call(() => {
                 node.destroy();
                 this.refreshTileStates();
@@ -596,7 +607,7 @@ export class HotPotGame extends Component {
         this.updateProgress();
     }
 
-    private insertIntoTray(type: IngredientType): void {
+    private insertIntoTray(type: IngredientType): number {
         let insertAt = this.tray.length;
         for (let i = this.tray.length - 1; i >= 0; i -= 1) {
             if (this.tray[i] === type) {
@@ -605,20 +616,15 @@ export class HotPotGame extends Component {
             }
         }
         this.tray.splice(insertAt, 0, type);
+        return insertAt;
     }
 
     private resolveTray(): void {
         this.renderTray();
-        const counts = new Map<IngredientType, number>();
-        let matchType: IngredientType | null = null;
-        this.tray.forEach((type) => {
-            const count = (counts.get(type) || 0) + 1;
-            counts.set(type, count);
-            if (count >= 3) matchType = type;
-        });
-        if (matchType) {
+        const matchStart = this.findAdjacentMatch();
+        if (matchStart >= 0) {
             this.combo += 1;
-            this.animateMatch(matchType);
+            this.animateMatch(matchStart);
         } else if (this.remainingTiles() === 0) {
             this.endGame(true);
         } else if (this.tray.length >= this.levelData.config.traySize) {
@@ -629,48 +635,115 @@ export class HotPotGame extends Component {
         }
     }
 
-    private animateMatch(type: IngredientType): void {
+    /** 返回第一组三个连续同类食材的起始下标；没有则返回 -1。 */
+    private findAdjacentMatch(): number {
+        for (let i = 0; i <= this.tray.length - 3; i += 1) {
+            if (this.tray[i] === this.tray[i + 1] && this.tray[i] === this.tray[i + 2]) return i;
+        }
+        return -1;
+    }
+
+    private animateMatch(matchStart: number): void {
         this.playEffect('match', 0.82);
-        const matching = this.trayNode.children.filter((slot) => (slot as Node & {
-            trayType?: IngredientType
-        }).trayType === type);
-        matching.slice(0, 3).forEach((slot) => {
-            tween(slot).to(0.12, {scale: new Vec3(1.16, 1.16, 1)}).start();
-            tween(opacity(slot)).to(0.25, {opacity: 0}).start();
+        const trayItems = this.trayNode.children.filter((child) => child.name.startsWith('TrayItem_'));
+        const matching = trayItems.slice(matchStart, matchStart + 3);
+        matching.forEach((item, index) => {
+            const start = item.position.clone();
+            tween(item)
+                .delay(index * 0.04)
+                .to(0.14, {
+                    position: new Vec3(start.x, start.y + 12),
+                    scale: new Vec3(1.3, 1.3, 1),
+                }, {easing: 'backOut'})
+                .to(0.3, {
+                    position: new Vec3(start.x, start.y + 30),
+                    scale: new Vec3(0.15, 0.15, 1),
+                }, {easing: 'cubicIn'})
+                .start();
+            tween(opacity(item))
+                .delay(0.16 + index * 0.04)
+                .to(0.28, {opacity: 0})
+                .start();
         });
+
+        // 与消除同时开始：直接移动右侧的真实食材节点，不创建副本、不保留原图。
+        trayItems.slice(matchStart + 3, this.tray.length).forEach((item, followerOffset) => {
+            const trayIndex = matchStart + 3 + followerOffset;
+            const targetX = -288 + (trayIndex - 3) * 96;
+            tween(item)
+                .to(0.62, {
+                    position: new Vec3(targetX, 0),
+                    scale: Vec3.ONE,
+                }, {easing: 'sineInOut'})
+                .start();
+        });
+        this.createTrayMatchBurst(-288 + (matchStart + 1) * 96);
         this.showToast(`${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`, '#D64A36');
         this.scheduleOnce(() => {
-            let removed = 0;
-            this.tray = this.tray.filter((item) => {
-                if (item === type && removed < 3) {
-                    removed += 1;
-                    return false;
-                }
-                return true;
-            });
+            this.tray.splice(matchStart, 3);
             this.renderTray();
             if (this.remainingTiles() === 0) this.endGame(true);
             else this.locked = false;
-        }, 0.28);
+        }, 0.68);
+    }
+
+    /** 在三张牌的中心产生一圈短促粒子，强化消除反馈。 */
+    private createTrayMatchBurst(centerX: number): void {
+        const colors = ['#FFD66B', '#FF8A52', '#FFF1B8'];
+        for (let i = 0; i < 12; i += 1) {
+            const particle = new Node(`MatchParticle_${i}`);
+            this.trayNode.addChild(particle);
+            particle.setPosition(centerX, 4);
+            transform(particle, 22, 22);
+            const graphics = particle.addComponent(Graphics);
+            graphics.fillColor = hex(colors[i % colors.length]);
+            graphics.circle(0, 0, i % 3 === 0 ? 10 : 7);
+            graphics.fill();
+
+            const angle = Math.PI * 2 * i / 12;
+            const distance = 66 + (i % 4) * 10;
+            tween(particle)
+                .to(0.55, {
+                    position: new Vec3(
+                        centerX + Math.cos(angle) * distance,
+                        4 + Math.sin(angle) * distance + 16,
+                    ),
+                    scale: new Vec3(0.45, 0.45, 1),
+                }, {easing: 'quadOut'})
+                .call(() => particle.destroy())
+                .start();
+            tween(opacity(particle))
+                .delay(0.16)
+                .to(0.39, {opacity: 0})
+                .start();
+        }
     }
 
     private renderTray(): void {
         this.trayNode.children.slice().forEach((child) => child.destroy());
+
+        // 第一层只绘制固定槽位，补位时边框保持不动。
         for (let i = 0; i < this.levelData.config.traySize; i += 1) {
             const slot = new Node(`TraySlot_${i}`);
             this.trayNode.addChild(slot);
             slot.setPosition(-288 + i * 96, 0);
             drawRoundRect(slot, 82, 84, 15, '#FFF4E5', '#7B3927', 2);
-            if (this.tray[i]) {
-                (slot as Node & { trayType?: IngredientType }).trayType = this.tray[i];
-                const ingredient = getIngredient(this.tray[i]);
-                if (this.ingredientFrames.has(this.tray[i])) {
-                    this.addIngredientImage(slot, this.tray[i], false, TRAY_IMAGE_WIDTH, TRAY_IMAGE_HEIGHT);
-                } else {
-                    makeLabel(slot, '?', 32, ingredient.dark, Vec3.ZERO, 56, 48);
-                }
+            if (!this.tray[i]) makeLabel(slot, String(i + 1), 18, '#B78E68', Vec3.ZERO, 40, 24);
+        }
+
+        // 第二层放真实食材节点；全部位于固定槽位之上，并可直接执行左移动画。
+        for (let i = 0; i < this.tray.length; i += 1) {
+            const type = this.tray[i];
+            const item = new Node(`TrayItem_${i}`);
+            this.trayNode.addChild(item);
+            item.setPosition(-288 + i * 96, 0);
+            transform(item, 82, 84);
+            (item as Node & { trayType?: IngredientType }).trayType = type;
+            const ingredient = getIngredient(type);
+            if (this.ingredientFrames.has(type)) {
+                this.addIngredientImage(item, type, false, TRAY_IMAGE_WIDTH, TRAY_IMAGE_HEIGHT);
             } else {
-                makeLabel(slot, String(i + 1), 18, '#B78E68', Vec3.ZERO, 40, 24);
+                makeLabel(item, '?', 32, ingredient.dark, Vec3.ZERO, 56, 48);
             }
         }
     }
@@ -711,7 +784,7 @@ export class HotPotGame extends Component {
         makeLabel(panel, won ? '锅底见啦！' : '托盘满啦！', 48,
             won ? '#C94836' : '#8B3D32', new Vec3(0, 150), 500, 70);
         makeLabel(panel, won ? '所有食材都已经下锅\n下一关会有更多叠层' :
-            '还差一点就成功了\n试试优先凑成托盘里的两张牌', 25, '#775145', new Vec3(0, 55), 480, 100, true);
+            '还差一点就成功了\n试试连续拿取三个同类食材', 25, '#775145', new Vec3(0, 55), 480, 100, true);
         if (won && this.levelIndex < LEVELS.length - 1) {
             makeButton(panel, '下一关', new Vec3(0, -73), 300, 72, '#D75542', () => this.nextLevel());
         } else if (won) {
