@@ -97,11 +97,11 @@ function drawFoodTile(node: Node, width: number, height: number, blocked = false
         graphics.fill();
     };
     layer(-7, 1, '#4B2B17', 28);
-    layer(-4, 0, blocked ? '#9D866B' : '#B99A72');
-    layer(0, 0, blocked ? '#BCAF97' : '#D5BE99');
-    layer(1, 1.5, blocked ? '#D8CBB5' : '#FFF5DF');
+    layer(-4, 0, blocked ? '#665746' : '#B99A72');
+    layer(0, 0, blocked ? '#756954' : '#D5BE99');
+    layer(1, 1.5, blocked ? '#8C877B' : '#FFF5DF');
     // 顶边轻微提亮，不使用粗描边或整张白色背景。
-    graphics.strokeColor = hex(blocked ? '#E0D5C2' : '#FFFCF2');
+    graphics.strokeColor = hex(blocked ? '#8C8B85' : '#FFFCF2');
     graphics.lineWidth = 1;
     graphics.moveTo(-width / 2 + 13, height / 2 - 2);
     graphics.lineTo(width / 2 - 13, height / 2 - 2);
@@ -654,6 +654,7 @@ export class HotPotGame extends Component {
     }
 
     private loadLevel(index: number): void {
+        this.clearMatchEffects();
         this.levelIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
         this.levelData = createLevel(this.levelIndex);
         this.tray = [];
@@ -662,7 +663,7 @@ export class HotPotGame extends Component {
         this.gameEnded = false;
         this.combo = 0;
         this.lastMoveSnapshot = null;
-        const toolsEnabled = this.levelIndex >= 2;
+        const toolsEnabled = this.levelIndex >= 1;
         this.toolUses = toolsEnabled ? {undo: 1, bomb: 1, shuffle: 1} : {undo: 0, bomb: 0, shuffle: 0};
         this.toolBar.active = toolsEnabled;
         this.updateToolButtons();
@@ -673,19 +674,19 @@ export class HotPotGame extends Component {
             if (child.name.startsWith('Tile_')) child.destroy();
         });
         this.foodTransitionLayer.children.slice().forEach((child) => child.destroy());
-        this.levelLabel.string = `第 ${this.levelData.config.level} / 10 关  ·  ${this.levelData.config.title}`;
+        this.levelLabel.string = `第 ${this.levelData.config.level} / ${LEVELS.length} 关  ·  ${this.levelData.config.title}`;
         this.levelData.tiles.forEach((tile) => this.createTileNode(tile));
         this.refreshTileStates();
         this.renderTray();
         this.updateProgress();
-        this.showToast('看清叠层，别让托盘塞满！', '#8A4B34');
+        // this.showToast('看清叠层，别让托盘塞满！', '#8A4B34');
     }
 
     private createTileNode(tile: TileData): void {
         const node = new Node(`Tile_${tile.id}`);
         this.board.addChild(node);
         node.setPosition(tile.x, tile.y, tile.layer);
-        const tileScale = this.levelData.config.rows === 8 ? EIGHT_ROW_TILE_SCALE : 1;
+        const tileScale = this.levelData.config.tileScale || (this.levelData.config.rows === 8 ? EIGHT_ROW_TILE_SCALE : 1);
         node.setScale(tileScale, tileScale, 1);
         transform(node, TILE_WIDTH, TILE_HEIGHT);
         node.on(Node.EventType.TOUCH_END, () => this.onTileClicked(tile));
@@ -718,7 +719,7 @@ export class HotPotGame extends Component {
         sprite.sizeMode = Sprite.SizeMode.CUSTOM;
         sprite.spriteFrame = frame;
         // 中性明暗保留食材本身的色相，避免全部染成黄褐色后难以辨认。
-        sprite.color = blocked ? hex('#B9B9B9') : Color.WHITE;
+        sprite.color = blocked ? hex('#737373') : Color.WHITE;
     }
 
     private findTile(id: string): TileData | undefined {
@@ -779,6 +780,7 @@ export class HotPotGame extends Component {
         node.setSiblingIndex(this.foodTransitionLayer.children.length - 1);
         const targetLocal = transitionUI.convertToNodeSpaceAR(targetWorld);
         const startScale = node.scale.clone();
+        const movingLevel = this.levelData;
         tween(node).to(0.08, {
             scale: new Vec3(startScale.x * 0.9, startScale.y * 0.9, 1),
         }).to(0.2, {
@@ -787,6 +789,7 @@ export class HotPotGame extends Component {
         }, {easing: 'cubicOut'})
             .call(() => {
                 node.destroy();
+                if (this.levelData !== movingLevel) return;
                 this.refreshTileStates();
                 this.resolveTray();
             }).start();
@@ -811,7 +814,7 @@ export class HotPotGame extends Component {
         if (matchStart >= 0) {
             this.combo += 1;
             this.animateMatch(matchStart);
-        } else if (this.remainingTiles() === 0) {
+        } else if (this.remainingTiles() === 0 && this.tray.length === 0) {
             this.endGame(true);
         } else if (this.tray.length >= this.levelData.config.traySize) {
             this.endGame(false);
@@ -833,7 +836,13 @@ export class HotPotGame extends Component {
         this.playEffect('match', 0.82);
         const trayItems = this.trayNode.children.filter((child) => child.name.startsWith('TrayItem_'));
         const matching = trayItems.slice(matchStart, matchStart + 3);
+        const effects = new Node('MatchEffects');
+        this.trayNode.addChild(effects);
+        // Commit the match before allowing another click. Animation nodes no
+        // longer occupy slots and cannot modify a later tray or restarted game.
+        this.tray.splice(matchStart, 3);
         matching.forEach((item) => {
+            item.setParent(effects);
             const start = item.position.clone();
             tween(item)
                 .to(0.08, {scale: new Vec3(1.12, 0.78, 1)})
@@ -849,11 +858,11 @@ export class HotPotGame extends Component {
                 .delay(0.34)
                 .to(0.22, {opacity: 0})
                 .start();
-            this.createTrayMatchBurst(start.x);
+            this.createTrayMatchBurst(start.x, effects);
         });
 
         // 与消除同时开始：直接移动右侧的真实食材节点，不创建副本、不保留原图。
-        trayItems.slice(matchStart + 3, this.tray.length).forEach((item, followerOffset) => {
+        trayItems.slice(matchStart + 3).forEach((item, followerOffset) => {
             const trayIndex = matchStart + 3 + followerOffset;
             const targetX = TRAY_START_X + (trayIndex - 3) * TRAY_SPACING;
             tween(item)
@@ -864,20 +873,24 @@ export class HotPotGame extends Component {
                 .start();
         });
         this.showToast(`${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`, '#D64A36');
-        this.scheduleOnce(() => {
-            this.tray.splice(matchStart, 3);
-            this.renderTray();
-            if (this.remainingTiles() === 0) this.endGame(true);
-            else this.locked = false;
-        }, 0.82);
+        tween(effects).delay(0.82).call(() => effects.destroy()).start();
+        if (this.remainingTiles() === 0 && this.tray.length === 0) this.endGame(true);
+        else this.locked = false;
+    }
+
+    private clearMatchEffects(): void {
+        this.trayNode.children.slice().filter(child => child.name === 'MatchEffects').forEach(child => {
+            child.removeFromParent();
+            child.destroy();
+        });
     }
 
     /** 星芒从每张牌的原位向四周散开，三个节点沿同一时间轴同步消除。 */
-    private createTrayMatchBurst(centerX: number): void {
+    private createTrayMatchBurst(centerX: number, parent: Node): void {
         const colors = ['#FFD66B', '#FF8A52', '#FFF1B8'];
         for (let i = 0; i < 16; i += 1) {
             const particle = new Node(`MatchParticle_${i}`);
-            this.trayNode.addChild(particle);
+            parent.addChild(particle);
             particle.setPosition(centerX, 0);
             transform(particle, 22, 22);
             const graphics = particle.addComponent(Graphics);
@@ -921,6 +934,7 @@ export class HotPotGame extends Component {
         this.updateProgress();
         // destroy 在帧末才生效，先移出托盘，确保消除动画只选中本次创建的三个节点。
         this.trayNode.children.slice().forEach((child) => {
+            if (child.name === 'MatchEffects') return;
             child.removeFromParent();
             child.destroy();
         });
@@ -986,12 +1000,42 @@ export class HotPotGame extends Component {
             g.lineTo(-3, -16);
             arrow(-24, 10, -1);
         } else if (type === 'bomb') {
-            // 圆形炸弹、引线与火花。
-            g.circle(-3, -5, 17);
-            g.moveTo(5, 10);
-            g.bezierCurveTo(4, 24, 19, 13, 20, 25);
-            g.moveTo(24, 21); g.lineTo(30, 24);
-            g.moveTo(20, 29); g.lineTo(21, 35);
+            // 实心铁壳、暖色轮廓和高光，缩小后仍能辨认炸弹。
+            g.fillColor = hex('#292D35');
+            g.strokeColor = hex('#FFE6AE');
+            g.lineWidth = 3;
+            g.circle(-5, -7, 21);
+            g.fill();
+            g.stroke();
+            g.fillColor = hex('#444B57');
+            g.circle(-9, -3, 14);
+            g.fill();
+            g.strokeColor = hex('#FFF5DA');
+            g.lineWidth = 3.5;
+            g.moveTo(-18, -5);
+            g.bezierCurveTo(-18, 2, -14, 7, -8, 8);
+            g.stroke();
+            // 引线座和弯曲引线。
+            g.fillColor = hex('#D9AA62');
+            g.roundRect(1, 9, 11, 9, 3);
+            g.fill();
+            g.strokeColor = hex('#FFE0A0');
+            g.lineWidth = 4;
+            g.moveTo(7, 17);
+            g.bezierCurveTo(6, 28, 20, 17, 20, 28);
+            g.stroke();
+            // 橙色放射火花与亮黄色火芯。
+            g.strokeColor = hex('#FFAE4D');
+            g.lineWidth = 3;
+            for (let ray = 0; ray < 5; ray += 1) {
+                const angle = ray * Math.PI * 2 / 5;
+                g.moveTo(20 + Math.cos(angle) * 6, 29 + Math.sin(angle) * 6);
+                g.lineTo(20 + Math.cos(angle) * 11, 29 + Math.sin(angle) * 11);
+            }
+            g.stroke();
+            g.fillColor = hex('#FFF2AF');
+            g.circle(20, 29, 4);
+            g.fill();
         } else {
             // 两条交叉箭头。
             g.moveTo(-28, -14);
@@ -1001,7 +1045,7 @@ export class HotPotGame extends Component {
             g.bezierCurveTo(-4, 14, 2, -14, 27, -14);
             arrow(27, -14, 1);
         }
-        g.stroke();
+        if (type !== 'bomb') g.stroke();
         const badge = new Node('UsesBadge');
         button.addChild(badge);
         badge.setPosition(72, 0);
@@ -1021,7 +1065,7 @@ export class HotPotGame extends Component {
     }
 
     private canUseTool(type: ToolType): boolean {
-        if (this.levelIndex < 2) return false;
+        if (this.levelIndex < 1) return false;
         if (this.locked || this.gameEnded) {
             this.showToast('请等待当前动画结束', '#8A4B34');
             return false;
@@ -1040,6 +1084,7 @@ export class HotPotGame extends Component {
             return;
         }
         const removed = new Set(this.lastMoveSnapshot.removedIds);
+        this.clearMatchEffects();
         this.tray = this.lastMoveSnapshot.tray.slice();
         this.levelData.tiles.forEach((tile) => {
             tile.removed = removed.has(tile.id);

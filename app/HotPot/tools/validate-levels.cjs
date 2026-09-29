@@ -41,7 +41,7 @@ assert(mixedTargets.every(tile => tile.type === 'shrimp' && !tile.removed),
 const coveredTiles = bombTiles('fish', 6).map(tile => ({...tile, blockedBy: ['upper-tile']}));
 assert.strictEqual(data.selectBombTargets(coveredTiles, () => 0.5).length, 6,
     'covered but unselected tiles are eligible');
-assert.strictEqual(data.LEVELS.length, 10, 'V0.1 must contain ten levels');
+assert.strictEqual(data.LEVELS.length, 3, 'must contain exactly three levels');
 
 function insertGrouped(tray, type) {
     let insertAt = tray.length;
@@ -81,10 +81,40 @@ data.LEVELS.forEach((config, index) => {
     const level = data.createLevel(index);
     assert.strictEqual(level.total, config.layers.reduce((sum, count) => sum + count, 0));
     assert.strictEqual(config.traySize, 7);
+    assert.strictEqual(level.total, [18, 30, 888][index]);
+    if (config.level === 3) {
+        assert.strictEqual(config.layers.length, 37, 'level three must have 37 layers');
+        assert(config.layers.every(count => count === 24), 'each deep layer must contain 24 tiles');
+        level.tiles.forEach(tile => {
+            assert(!level.tiles.some(other => other.id !== tile.id && other.layer === tile.layer &&
+                Math.abs(other.x - tile.x) < 92 * 1.2 * config.tileScale &&
+                Math.abs(other.y - tile.y) < 76 * 1.2 * config.tileScale),
+                `${tile.id} must not overlap another tile in its own layer`);
+        });
+        level.tiles.filter(tile => tile.layer < config.layers.length - 1).forEach(tile => {
+            const directlyAbove = level.tiles.filter(upper => upper.layer === tile.layer + 1 &&
+                Math.abs(upper.x - tile.x) < 92 * 1.2 * 0.82 &&
+                Math.abs(upper.y - tile.y) < 76 * 1.2 * 0.82);
+            assert(directlyAbove.length >= 2, `${tile.id} must be covered by at least two tiles in the next layer`);
+            assert(directlyAbove.every(upper => tile.blockedBy.includes(upper.id)),
+                `${tile.id} must remain blocked by each overlapping tile`);
+        });
+        for (let layer = 0; layer < config.layers.length - 1; layer += 1) {
+            const lowerTiles = level.tiles.filter(tile => tile.layer === layer);
+            const upperTiles = level.tiles.filter(tile => tile.layer === layer + 1);
+            const coveredRows = new Set(lowerTiles.filter(tile => {
+                const blockers = upperTiles.filter(upper => tile.blockedBy.includes(upper.id));
+                return new Set(blockers.map(upper => upper.y)).size >= 2;
+            }).map(tile => tile.y));
+            assert(coveredRows.size >= 3,
+                `level three layer ${layer} must include vertical overlaps`);
+        }
+    }
     assert(config.typeCount >= 1 && config.typeCount <= 10, 'each level must use between one and ten ingredient types');
     assert.strictEqual(new Set(level.tiles.map((tile) => tile.type)).size, config.typeCount,
         `level ${config.level} must use exactly ${config.typeCount} ingredient types`);
-    if (index >= 2) {
+    if (config.rows === 8) {
+        const imageHeight = config.level === 3 ? (76 * 1.2 - 4) * 0.82 : data.EIGHT_ROW_IMAGE_HEIGHT;
         assert.strictEqual(config.rows, 8, `level ${config.level} must use the eight-row layout`);
         config.layers.forEach((_, layerIndex) => {
             const rowYs = Array.from(new Set(level.tiles
@@ -92,7 +122,7 @@ data.LEVELS.forEach((config, index) => {
                 .map((tile) => tile.y))).sort((a, b) => a - b);
             assert.strictEqual(rowYs.length, 8, `level ${config.level} layer ${layerIndex} must contain eight rows`);
             for (let row = 1; row < rowYs.length; row += 1) {
-                assert(rowYs[row] - rowYs[row - 1] - data.EIGHT_ROW_IMAGE_HEIGHT >= data.EIGHT_ROW_IMAGE_HEIGHT * 0.1,
+                assert(rowYs[row] - rowYs[row - 1] - imageHeight >= imageHeight * 0.1,
                     `level ${config.level} layer ${layerIndex} image gap must be at least 10% of image height`);
             }
         });
@@ -100,7 +130,7 @@ data.LEVELS.forEach((config, index) => {
     config.layers.forEach((count) => assert.strictEqual(count % 3, 0));
     level.tiles.forEach((tile) => {
         seenIngredientTypes.add(tile.type);
-        const tileScale = config.rows === 8 ? 0.82 : 1;
+        const tileScale = config.tileScale || (config.rows === 8 ? 0.82 : 1);
         assert(Math.abs(tile.x) + 92 * 1.2 * tileScale / 2 <= 344 &&
             Math.abs(tile.y) + 76 * 1.2 * tileScale / 2 <= 420, 'tile outside board');
         if (index >= 2) assert(Math.abs(tile.y) + data.EIGHT_ROW_IMAGE_HEIGHT / 2 <= 420,
@@ -108,6 +138,14 @@ data.LEVELS.forEach((config, index) => {
         tile.blockedBy.forEach((id) => {
             const blocker = level.tiles.find((candidate) => candidate.id === id);
             assert(blocker && blocker.layer > tile.layer, 'blocker must be higher');
+            if (config.level === 3) {
+                const width = 92 * 1.2 * tileScale;
+                const height = 76 * 1.2 * tileScale;
+                const overlapWidth = width - Math.abs(tile.x - blocker.x);
+                const overlapHeight = height - Math.abs(tile.y - blocker.y);
+                assert(overlapWidth * overlapHeight / (width * height) >= 0.2,
+                    `${tile.id} and ${blocker.id} must overlap by at least 20% of the tile area`);
+            }
         });
     });
 

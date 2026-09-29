@@ -16,6 +16,7 @@ export interface LevelConfig {
     layers: number[];
     traySize: number;
     rows?: number;
+    tileScale?: number;
     typeOffset?: number;
 }
 
@@ -54,16 +55,9 @@ export const INGREDIENTS: IngredientConfig[] = [
 // Each layer is made from complete triples. A top-to-bottom solution always
 // exists, while imperfect choices can still fill the seven-slot tray.
 export const LEVELS: LevelConfig[] = [
-    {level: 1, title: '初识火锅', typeCount: 3, layers: [9, 9], traySize: 7},
-    {level: 2, title: '三鲜开胃', typeCount: 4, layers: [15, 15], traySize: 7},
-    {level: 3, title: '小菜叠盘', typeCount: 5, typeOffset: 3, layers: [24, 24, 24], traySize: 7, rows: 8},
-    {level: 4, title: '红汤沸腾', typeCount: 6, typeOffset: 4, layers: [24, 24, 30], traySize: 7, rows: 8},
-    {level: 5, title: '筷下生风', typeCount: 7, typeOffset: 5, layers: [30, 30, 24], traySize: 7, rows: 8},
-    {level: 6, title: '五味争鲜', typeCount: 8, typeOffset: 6, layers: [30, 30, 30], traySize: 7, rows: 8},
-    {level: 7, title: '叠叠红锅', typeCount: 9, typeOffset: 0, layers: [24, 24, 24, 24], traySize: 7, rows: 8},
-    {level: 8, title: '逼仄一格', typeCount: 10, typeOffset: 3, layers: [24, 24, 24, 30], traySize: 7, rows: 8},
-    {level: 9, title: '十味齐聚', typeCount: 10, typeOffset: 0, layers: [24, 30, 30, 24], traySize: 7, rows: 8},
-    {level: 10, title: '火锅大满贯', typeCount: 10, typeOffset: 3, layers: [30, 30, 30, 30], traySize: 7, rows: 8},
+    {level: 1, title: '开锅尝鲜', typeCount: 3, layers: [9, 9], traySize: 7},
+    {level: 2, title: '热锅练手', typeCount: 4, layers: [15, 15], traySize: 7},
+    {level: 3, title: '千层盛宴', typeCount: 10, typeOffset: 3, layers: Array(37).fill(24), traySize: 7, tileScale: 0.82},
 ];
 
 function seededRandom(seed: number): () => number {
@@ -132,13 +126,35 @@ function buildPositions(count: number, layerIndex: number, targetRows?: number):
     return result;
 }
 
+// Six separate groups alternate square/diamond arrangements. Every tile
+// overlaps two tiles in the adjacent layer by at least 20% of its area,
+// without overlaps within a layer or cumulative drift across 37 layers.
+function buildLevelThreePositions(config: LevelConfig): Array<Array<{ x: number; y: number }>> {
+    return config.layers.map((_, layer) => {
+        const offsets = layer % 2 === 0
+            ? [{x: -48, y: -42}, {x: 48, y: -42}, {x: -48, y: 42}, {x: 48, y: 42}]
+            : [{x: -96, y: 0}, {x: 96, y: 0}, {x: 0, y: -84}, {x: 0, y: 84}];
+        const positions: Array<{ x: number; y: number }> = [];
+        for (let row = 0; row < 3; row += 1) {
+            for (let col = 0; col < 2; col += 1) {
+                offsets.forEach(offset => positions.push({
+                    x: (col - 0.5) * 288 + offset.x,
+                    y: (1 - row) * 252 + offset.y,
+                }));
+            }
+        }
+        return positions;
+    });
+}
+
 export function createLevel(levelIndex: number): LevelData {
     const config = LEVELS[levelIndex];
     const random = seededRandom(20260923 + config.level * 97);
     const tiles: TileData[] = [];
     let id = 0;
+    const stackedPositions = config.level === 3 ? buildLevelThreePositions(config) : undefined;
     config.layers.forEach((count, layerIndex) => {
-        const positions = buildPositions(count, layerIndex, config.rows);
+        const positions = stackedPositions ? stackedPositions[layerIndex] : buildPositions(count, layerIndex, config.rows);
         const types = buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random);
         for (let i = 0; i < count; i += 1) {
             tiles.push({
@@ -153,7 +169,7 @@ export function createLevel(levelIndex: number): LevelData {
         }
     });
 
-    const tileScale = config.rows === 8 ? 0.82 : 1;
+    const tileScale = config.tileScale || (config.rows === 8 ? 0.82 : 1);
     const tileWidth = 92 * 1.2 * tileScale;
     const tileHeight = 76 * 1.2 * tileScale;
     for (const lower of tiles) {
