@@ -16,31 +16,71 @@ assert.strictEqual(compiled.diagnostics.length, 0);
 // Keep tween completion pending so multiple matches can run concurrently.
 const completions = [];
 const animatedTargets = [];
+
 class Vec3 {
-    constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); }
-    clone() { return new Vec3(this.x, this.y, this.z); }
+    constructor(x = 0, y = 0, z = 0) {
+        Object.assign(this, {x, y, z});
+    }
+
+    clone() {
+        return new Vec3(this.x, this.y, this.z);
+    }
 }
+
 Vec3.ONE = new Vec3(1, 1, 1);
+
 class Node {
-    constructor(name) { this.name = name; this.children = []; this.position = new Vec3(); }
-    addChild(child) { child.setParent(this); }
-    setParent(parent) { this.removeFromParent(); this.parent = parent; parent.children.push(this); }
+    constructor(name) {
+        this.name = name;
+        this.children = [];
+        this.position = new Vec3();
+    }
+
+    addChild(child) {
+        child.setParent(this);
+    }
+
+    setParent(parent) {
+        this.removeFromParent();
+        this.parent = parent;
+        parent.children.push(this);
+    }
+
     removeFromParent() {
         if (this.parent) this.parent.children = this.parent.children.filter(child => child !== this);
         this.parent = null;
     }
-    destroy() { this.removeFromParent(); this.destroyed = true; }
-    getComponent() { return {}; }
+
+    destroy() {
+        this.removeFromParent();
+        this.destroyed = true;
+    }
+
+    getComponent() {
+        return {};
+    }
 }
+
 const cc = {
-    _decorator: {ccclass: () => klass => klass}, Component: class {}, Node, Vec3,
+    _decorator: {ccclass: () => klass => klass}, Component: class {
+    }, Node, Vec3,
     tween(target) {
         animatedTargets.push(target);
         const callbacks = [];
         const chain = {
-            to() { return chain; }, delay() { return chain; },
-            call(callback) { callbacks.push(callback); return chain; },
-            start() { completions.push(...callbacks); return chain; },
+            to() {
+                return chain;
+            }, delay() {
+                return chain;
+            },
+            call(callback) {
+                callbacks.push(callback);
+                return chain;
+            },
+            start() {
+                completions.push(...callbacks);
+                return chain;
+            },
         };
         return chain;
     },
@@ -51,22 +91,31 @@ vm.runInNewContext(compiled.outputText, {
     require: name => name === 'cc' ? cc : {},
 });
 const Game = moduleObject.exports.HotPotGame;
+
 function makeGame(tray) {
     const game = new Game();
     game.tray = tray.slice();
     game.trayNode = new Node('Tray');
     game.levelData = {config: {traySize: 7}};
     game.remainingTiles = () => 20;
-    game.playEffect = game.showToast = game.createTrayMatchBurst = () => {};
-    game.renderReserve = game.dismissOverlay = () => {};
-    game.updateProgress = game.updateToolButtons = () => {};
-    game.endGame = won => { game.result = won; game.gameEnded = true; game.locked = true; };
+    game.playEffect = game.showToast = game.createTrayMatchBurst = () => {
+    };
+    game.renderReserve = game.dismissOverlay = () => {
+    };
+    game.updateProgress = game.updateToolButtons = () => {
+    };
+    game.endGame = won => {
+        game.result = won;
+        game.gameEnded = true;
+        game.locked = true;
+    };
     game.renderTray = () => {
         game.trayNode.children.slice().filter(child => child.name !== 'MatchEffects').forEach(child => child.destroy());
         game.tray.forEach((_, i) => game.trayNode.addChild(new Node(`TrayItem_${i}`)));
     };
     return game;
 }
+
 function pick(game, type) {
     assert(!game.locked && !game.gameEnded, 'next pick must be allowed during match animation');
     game.locked = true;
@@ -125,7 +174,8 @@ assert.strictEqual(revival.reserve.length, 2);
 assert.strictEqual(revival.tray.length, 5);
 revival.levelIndex = 1;
 revival.toolUses.undo = 1;
-revival.rebuildBoardTiles = revival.updateProgress = revival.updateToolButtons = () => {};
+revival.rebuildBoardTiles = revival.updateProgress = revival.updateToolButtons = () => {
+};
 revival.useUndoTool();
 assert.strictEqual(revival.reserve.length, 3, 'undo must restore the reserved tile');
 assert.strictEqual(revival.tray.length, 4);
@@ -178,7 +228,8 @@ const flip = makeGame(['corn']);
 flip.levelIndex = 1;
 flip.toolUses.shuffle = 2;
 flip.board = new Node('Board');
-flip.drawTile = () => {};
+flip.drawTile = () => {
+};
 flip.levelData.tiles = ['beef', 'shrimp', 'beef'].map((type, i) => ({
     id: `tile${i}`, type, removed: false, blockedBy: [], x: i * 100, y: 0, layer: 0,
 }));

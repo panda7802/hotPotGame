@@ -57,7 +57,15 @@ export const INGREDIENTS: IngredientConfig[] = [
 export const LEVELS: LevelConfig[] = [
     {level: 1, title: '开锅尝鲜', typeCount: 3, layers: [9, 9], traySize: 7},
     {level: 2, title: '热锅练手', typeCount: 4, layers: [15, 15], traySize: 7},
-    {level: 3, title: '千层盛宴', typeCount: 10, typeOffset: 3, layers: Array(37).fill(24), traySize: 7, tileScale: 0.82},
+    {
+        level: 3,
+        title: '千层盛宴',
+        typeCount: 10,
+        typeOffset: 3,
+        layers: Array(37).fill(24),
+        traySize: 7,
+        tileScale: 0.82
+    },
 ];
 
 function seededRandom(seed: number): () => number {

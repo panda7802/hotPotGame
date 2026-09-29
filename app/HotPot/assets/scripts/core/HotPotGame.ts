@@ -13,15 +13,24 @@ import {
     resources,
     Sprite,
     SpriteFrame,
+    sys,
     Texture2D,
     tween,
-    sys,
     UIOpacity,
     UITransform,
     Vec3,
     view,
 } from 'cc';
-import {createLevel, getIngredient, INGREDIENTS, IngredientType, LevelData, LEVELS, TileData, selectBombTargets,} from '../data/GameData';
+import {
+    createLevel,
+    getIngredient,
+    INGREDIENTS,
+    IngredientType,
+    LevelData,
+    LEVELS,
+    selectBombTargets,
+    TileData,
+} from '../data/GameData';
 
 const {ccclass} = _decorator;
 const DESIGN_WIDTH = 720;
@@ -160,16 +169,30 @@ function drawControlIcon(icon: Node, restart: boolean, enabled = true): void {
         g.bezierCurveTo(-4, 26, -25, 7, -12, -10);
         g.bezierCurveTo(-4, -20, 12, -16, 16, -5);
         g.stroke();
-        g.moveTo(13, 9); g.lineTo(1, 10); g.lineTo(12, 21); g.close(); g.fill();
+        g.moveTo(13, 9);
+        g.lineTo(1, 10);
+        g.lineTo(12, 21);
+        g.close();
+        g.fill();
     } else {
-        g.moveTo(-15, -6); g.lineTo(-8, -6); g.lineTo(2, -15);
-        g.lineTo(2, 15); g.lineTo(-8, 6); g.lineTo(-15, 6); g.close(); g.fill();
+        g.moveTo(-15, -6);
+        g.lineTo(-8, -6);
+        g.lineTo(2, -15);
+        g.lineTo(2, 15);
+        g.lineTo(-8, 6);
+        g.lineTo(-15, 6);
+        g.close();
+        g.fill();
         if (enabled) {
-            g.moveTo(8, -8); g.bezierCurveTo(15, -3, 15, 3, 8, 8);
-            g.moveTo(14, -14); g.bezierCurveTo(25, -6, 25, 6, 14, 14);
+            g.moveTo(8, -8);
+            g.bezierCurveTo(15, -3, 15, 3, 8, 8);
+            g.moveTo(14, -14);
+            g.bezierCurveTo(25, -6, 25, 6, 14, 14);
         } else {
-            g.moveTo(9, -7); g.lineTo(21, 7);
-            g.moveTo(9, 7); g.lineTo(21, -7);
+            g.moveTo(9, -7);
+            g.lineTo(21, 7);
+            g.moveTo(9, 7);
+            g.lineTo(21, -7);
         }
         g.stroke();
     }
@@ -1208,7 +1231,9 @@ export class HotPotGame extends Component {
             this.showToast('棋盘上没有满 3 张的同类食材', '#8A4B34');
             return;
         }
-        targets.forEach((tile) => { tile.removed = true; });
+        targets.forEach((tile) => {
+            tile.removed = true;
+        });
         // 清空旧撤回快照，防止撤回拿牌时复活已经炸掉的牌。
         this.lastMoveSnapshot = null;
         this.toolUses.bomb -= 1;
@@ -1380,12 +1405,18 @@ export class HotPotGame extends Component {
         emblem.setPosition(0, 246);
         const g = emblem.addComponent(Graphics);
         g.fillColor = hex('#F6E4C5');
-        g.circle(0, 0, 45); g.fill();
+        g.circle(0, 0, 45);
+        g.fill();
         g.fillColor = hex('#B94B36');
-        g.roundRect(-30, -22, 60, 35, 12); g.fill();
-        g.strokeColor = hex('#7C3C29'); g.lineWidth = 5;
-        g.moveTo(-39, 5); g.lineTo(39, 5); g.stroke();
-        g.strokeColor = hex('#D89A57'); g.lineWidth = 3;
+        g.roundRect(-30, -22, 60, 35, 12);
+        g.fill();
+        g.strokeColor = hex('#7C3C29');
+        g.lineWidth = 5;
+        g.moveTo(-39, 5);
+        g.lineTo(39, 5);
+        g.stroke();
+        g.strokeColor = hex('#D89A57');
+        g.lineWidth = 3;
         [-15, 0, 15].forEach(x => {
             g.moveTo(x, 19);
             g.bezierCurveTo(x - 7, 25, x + 7, 29, x, 36);

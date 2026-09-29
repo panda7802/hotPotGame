@@ -87,8 +87,8 @@ data.LEVELS.forEach((config, index) => {
         assert(config.layers.every(count => count === 24), 'each deep layer must contain 24 tiles');
         level.tiles.forEach(tile => {
             assert(!level.tiles.some(other => other.id !== tile.id && other.layer === tile.layer &&
-                Math.abs(other.x - tile.x) < 92 * 1.2 * config.tileScale &&
-                Math.abs(other.y - tile.y) < 76 * 1.2 * config.tileScale),
+                    Math.abs(other.x - tile.x) < 92 * 1.2 * config.tileScale &&
+                    Math.abs(other.y - tile.y) < 76 * 1.2 * config.tileScale),
                 `${tile.id} must not overlap another tile in its own layer`);
         });
         level.tiles.filter(tile => tile.layer < config.layers.length - 1).forEach(tile => {
