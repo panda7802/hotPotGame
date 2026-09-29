@@ -39,6 +39,8 @@ const IMAGE_CROP_X = 0.04;
 const IMAGE_CROP_Y = 0.06;
 type GameAudio = 'bgm' | 'match' | 'win' | 'lose';
 type ToolType = 'undo' | 'bomb' | 'shuffle';
+const TOOL_NAMES: Record<ToolType, string> = {undo: '撤回', bomb: '炸', shuffle: '翻锅'};
+const BOIL_STAGES = ['小火慢煮', '汤底渐热', '咕嘟冒泡', '香气四溢', '红汤翻滚', '热气腾腾', '满锅沸腾', '旺火盛宴', '收汁见底'];
 // 图集按从左到右、从上到下排列；独立于关卡食材顺序。
 const HANDPAINTED_TYPES: IngredientType[] = [
     'beef', 'shrimp', 'vegetable', 'mushroom', 'corn', 'fish', 'egg',
@@ -47,6 +49,7 @@ const HANDPAINTED_TYPES: IngredientType[] = [
 
 interface MoveSnapshot {
     tray: IngredientType[];
+    reserve: IngredientType[];
     removedIds: string[];
 }
 
@@ -232,6 +235,10 @@ export class HotPotGame extends Component {
     private levelIndex = 0;
     private levelData!: LevelData;
     private tray: IngredientType[] = [];
+    private reserve: IngredientType[] = [];
+    private reviveUsed = false;
+    private rewardedMilestones = 0;
+    private reserveNode!: Node;
     private tileNodes = new Map<string, Node>();
     private locked = false;
     private gameEnded = false;
@@ -434,8 +441,6 @@ export class HotPotGame extends Component {
         levelBar.setPosition(0, 480 + this.topSpread);
         drawRoundRect(levelBar, 536, 58, 16, '#F5DEB2');
         this.levelLabel = makeLabel(levelBar, '', 27, '#63351F', Vec3.ZERO, 440, 44);
-        makeButton(this.node, '‹', new Vec3(-300, 480 + this.topSpread), 60, 58, '#934C2A', () => this.previousLevel());
-        makeButton(this.node, '›', new Vec3(300, 480 + this.topSpread), 60, 58, '#934C2A', () => this.nextLevel());
 
         const rulePill = new Node('RulePill');
         this.node.addChild(rulePill);
@@ -456,6 +461,11 @@ export class HotPotGame extends Component {
         this.node.addChild(this.trayNode);
         this.trayNode.setPosition(0, -440);
         drawTavernPanel(this.trayNode, 688, 124, 'wood');
+
+        this.reserveNode = new Node('ReviveReserve');
+        this.node.addChild(this.reserveNode);
+        this.reserveNode.setPosition(0, -320);
+        this.reserveNode.active = false;
 
         this.toolBar = new Node('ToolBar');
         this.node.addChild(this.toolBar);
@@ -658,6 +668,10 @@ export class HotPotGame extends Component {
         this.levelIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
         this.levelData = createLevel(this.levelIndex);
         this.tray = [];
+        this.reserve = [];
+        this.reviveUsed = false;
+        this.rewardedMilestones = 0;
+        this.renderReserve();
         this.tileNodes.clear();
         this.locked = false;
         this.gameEnded = false;
@@ -762,6 +776,7 @@ export class HotPotGame extends Component {
 
         this.lastMoveSnapshot = {
             tray: this.tray.slice(),
+            reserve: this.reserve.slice(),
             removedIds: this.levelData.tiles.filter((item) => item.removed).map((item) => item.id),
         };
         this.locked = true;
@@ -814,7 +829,7 @@ export class HotPotGame extends Component {
         if (matchStart >= 0) {
             this.combo += 1;
             this.animateMatch(matchStart);
-        } else if (this.remainingTiles() === 0 && this.tray.length === 0) {
+        } else if (this.isBoardCleared()) {
             this.endGame(true);
         } else if (this.tray.length >= this.levelData.config.traySize) {
             this.endGame(false);
@@ -872,9 +887,11 @@ export class HotPotGame extends Component {
                 }, {easing: 'sineInOut'})
                 .start();
         });
-        this.showToast(`${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`, '#D64A36');
+        const reward = this.grantBoilRewards();
+        this.updateProgress();
+        this.showToast(reward || `${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`, '#D64A36');
         tween(effects).delay(0.82).call(() => effects.destroy()).start();
-        if (this.remainingTiles() === 0 && this.tray.length === 0) this.endGame(true);
+        if (this.isBoardCleared()) this.endGame(true);
         else this.locked = false;
     }
 
@@ -969,9 +986,94 @@ export class HotPotGame extends Component {
         return this.levelData.tiles.filter((tile) => !tile.removed).length;
     }
 
+    private isBoardCleared(): boolean {
+        return this.remainingTiles() === 0 && this.tray.length === 0 && this.reserve.length === 0;
+    }
+
+    private revive(): void {
+        if (!this.gameEnded || this.reviveUsed || this.tray.length < this.levelData.config.traySize) return;
+        this.reviveUsed = true;
+        this.clearMatchEffects();
+        this.reserve = this.tray.splice(0, 3);
+        this.lastMoveSnapshot = null;
+        this.dismissOverlay();
+        this.gameEnded = false;
+        this.locked = false;
+        this.combo = 0;
+        this.renderTray();
+        this.renderReserve();
+        this.showToast('已复活！寄存食材可点击放回托盘', '#D86A3B');
+    }
+
+    private takeReservedTile(index: number): void {
+        if (this.locked || this.gameEnded || index < 0 || index >= this.reserve.length) return;
+        this.lastMoveSnapshot = {
+            tray: this.tray.slice(), reserve: this.reserve.slice(),
+            removedIds: this.levelData.tiles.filter(tile => tile.removed).map(tile => tile.id),
+        };
+        this.locked = true;
+        const type = this.reserve.splice(index, 1)[0];
+        this.insertIntoTray(type);
+        this.renderReserve();
+        this.resolveTray();
+    }
+
+    private renderReserve(): void {
+        this.reserveNode.children.slice().forEach(child => {
+            child.removeFromParent();
+            child.destroy();
+        });
+        this.reserveNode.active = this.reserve.length > 0;
+        // Make room above the tray instead of covering playable board tiles.
+        const scale = this.reserve.length > 0 ? 0.86 : 1;
+        this.board.setScale(scale, scale, 1);
+        if (!this.reserve.length) return;
+        drawTavernPanel(this.reserveNode, 560, 90, 'wood');
+        makeLabel(this.reserveNode, '寄存食材\n点击取回', 22, '#FFF8E7', new Vec3(-174, 0), 170, 66, true);
+        this.reserve.forEach((type, index) => {
+            const item = new Node(`Reserved_${index}`);
+            this.reserveNode.addChild(item);
+            item.setPosition(-20 + index * 96, 0);
+            item.setScale(0.75, 0.75, 1);
+            this.drawTile(item, type, false);
+            item.on(Node.EventType.TOUCH_END, () => this.takeReservedTile(index));
+        });
+    }
+
     private updateProgress(): void {
         const open = this.levelData.tiles.filter((tile) => this.isTileSelectable(tile)).length;
-        this.progressLabel.string = `剩余 ${this.remainingTiles()} / ${this.levelData.total}    ·    可拿 ${open} 张`;
+        if (this.levelData.config.level === 3) {
+            const cleared = this.clearedTileCount();
+            const next = (this.rewardedMilestones + 1) * 100;
+            this.progressLabel.fontSize = 26;
+            this.progressLabel.string = next <= this.levelData.total
+                ? `距离下一次获取道具还有${Math.max(0, next - cleared)}个`
+                : '本局开锅道具已全部领取，继续捞！';
+        } else {
+            this.progressLabel.fontSize = 26;
+            this.progressLabel.string = `剩余 ${this.remainingTiles()} / ${this.levelData.total}    ·    可拿 ${open} 张`;
+        }
+    }
+
+    private clearedTileCount(): number {
+        return this.levelData.total - this.remainingTiles() - this.tray.length - this.reserve.length;
+    }
+
+    private grantBoilRewards(): string {
+        if (this.levelData.config.level !== 3) return '';
+        const reached = Math.floor(this.clearedTileCount() / 100);
+        const rewards: string[] = [];
+        // Never roll the milestone back on undo, so replaying a match cannot farm tools.
+        while (this.rewardedMilestones < reached) {
+            this.rewardedMilestones += 1;
+            const types: ToolType[] = ['undo', 'bomb', 'shuffle'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            this.toolUses[type] += 1;
+            rewards.push(`${TOOL_NAMES[type]} +1`);
+        }
+        if (!rewards.length) return '';
+        this.updateToolButtons();
+        return `${BOIL_STAGES[this.rewardedMilestones]}！${rewards.join('，')}`;
     }
 
     private makeToolButton(type: ToolType, position: Vec3, fill: string, callback: () => void): Node {
@@ -981,8 +1083,7 @@ export class HotPotGame extends Component {
         button.addChild(icon);
         icon.setPosition(-62, 0);
         icon.setScale(0.7, 0.7, 1);
-        const names: Record<ToolType, string> = {undo: '撤回', bomb: '炸', shuffle: '洗牌'};
-        makeLabel(button, names[type], 27, '#FFF8E7', new Vec3(2, 0), 68, 40);
+        makeLabel(button, TOOL_NAMES[type], 27, '#FFF8E7', new Vec3(2, 0), 68, 40);
         transform(icon, 64, 44);
         const g = icon.addComponent(Graphics);
         g.strokeColor = hex('#FFF8E7');
@@ -1086,6 +1187,7 @@ export class HotPotGame extends Component {
         const removed = new Set(this.lastMoveSnapshot.removedIds);
         this.clearMatchEffects();
         this.tray = this.lastMoveSnapshot.tray.slice();
+        this.reserve = this.lastMoveSnapshot.reserve.slice();
         this.levelData.tiles.forEach((tile) => {
             tile.removed = removed.has(tile.id);
         });
@@ -1093,6 +1195,7 @@ export class HotPotGame extends Component {
         this.toolUses.undo -= 1;
         this.rebuildBoardTiles();
         this.renderTray();
+        this.renderReserve();
         this.updateProgress();
         this.updateToolButtons();
         this.showToast('已撤回上一次拿取', '#D86A3B');
@@ -1110,18 +1213,19 @@ export class HotPotGame extends Component {
         this.lastMoveSnapshot = null;
         this.toolUses.bomb -= 1;
         this.rebuildBoardTiles();
+        const reward = this.grantBoilRewards();
         this.updateProgress();
         this.updateToolButtons();
         this.playEffect('match', 0.82);
-        this.showToast(`炸掉 ${targets.length} 张${getIngredient(targets[0].type).name}`, '#A14425');
-        if (this.remainingTiles() === 0 && this.tray.length === 0) this.endGame(true);
+        this.showToast(reward || `炸掉 ${targets.length} 张${getIngredient(targets[0].type).name}`, '#A14425');
+        if (this.isBoardCleared()) this.endGame(true);
     }
 
     private useShuffleTool(): void {
         if (!this.canUseTool('shuffle')) return;
         const activeTiles = this.levelData.tiles.filter((tile) => !tile.removed);
         if (activeTiles.length < 2) {
-            this.showToast('剩余食材不足，无法洗牌', '#8A4B34');
+            this.showToast('剩余食材不足，无法翻锅', '#8A4B34');
             return;
         }
         const types = activeTiles.map((tile) => tile.type);
@@ -1129,18 +1233,52 @@ export class HotPotGame extends Component {
             const j = Math.floor(Math.random() * (i + 1));
             [types[i], types[j]] = [types[j], types[i]];
         }
-        activeTiles.forEach((tile, index) => {
-            tile.type = types[index];
-            const node = this.tileNodes.get(tile.id);
-            if (!node) return;
-            const selectable = this.isTileSelectable(tile);
-            (node as Node & { selectableState?: boolean }).selectableState = selectable;
-            this.drawTile(node, tile.type, !selectable);
-        });
+        const shuffledLevel = this.levelData;
+        this.locked = true;
         this.lastMoveSnapshot = null;
         this.toolUses.shuffle -= 1;
         this.updateToolButtons();
-        this.showToast('剩余食材已重新洗牌', '#D86A3B');
+        this.showToast('翻锅中，整锅食材重新拌匀！', '#D86A3B');
+        // Every remaining board tile joins the pile, including covered layers.
+        // Independent paths and rotations imitate mixing mahjong tiles on a table.
+        activeTiles.forEach((tile, index) => {
+            const node = this.tileNodes.get(tile.id);
+            if (!node) return;
+            const start = node.position.clone();
+            const scale = node.scale.clone();
+            const direction = index % 2 === 0 ? 1 : -1;
+            const pileX = (Math.random() - 0.5) * 360;
+            const pileY = (Math.random() - 0.5) * 260;
+            this.drawTile(node, tile.type, false);
+            tween(node).to(0.35, {
+                position: new Vec3(pileX, pileY, start.z),
+                angle: direction * (25 + Math.random() * 45),
+                scale: new Vec3(scale.x * 0.8, scale.y * 0.8, 1),
+            }, {easing: 'sineInOut'}).to(0.28, {
+                position: new Vec3(-pileX * 0.85, pileY + direction * 55, start.z),
+                angle: -direction * 65,
+            }, {easing: 'sineInOut'}).to(0.28, {
+                position: new Vec3(pileX * 0.65, -pileY, start.z),
+                angle: direction * 35,
+            }, {easing: 'sineInOut'}).to(0.45, {
+                position: start, angle: 0, scale,
+            }, {easing: 'cubicOut'}).start();
+        });
+        tween(this.board).delay(0.91).call(() => {
+            if (this.levelData !== shuffledLevel) return;
+            activeTiles.forEach((tile, index) => {
+                tile.type = types[index];
+                const node = this.tileNodes.get(tile.id);
+                if (!node) return;
+                const selectable = this.isTileSelectable(tile);
+                (node as Node & { selectableState?: boolean }).selectableState = selectable;
+                this.drawTile(node, tile.type, !selectable);
+            });
+        }).delay(0.47).call(() => {
+            if (this.levelData !== shuffledLevel) return;
+            this.locked = false;
+            this.showToast('翻锅完成，接着捞！', '#D86A3B');
+        }).start();
     }
 
     private rebuildBoardTiles(): void {
@@ -1209,19 +1347,21 @@ export class HotPotGame extends Component {
         overlay.addChild(panel);
         panel.setPosition(0, 35);
         panel.setScale(0.75, 0.75, 1);
-        drawRoundRect(panel, 570, 500, 32, '#FFF9EF');
-        makeLabel(panel, won ? '锅底见啦！' : '托盘满啦！', 48,
-            won ? '#C94836' : '#8B3D32', new Vec3(0, 150), 500, 70);
-        makeLabel(panel, won ? '所有食材都已经下锅\n下一关会有更多叠层' :
-            '还差一点就成功了\n试试连续拿取三个同类食材', 25, '#775145', new Vec3(0, 55), 480, 100, true);
-        if (won && this.levelIndex < LEVELS.length - 1) {
-            makeButton(panel, '下一关', new Vec3(0, -73), 300, 72, '#D75542', () => this.nextLevel());
-        } else if (won) {
-            makeButton(panel, '再玩一遍', new Vec3(0, -73), 300, 72, '#D75542', () => this.loadLevel(0));
-        } else {
-            makeButton(panel, '再试一次', new Vec3(0, -73), 300, 72, '#D75542', () => this.restartLevel());
+        if (!won) {
+            this.drawFailurePanel(panel);
+            tween(panel).to(0.24, {scale: Vec3.ONE}, {easing: 'backOut'}).start();
+            return;
         }
-        makeButton(panel, '关闭', new Vec3(0, -165), 220, 60, '#B88261', () => this.dismissOverlay());
+        drawRoundRect(panel, 570, 500, 32, '#FFF9EF');
+        makeLabel(panel, '锅底见啦！', 48, '#C94836', new Vec3(0, 150), 500, 70);
+        makeLabel(panel, this.levelIndex < LEVELS.length - 1 ? '所有食材都已经下锅\n下一关会有更多叠层' :
+            '所有食材都已经下锅\n三关盛宴，圆满收锅！', 25, '#775145', new Vec3(0, 55), 480, 100, true);
+        if (this.levelIndex < LEVELS.length - 1) {
+            makeButton(panel, '下一关', new Vec3(0, -73), 300, 72, '#D75542', () => this.nextLevel());
+        } else {
+            makeButton(panel, '再玩一遍', new Vec3(0, -73), 300, 72, '#D75542', () => this.loadLevel(0));
+        }
+        makeButton(panel, '关闭', new Vec3(0, -165), 220, 50, '#B88261', () => this.dismissOverlay());
         tween(panel).to(0.2, {scale: Vec3.ONE}, {easing: 'backOut'}).start();
     }
 
@@ -1229,13 +1369,56 @@ export class HotPotGame extends Component {
         this.node.getChildByName('ResultOverlay')?.destroy();
     }
 
-    private restartLevel(): void {
-        this.loadLevel(this.levelIndex);
+    private drawFailurePanel(panel: Node): void {
+        drawRoundRect(panel, 580, 640, 32, '#FFF8E9', '#DAB88A', 3);
+        const close = makeButton(panel, '×', new Vec3(239, 265), 52, 52, '#EAD8BD',
+            () => this.dismissOverlay());
+        close.getChildByName('Label')!.getComponent(Label)!.color = hex('#805B43');
+
+        const emblem = new Node('FullPotEmblem');
+        panel.addChild(emblem);
+        emblem.setPosition(0, 246);
+        const g = emblem.addComponent(Graphics);
+        g.fillColor = hex('#F6E4C5');
+        g.circle(0, 0, 45); g.fill();
+        g.fillColor = hex('#B94B36');
+        g.roundRect(-30, -22, 60, 35, 12); g.fill();
+        g.strokeColor = hex('#7C3C29'); g.lineWidth = 5;
+        g.moveTo(-39, 5); g.lineTo(39, 5); g.stroke();
+        g.strokeColor = hex('#D89A57'); g.lineWidth = 3;
+        [-15, 0, 15].forEach(x => {
+            g.moveTo(x, 19);
+            g.bezierCurveTo(x - 7, 25, x + 7, 29, x, 36);
+        });
+        g.stroke();
+
+        makeLabel(panel, '托盘满啦', 46, '#803C2B', new Vec3(0, 165), 450, 62);
+        makeLabel(panel, this.reviveUsed ? '换个拿取顺序，再开一锅！' : '别急，这锅还有机会！',
+            25, '#957158', new Vec3(0, 112), 470, 38);
+
+        const tip = new Node('ReviveExplanation');
+        panel.addChild(tip);
+        tip.setPosition(0, 24);
+        drawRoundRect(tip, 476, 110, 18, '#F3E5CE');
+        makeLabel(tip, this.reviveUsed ? '本局免费复活已使用' : '免费复活 · 本局还可用 1 次',
+            25, '#8B4B30', new Vec3(0, 23), 444, 36);
+        makeLabel(tip, this.reviveUsed ? '优先凑齐三张，给托盘留出空位' : '暂存前三张食材，腾出三格继续捞',
+            22, '#927059', new Vec3(0, -23), 444, 34);
+
+        makeButton(panel, this.reviveUsed ? '再开一锅' : '免费复活，继续捞',
+            new Vec3(0, -92), 466, 82, '#C94E35',
+            () => this.reviveUsed ? this.restartLevel() : this.revive());
+        if (!this.reviveUsed) {
+            const restart = makeButton(panel, '重新开始', new Vec3(0, -187), 466, 66, '#EAD8BD',
+                () => this.restartLevel());
+            restart.getChildByName('Label')!.getComponent(Label)!.color = hex('#805B43');
+        }
+        // makeLabel(panel, this.reviveUsed ? '重新开始后，可再次获得一次免费复活' : '无需广告 · 寄存食材可随时点击取回',
+        //     20, '#A1856A', new Vec3(0, this.reviveUsed ? -190 : -263), 490, 34);
     }
 
-    private previousLevel(): void {
-        if (this.levelIndex > 0) this.loadLevel(this.levelIndex - 1);
-        else this.showToast('已经是第一关', '#8A4B34');
+    private restartLevel(): void {
+        this.loadLevel(this.levelIndex);
     }
 
     private nextLevel(): void {
