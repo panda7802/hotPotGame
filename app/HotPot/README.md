@@ -58,7 +58,9 @@ node .\tools\validate-tray-animation.cjs
 powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 ```
 
-脚本会生成 `build/wechatgame/`，并调用本机微信开发者工具。若工具的“服务端口”已开启，脚本会自动载入项目；否则会打开入口页，此时选择“导入项目”并选中该构建目录。默认 AppId 只用于本地调试；真机预览或上传时使用 `-AppId 'wx你的小游戏AppId'`。详细说明见 `../../doc/火锅叠叠消-微信小游戏运行说明.md`。
+脚本会生成 `build/wechatgame/`，并调用本机微信开发者工具。若工具的“服务端口”已开启，脚本会自动载入项目；否则会打开入口页，此时选择“导入项目”并选中该构建目录。默认使用本项目已有 AppID `wx943cc2d81ec6f820`，可通过 `-AppId` 覆盖。脚本采用发布构建，等待 Creator 成功退出后检查完整目录必须小于 4,000,000 字节。
+
+2026-09-30 已裁剪未使用的物理、骨骼动画、瓦片地图等引擎模块；未引用的 `hotpot-bg.jpg` 和 `hotpot-corner.png` 已连同 UUID 元数据移至 `assets/art-archive/`，不再进入 resources 包。当前背景、标题、食材、备用食材和音频保持原样。重新构建前请关闭并重新打开 Creator，以加载更新后的引擎模块配置。
 
 ## 代码位置
 
