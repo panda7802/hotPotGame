@@ -167,6 +167,23 @@ function service(server, localStorage = storage(), options = {}, config = settin
 }
 
 (async () => {
+    const sdk = require('../cloudfunctions/hotpotPlayerDev/node_modules/@cloudbase/node-sdk');
+    const {requestIdentity} = require('../cloudfunctions/hotpotPlayerDev/request-context');
+    const aliceContext = {environment: JSON.stringify({TCB_ENV: settings.environmentId, WX_OPENID: 'alice', WX_APPID: settings.appId})};
+    assert.strictEqual(requestIdentity(sdk, aliceContext, settings.environmentId).OPENID, 'alice');
+    assert.strictEqual(requestIdentity(sdk, {environment: '{}'}, settings.environmentId).OPENID, undefined,
+        'a non-WeChat invocation after a player call must not inherit the previous identity');
+    assert.strictEqual(requestIdentity(sdk, {environ: `TCB_ENV=${settings.environmentId};WX_OPENID=bob;WX_APPID=${settings.appId}`}, settings.environmentId).OPENID, 'bob');
+    assert.strictEqual(requestIdentity(sdk, {environment: 'invalid'}, settings.environmentId).OPENID, undefined);
+    assert.strictEqual(requestIdentity(sdk, undefined, settings.environmentId).OPENID, undefined);
+    // wx-server-sdk returns {} outside a WeChat call. Runtime environment is still trusted,
+    // but neither a console request nor event-supplied identity may access player records.
+    const consoleCloud = {getWXContext: () => ({}), database: () => {throw new Error('Must not access database');}};
+    const consoleHandler = createHandler(consoleCloud, settings, domain, regions, settings.environmentId);
+    assert.strictEqual((await consoleHandler({action: 'load', OPENID: 'fake', APPID: settings.appId, ENV: settings.environmentId})).code, 'IDENTITY_REQUIRED');
+    assert.strictEqual((await createHandler(consoleCloud, settings, domain, regions, 'wrong-env')({action: 'load'})).code, 'DEVELOPMENT_ENV_REQUIRED');
+    assert.strictEqual((await createHandler({getWXContext: () => ({ENV: settings.environmentId, OPENID: 'fake', APPID: settings.appId})},
+        settings, domain, regions, 'wrong-env')({action: 'load'})).code, 'DEVELOPMENT_ENV_REQUIRED');
     const server = backend();
     const original = await server.handler({action: 'load', openid: 'bob', playerId: 'fake'});
     assert(original.ok && original.player.playerId.length === 32);

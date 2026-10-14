@@ -19,14 +19,14 @@ if ($LASTEXITCODE -ne 0) { throw 'Cloud preparation failed.' }
     -OutputName 'wechatgame-cloud-dev' -SkipBuild:$SkipBuild
 $buildRoot = Join-Path $projectRoot 'build\wechatgame-cloud-dev'
 $gameConfigPath = Join-Path $buildRoot 'game.json'
-$gameConfig = Get-Content -LiteralPath $gameConfigPath -Raw | ConvertFrom-Json
+$gameConfig = Get-Content -LiteralPath $gameConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $gameConfig | Add-Member -NotePropertyName cloud -NotePropertyValue $true -Force
-$gameConfig | ConvertTo-Json -Depth 20 -Compress | Set-Content -LiteralPath $gameConfigPath -Encoding utf8
+[System.IO.File]::WriteAllText($gameConfigPath, ($gameConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
 $projectConfigPath = Join-Path $buildRoot 'project.config.json'
-$projectConfig = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
+$projectConfig = Get-Content -LiteralPath $projectConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $projectConfig | Add-Member -NotePropertyName cloudfunctionRoot -NotePropertyValue '../../cloudfunctions/' -Force
 $projectConfig.projectname = 'HotPot-Cloud-Dev'
-$projectConfig | ConvertTo-Json -Depth 20 -Compress | Set-Content -LiteralPath $projectConfigPath -Encoding utf8
+[System.IO.File]::WriteAllText($projectConfigPath, ($projectConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
 $totalBytes = (Get-ChildItem -LiteralPath $buildRoot -Recurse -File | Measure-Object Length -Sum).Sum
 if ($totalBytes -ge 4000000) { throw "Development export exceeds 4 MB: $totalBytes bytes." }
 Write-Host "Development build ready: $buildRoot ($totalBytes bytes)"

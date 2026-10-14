@@ -4,11 +4,12 @@ const crypto = require('crypto');
 const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
 
 /** 从平台上下文读取身份；event 中的 openid/playerId/env 永远不用于选取档案。 */
-exports.createHandler = function createHandler(cloud, settings, domain, regions) {
+exports.createHandler = function createHandler(cloud, settings, domain, regions, runtimeEnvironment) {
     return async function main(event = {}) {
         const context = cloud.getWXContext();
         if (!settings.enabled || !settings.environmentId || (settings.environmentId === RELEASE_ENVIRONMENT_ID && !settings.allowSharedEnvironment) ||
-            context.ENV !== settings.environmentId || settings.collectionName !== 'hotpot_players_dev') {
+            (context.ENV || runtimeEnvironment) !== settings.environmentId ||
+            (runtimeEnvironment && runtimeEnvironment !== settings.environmentId) || settings.collectionName !== 'hotpot_players_dev') {
             return {ok: false, code: 'DEVELOPMENT_ENV_REQUIRED'};
         }
         if (!context.OPENID || context.APPID !== settings.appId) return {ok: false, code: 'IDENTITY_REQUIRED'};

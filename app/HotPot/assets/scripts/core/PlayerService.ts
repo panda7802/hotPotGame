@@ -18,6 +18,7 @@ export class PlayerService {
     playerId: string | null = null;
     remote: CloudPlayer | null = null;
     storageAvailable = true;
+    private failureText = '云端连接失败';
     onChange: () => void = () => {};
     private local: LocalPlayer;
     private cloud: any = null;
@@ -37,6 +38,7 @@ export class PlayerService {
     get isConflict(): boolean { return this.status === 'conflict'; }
     get statusText(): string {
         if (!this.storageAvailable) return '本机存储不可用，请勿关闭游戏';
+        if (this.status === 'error') return `本机已保存 · ${this.failureText}`;
         return {
             local: '本机保存 · 云端未连接', connecting: '正在连接云端', synced: '已同步到云端',
             pending: '本机已保存 · 等待同步', syncing: '本机已保存 · 正在同步',
@@ -79,7 +81,8 @@ export class PlayerService {
             }
             this.persist(); this.changed();
             if (this.status === 'pending') this.schedule();
-        } catch {
+        } catch (error) {
+            this.describeFailure(error);
             this.cloud = null; this.status = 'error'; this.changed();
         }
     }
@@ -126,7 +129,8 @@ export class PlayerService {
                     this.status = 'synced';
                 } else this.status = 'pending';
                 this.persist(); this.changed();
-            } catch {
+            } catch (error) {
+                this.describeFailure(error);
                 this.status = 'error'; this.changed(); return;
             }
         }
@@ -185,6 +189,21 @@ export class PlayerService {
         }));
         if (!response.result?.ok) throw new Error(response.result?.code || '云端请求失败');
         return response.result;
+    }
+
+    private describeFailure(error: any): void {
+        const message = String(error?.message || error?.errMsg || '');
+        const descriptions: Record<string, string> = {
+            IDENTITY_REQUIRED: '微信身份未确认，请检查云环境关联',
+            DEVELOPMENT_ENV_REQUIRED: '云环境配置不匹配',
+            DATABASE_UNAVAILABLE: '云存档服务暂不可用',
+            INVALID_STATE: '当前存档校验失败',
+        };
+        const code = Object.keys(descriptions).find(item => message === item) ||
+            (message.includes('超时') ? 'TIMEOUT' : String(error?.errCode || error?.code || 'NETWORK_ERROR'));
+        this.failureText = descriptions[code] || (code === 'TIMEOUT' ? '云端请求超时，请重试' : '云端连接失败，请重试');
+        // 只记录已知业务代码或平台数字错误码，不输出响应、OpenID 或原始异常。
+        console.warn('[HotPot Cloud Dev]', Object.hasOwnProperty.call(descriptions, code) || /^-?\d+$/.test(code) || code === 'TIMEOUT' ? code : 'NETWORK_ERROR');
     }
 
     private callbackRequest(start: (success: (value: any) => void, fail: (error: any) => void) => void): Promise<any> {

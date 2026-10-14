@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$AppId = 'wx943cc2d81ec6f820',
     [string]$CreatorPath = 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe',
@@ -116,9 +116,9 @@ Assert-WeChatBuildOutput
 # Platform options passed as flat CLI parameters can be ignored by Creator 3.8.
 # Apply the requested AppId to the generated WeChat project explicitly.
 if (-not $SkipBuild) {
-    $wechatConfig = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
+    $wechatConfig = Get-Content -LiteralPath $projectConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $wechatConfig.appid = $AppId.Trim()
-    $wechatConfig | ConvertTo-Json -Depth 20 -Compress | Set-Content -LiteralPath $projectConfigPath -Encoding utf8
+    [System.IO.File]::WriteAllText($projectConfigPath, ($wechatConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
 }
 
 $totalBytes = (Get-ChildItem -LiteralPath $buildRoot -Recurse -File | Measure-Object Length -Sum).Sum
