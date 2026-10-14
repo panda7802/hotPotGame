@@ -6,6 +6,9 @@ import {
     Color,
     Component,
     Graphics,
+    game as cocosGame,
+    Game,
+    JsonAsset,
     Label,
     Node,
     Rect,
@@ -31,6 +34,8 @@ import {
     selectBombTargets,
     TileData,
 } from '../data/GameData';
+import {BOARD_VERSION, clone, GameSave, RegionNode, regionPath, restoreLevel, SaveStatus} from '../data/PlayerData';
+import {PlayerService} from './PlayerService';
 
 const {ccclass} = _decorator;
 const DESIGN_WIDTH = 720;
@@ -272,6 +277,11 @@ export class HotPotGame extends Component {
     private effectSource!: AudioSource;
     private soundEnabled = true;
     private soundButtonLabel!: Label;
+    private playerService: PlayerService | null = null;
+    private playerStatusLabel: Label | null = null;
+    private profileButtonLabel!: Label;
+    private lastResult: SaveStatus = 'playing';
+    private restoringSave = false;
 
     private board!: Node;
     private trayNode!: Node;
@@ -313,13 +323,87 @@ export class HotPotGame extends Component {
         });
         this.buildShell();
         this.setupAudio();
-        this.loadIngredientImages(() => this.loadLevel(0));
+        this.progressLabel.string = '正在载入食材与玩家档案…';
+        this.loadIngredientImages(() => { void this.initializePlayer(); });
+        cocosGame.on(Game.EVENT_HIDE, this.flushPlayerSave, this);
+        cocosGame.on(Game.EVENT_SHOW, this.flushPlayerSave, this);
     }
 
     onDestroy(): void {
         this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
         this.bgmSource?.stop();
         this.effectSource?.stop();
+        cocosGame.off(Game.EVENT_HIDE, this.flushPlayerSave, this);
+        cocosGame.off(Game.EVENT_SHOW, this.flushPlayerSave, this);
+        this.playerService?.flush();
+    }
+
+    private async initializePlayer(): Promise<void> {
+        const regions = await new Promise<RegionNode[]>((resolve) => {
+            resources.load('data/regions', JsonAsset, (error, asset) => {
+                if (error || !asset) { resolve([]); return; }
+                resolve(asset.json as RegionNode[]);
+            });
+        });
+        if (!this.node.isValid) return;
+        if (!regions.length) {
+            this.loadLevel(0, false);
+            this.showToast('地区数据加载失败，请重新打开游戏', '#A24A3C');
+            return;
+        }
+        this.playerService = new PlayerService(regions, sys.localStorage);
+        this.playerService.onChange = () => {
+            if (!this.node.isValid) return;
+            this.profileButtonLabel.string = this.playerService!.isConflict ? '存档' : '档案';
+            if (this.playerStatusLabel?.node.isValid) this.playerStatusLabel.string = this.playerService!.statusText;
+        };
+        await this.playerService.initialize();
+        if (!this.node.isValid) return;
+        const saved = this.playerService.state.save;
+        if (saved) {
+            this.restoreGame(saved);
+            this.showToast('已恢复上次这锅的进度', '#D86A3B');
+        } else this.loadLevel(0);
+        if (this.playerService.isConflict) this.showSaveConflict();
+    }
+
+    private flushPlayerSave(): void { void this.playerService?.flush(); }
+
+    private checkpointGame(): void {
+        if (!this.playerService || !this.levelData || this.restoringSave || (this.locked && !this.gameEnded)) return;
+        const save: GameSave = {
+            version: 1, boardVersion: BOARD_VERSION, levelIndex: this.levelIndex,
+            types: this.levelData.tiles.map(tile => tile.type),
+            removedIds: this.levelData.tiles.filter(tile => tile.removed).map(tile => tile.id),
+            tray: this.tray.slice(), reserve: this.reserve.slice(), reviveUsed: this.reviveUsed,
+            rewardedMilestones: this.rewardedMilestones, toolUses: {...this.toolUses},
+            lastMove: this.lastMoveSnapshot ? clone(this.lastMoveSnapshot) : null,
+            status: this.gameEnded ? this.lastResult : 'playing',
+        };
+        try { this.playerService.setSave(save); }
+        catch { this.showToast('当前进度未能保存，请重试', '#A24A3C'); }
+    }
+
+    private restoreGame(save: GameSave): void {
+        const restored = restoreLevel(save);
+        this.restoringSave = true;
+        try {
+            this.loadLevel(save.levelIndex, false);
+            this.levelData = restored;
+            this.tray = save.tray.slice(); this.reserve = save.reserve.slice();
+            this.reviveUsed = save.reviveUsed;
+            this.rewardedMilestones = save.rewardedMilestones;
+            this.toolUses = {...save.toolUses};
+            this.lastMoveSnapshot = save.lastMove ? clone(save.lastMove) : null;
+            this.rebuildBoardTiles(); this.renderTray(); this.renderReserve();
+            this.updateProgress(); this.updateToolButtons();
+            if (save.status !== 'playing') this.endGame(save.status === 'won');
+        } finally { this.restoringSave = false; }
+    }
+
+    private hasPlayerMenu(): boolean {
+        return ['PlayerOverlay', 'RegionOverlay', 'CloudConflictOverlay', 'ConnectedSaveOverlay']
+            .some(name => !!this.node?.getChildByName?.(name));
     }
 
     private setupAudio(): void {
@@ -462,8 +546,10 @@ export class HotPotGame extends Component {
         const levelBar = new Node('LevelBar');
         this.node.addChild(levelBar);
         levelBar.setPosition(0, 480 + this.topSpread);
-        drawRoundRect(levelBar, 536, 58, 16, '#F5DEB2');
-        this.levelLabel = makeLabel(levelBar, '', 27, '#63351F', Vec3.ZERO, 440, 44);
+        drawRoundRect(levelBar, 650, 58, 16, '#F5DEB2');
+        this.levelLabel = makeLabel(levelBar, '', 27, '#63351F', new Vec3(-48, 0), 510, 44);
+        const profile = makeButton(levelBar, '档案', new Vec3(265, 0), 102, 48, '#A3613B', () => this.showPlayerProfile());
+        this.profileButtonLabel = profile.getChildByName('Label')!.getComponent(Label)!;
 
         const rulePill = new Node('RulePill');
         this.node.addChild(rulePill);
@@ -686,7 +772,7 @@ export class HotPotGame extends Component {
         opacity(pattern, 48);
     }
 
-    private loadLevel(index: number): void {
+    private loadLevel(index: number, persist = true): void {
         this.clearMatchEffects();
         this.levelIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
         this.levelData = createLevel(this.levelIndex);
@@ -698,6 +784,7 @@ export class HotPotGame extends Component {
         this.tileNodes.clear();
         this.locked = false;
         this.gameEnded = false;
+        this.lastResult = 'playing';
         this.combo = 0;
         this.lastMoveSnapshot = null;
         const toolsEnabled = this.levelIndex >= 1;
@@ -716,6 +803,7 @@ export class HotPotGame extends Component {
         this.refreshTileStates();
         this.renderTray();
         this.updateProgress();
+        if (persist) this.checkpointGame();
         // this.showToast('看清叠层，别让托盘塞满！', '#8A4B34');
     }
 
@@ -785,7 +873,7 @@ export class HotPotGame extends Component {
     }
 
     private onTileClicked(tile: TileData): void {
-        if (this.locked || this.gameEnded || tile.removed) return;
+        if (this.locked || this.gameEnded || this.hasPlayerMenu() || tile.removed) return;
         const node = this.tileNodes.get(tile.id);
         if (!node) return;
         if (!this.isTileSelectable(tile)) {
@@ -859,6 +947,7 @@ export class HotPotGame extends Component {
         } else {
             this.combo = 0;
             this.locked = false;
+            this.checkpointGame();
         }
     }
 
@@ -915,7 +1004,7 @@ export class HotPotGame extends Component {
         this.showToast(reward || `${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`, '#D64A36');
         tween(effects).delay(0.82).call(() => effects.destroy()).start();
         if (this.isBoardCleared()) this.endGame(true);
-        else this.locked = false;
+        else { this.locked = false; this.checkpointGame(); }
     }
 
     private clearMatchEffects(): void {
@@ -1025,11 +1114,12 @@ export class HotPotGame extends Component {
         this.combo = 0;
         this.renderTray();
         this.renderReserve();
+        this.checkpointGame();
         this.showToast('已复活！寄存食材可点击放回托盘', '#D86A3B');
     }
 
     private takeReservedTile(index: number): void {
-        if (this.locked || this.gameEnded || index < 0 || index >= this.reserve.length) return;
+        if (this.locked || this.gameEnded || this.hasPlayerMenu() || index < 0 || index >= this.reserve.length) return;
         this.lastMoveSnapshot = {
             tray: this.tray.slice(), reserve: this.reserve.slice(),
             removedIds: this.levelData.tiles.filter(tile => tile.removed).map(tile => tile.id),
@@ -1190,6 +1280,7 @@ export class HotPotGame extends Component {
 
     private canUseTool(type: ToolType): boolean {
         if (this.levelIndex < 1) return false;
+        if (this.hasPlayerMenu()) return false;
         if (this.locked || this.gameEnded) {
             this.showToast('请等待当前动画结束', '#8A4B34');
             return false;
@@ -1221,6 +1312,7 @@ export class HotPotGame extends Component {
         this.renderReserve();
         this.updateProgress();
         this.updateToolButtons();
+        this.checkpointGame();
         this.showToast('已撤回上一次拿取', '#D86A3B');
     }
 
@@ -1244,6 +1336,7 @@ export class HotPotGame extends Component {
         this.playEffect('match', 0.82);
         this.showToast(reward || `炸掉 ${targets.length} 张${getIngredient(targets[0].type).name}`, '#A14425');
         if (this.isBoardCleared()) this.endGame(true);
+        else this.checkpointGame();
     }
 
     private useShuffleTool(): void {
@@ -1302,6 +1395,7 @@ export class HotPotGame extends Component {
         }).delay(0.47).call(() => {
             if (this.levelData !== shuffledLevel) return;
             this.locked = false;
+            this.checkpointGame();
             this.showToast('翻锅完成，接着捞！', '#D86A3B');
         }).start();
     }
@@ -1331,6 +1425,7 @@ export class HotPotGame extends Component {
     }
 
     private showRestartConfirmation(): void {
+        if (!this.levelData || this.hasPlayerMenu() || (this.locked && !this.gameEnded)) return;
         if (this.node.getChildByName('RestartConfirmOverlay')) return;
         const overlay = new Node('RestartConfirmOverlay');
         this.node.addChild(overlay);
@@ -1360,6 +1455,8 @@ export class HotPotGame extends Component {
     private endGame(won: boolean): void {
         this.locked = true;
         this.gameEnded = true;
+        this.lastResult = won ? 'won' : 'lost';
+        this.checkpointGame();
         this.playEffect(won ? 'win' : 'lose', 0.72);
         const overlay = new Node('ResultOverlay');
         this.node.addChild(overlay);
@@ -1392,6 +1489,151 @@ export class HotPotGame extends Component {
 
     private dismissOverlay(): void {
         this.node.getChildByName('ResultOverlay')?.destroy();
+    }
+
+    private dismissPlayerMenu(name: string): void {
+        const overlay = this.node.getChildByName(name);
+        overlay?.removeFromParent(); overlay?.destroy();
+        this.playerStatusLabel = null;
+    }
+
+    private makePlayerMenu(name: string, height: number): Node | null {
+        if (!this.playerService || !this.levelData || this.hasPlayerMenu() || (this.locked && !this.gameEnded)) return null;
+        const overlay = new Node(name);
+        this.node.addChild(overlay);
+        drawRoundRect(overlay, DESIGN_WIDTH, this.viewportHeight, 0, '#5A241E');
+        overlay.addComponent(BlockInputEvents); opacity(overlay, 238);
+        const panel = new Node('PlayerPanel'); overlay.addChild(panel);
+        drawRoundRect(panel, 650, height, 28, '#FFF9EF');
+        return panel;
+    }
+
+    private showPlayerProfile(): void {
+        const panel = this.makePlayerMenu('PlayerOverlay', 720);
+        if (!panel) return;
+        const service = this.playerService!;
+        makeLabel(panel, '我的小馆档案', 42, '#8D3426', new Vec3(0, 285), 580, 62);
+        makeLabel(panel, service.playerId ? `玩家编号 ${service.playerId.slice(0, 8)} · 开发版` : '本机玩家 · 开发版',
+            26, '#775145', new Vec3(0, 210), 580, 42);
+        const path = regionPath(service.regions, service.state.profile.regionCodes);
+        makeLabel(panel, path.length ? path.map(item => item.name).join(' / ') : '地区尚未选择',
+            27, '#775145', new Vec3(0, 147), 580, 64, true);
+        this.playerStatusLabel = makeLabel(panel, service.statusText, 24, '#A15E37', new Vec3(0, 79), 580, 42);
+        const save = service.state.save;
+        makeLabel(panel, save ? `第${save.levelIndex + 1}关 · ${save.removedIds.length}张已拿取 · 云版本${service.revision}` : '还没有存档',
+            23, '#94735D', new Vec3(0, 22), 590, 40);
+        makeButton(panel, '选择地区', new Vec3(0, -61), 370, 66, '#A3613B', () => {
+            if (service.status === 'connecting') return;
+            this.dismissPlayerMenu('PlayerOverlay'); this.showRegionPicker([], 0);
+        });
+        makeButton(panel, service.isConflict ? '选择保留哪份存档' : service.playerId ? '同步存档' : '连接云端',
+            new Vec3(0, -147), 370, 66, '#D75542', () => {
+                if (service.isConflict) { this.dismissPlayerMenu('PlayerOverlay'); this.showSaveConflict(); return; }
+                if (service.playerId) { void service.flush(); return; }
+                // 重新连接期间阻止重复点击。身份确认后再让玩家决定当前局与账号存档。
+                if (service.status === 'connecting') return;
+                void service.initialize().then(() => {
+                    if (!this.node.isValid || !service.playerId) return;
+                    this.dismissPlayerMenu('PlayerOverlay');
+                    const saved = service.state.save;
+                    if (saved) this.showConnectedSaveChoice(saved);
+                    else { this.checkpointGame(); this.showPlayerProfile(); }
+                });
+            });
+        makeLabel(panel, '每次操作后自动保存，断网时先保留在本机', 22, '#94735D', new Vec3(0, -222), 590, 38);
+        makeButton(panel, '继续游戏', new Vec3(0, -294), 300, 62, '#B88261', () => {
+            if (service.status === 'connecting') return;
+            this.dismissPlayerMenu('PlayerOverlay');
+        });
+    }
+
+    private showConnectedSaveChoice(saved: GameSave): void {
+        const panel = this.makePlayerMenu('ConnectedSaveOverlay', 520);
+        if (!panel) return;
+        const service = this.playerService!;
+        makeLabel(panel, '账号已连接', 42, '#8D3426', new Vec3(0, 181), 570, 60);
+        makeLabel(panel, `账号存档：第${saved.levelIndex + 1}关 · ${saved.removedIds.length}张已拿取\n当前这锅：第${this.levelIndex + 1}关 · ${this.levelData.tiles.filter(tile => tile.removed).length}张已拿取`,
+            26, '#775145', new Vec3(0, 81), 590, 110, true);
+        makeLabel(panel, '选择要继续的进度，当前本机记录仍单独保留', 22, '#94735D', new Vec3(0, -13), 590, 48, true);
+        const finish = (): void => {
+            if (service.isConflict) this.showSaveConflict(); else this.showPlayerProfile();
+        };
+        makeButton(panel, '继续账号存档', new Vec3(0, -99), 400, 66, '#D75542', () => {
+            this.dismissPlayerMenu('ConnectedSaveOverlay'); this.restoreGame(saved); finish();
+        });
+        makeButton(panel, '将当前这锅保存到账号', new Vec3(0, -186), 450, 66, '#A3613B', () => {
+            this.dismissPlayerMenu('ConnectedSaveOverlay'); this.checkpointGame(); finish();
+        });
+    }
+
+    private showRegionPicker(codes: string[], page: number): void {
+        const panel = this.makePlayerMenu('RegionOverlay', 760);
+        if (!panel) return;
+        const service = this.playerService!;
+        let options = service.regions;
+        const names: string[] = [];
+        for (const code of codes) {
+            const selected = options.find(item => item.code === code)!;
+            names.push(selected.name); options = selected.children || [];
+        }
+        const pages = Math.ceil(options.length / 6);
+        page = Math.max(0, Math.min(pages - 1, page));
+        makeLabel(panel, '选择地区', 40, '#8D3426', new Vec3(0, 303), 580, 58);
+        makeLabel(panel, names.length ? names.join(' / ') : '请选择省份或海外', 25, '#775145',
+            new Vec3(0, 242), 590, 44);
+        options.slice(page * 6, page * 6 + 6).forEach((region, index) => {
+            makeButton(panel, region.name, new Vec3(0, 170 - index * 65), 540, 53, '#A3613B', () => {
+                const next = [...codes, region.code];
+                if (region.children?.length) {
+                    this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(next, 0);
+                } else {
+                    service.setRegion(next);
+                    this.dismissPlayerMenu('RegionOverlay'); this.showPlayerProfile();
+                }
+            });
+        });
+        makeButton(panel, '上一页', new Vec3(-170, -222), 145, 48, '#B88261', () => {
+            this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(codes, page - 1);
+        });
+        makeLabel(panel, `${page + 1} / ${pages}`, 24, '#775145', new Vec3(0, -222), 130, 38);
+        makeButton(panel, '下一页', new Vec3(170, -222), 145, 48, '#B88261', () => {
+            this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(codes, page + 1);
+        });
+        makeButton(panel, codes.length ? '上一级' : '返回档案', new Vec3(-150, -305), 230, 58, '#B88261', () => {
+            this.dismissPlayerMenu('RegionOverlay');
+            if (codes.length) this.showRegionPicker(codes.slice(0, -1), 0);
+            else this.showPlayerProfile();
+        });
+        makeButton(panel, '取消', new Vec3(150, -305), 230, 58, '#B88261', () => {
+            this.dismissPlayerMenu('RegionOverlay'); this.showPlayerProfile();
+        });
+    }
+
+    private showSaveConflict(): void {
+        const service = this.playerService!;
+        if (!service?.remote) return;
+        const panel = this.makePlayerMenu('CloudConflictOverlay', 650);
+        if (!panel) return;
+        const describe = (save: GameSave | null): string => save
+            ? `第${save.levelIndex + 1}关 · ${save.removedIds.length}张已拿取 · ${save.status === 'playing' ? '进行中' : save.status === 'won' ? '已通关' : '托盘已满'}`
+            : '没有进行中的对局';
+        makeLabel(panel, '发现两份不同进度', 40, '#8D3426', new Vec3(0, 253), 580, 60);
+        makeLabel(panel, '另一台设备已保存新进度，请选择要保留的一份', 24, '#94735D', new Vec3(0, 177), 590, 64, true);
+        makeLabel(panel, `本机：${describe(service.state.save)}\n云端：${describe(service.remote.state.save)}`, 26,
+            '#775145', new Vec3(0, 73), 580, 114, true);
+        makeLabel(panel, '所选版本会同时保留该版本的地区资料', 22, '#AE5A3E', new Vec3(0, -24), 590, 40);
+        makeButton(panel, '使用云端进度', new Vec3(0, -104), 400, 66, '#D75542', () => {
+            const state = service.resolveConflict(true);
+            this.dismissPlayerMenu('CloudConflictOverlay');
+            if (state.save) this.restoreGame(state.save); else this.loadLevel(0);
+        });
+        makeButton(panel, '保留本机进度', new Vec3(0, -188), 400, 66, '#A3613B', () => {
+            const state = service.resolveConflict(false);
+            this.dismissPlayerMenu('CloudConflictOverlay');
+            if (state.save) this.restoreGame(state.save); else this.loadLevel(0);
+            void service.flush();
+        });
+        makeButton(panel, '稍后决定', new Vec3(0, -272), 290, 54, '#B88261', () => this.dismissPlayerMenu('CloudConflictOverlay'));
     }
 
     private drawFailurePanel(panel: Node): void {

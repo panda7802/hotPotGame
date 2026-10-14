@@ -52,6 +52,8 @@ node .\tools\validate-tray-animation.cjs
 
 ## 微信小游戏
 
+当前 CloudBase 开发分支请使用 `tools/build-cloud-dev.ps1`，生成独立的 `build/wechatgame-cloud-dev`；默认发布输出 `build/wechatgame` 在此分支受保护。身份、地区、存档、权限与部署步骤见 [CloudBase 玩家开发交接](../../doc/CloudBase玩家身份与云存档-开发交接.md)。云函数目录位于 `cloudfunctions/hotpotPlayerDev`，不进入小游戏包；顶部新增“档案”入口。
+
 保存并关闭 Cocos Creator 后，在 PowerShell 中运行：
 
 ```powershell

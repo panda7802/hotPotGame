@@ -59,6 +59,10 @@ class Node {
     getComponent() {
         return {};
     }
+
+    getChildByName(name) {
+        return this.children.find(child => child.name === name);
+    }
 }
 
 const cc = {
@@ -86,14 +90,29 @@ const cc = {
     },
 };
 const moduleObject = {exports: {}};
+const dependencies = {};
+function loadDependency(name, parent = sourcePath) {
+    if (name === 'cc') return cc;
+    const filename = path.resolve(path.dirname(parent), name) + '.ts';
+    if (dependencies[filename]) return dependencies[filename];
+    const result = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
+        compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019},
+    });
+    const exports = {};
+    vm.runInNewContext(result.outputText, {exports, setTimeout, clearTimeout,
+        require: child => loadDependency(child, filename)});
+    dependencies[filename] = exports;
+    return exports;
+}
 vm.runInNewContext(compiled.outputText, {
     exports: moduleObject.exports,
-    require: name => name === 'cc' ? cc : {},
+    require: loadDependency,
 });
 const Game = moduleObject.exports.HotPotGame;
 
 function makeGame(tray) {
     const game = new Game();
+    game.node = new Node('Game');
     game.tray = tray.slice();
     game.trayNode = new Node('Tray');
     game.levelData = {config: {traySize: 7}};
@@ -108,6 +127,8 @@ function makeGame(tray) {
         game.result = won;
         game.gameEnded = true;
         game.locked = true;
+        game.lastResult = won ? 'won' : 'lost';
+        game.checkpointGame();
     };
     game.renderTray = () => {
         game.trayNode.children.slice().filter(child => child.name !== 'MatchEffects').forEach(child => child.destroy());
@@ -273,3 +294,86 @@ countdown.remainingTiles = () => 87;
 Game.prototype.updateProgress.call(countdown);
 assert.strictEqual(countdown.progressLabel.string, '本局开锅道具已全部领取，继续捞！');
 console.log('Third-level reward countdown and final reward message: OK');
+
+const actualData = loadDependency('../data/GameData');
+const saveDomain = loadDependency('../data/PlayerData');
+function persistedGame() {
+    const game = makeGame([]);
+    const writes = [];
+    game.playerService = {setSave(save) {writes.push(saveDomain.validateGameSave(save));}};
+    game.board = new Node('Board');
+    game.foodTransitionLayer = new Node('FoodTransitionLayer');
+    game.toolBar = {};
+    game.levelLabel = {};
+    game.createTileNode = game.refreshTileStates = () => {};
+    game.remainingTiles = Game.prototype.remainingTiles.bind(game);
+    game.loadLevel(1);
+    return {game, writes};
+}
+const persisted = persistedGame();
+assert.strictEqual(persisted.writes.length, 1);
+const topTiles = persisted.game.levelData.tiles.filter(tile => tile.layer === 1);
+const matchType = topTiles[0].type;
+for (const tile of topTiles.filter(tile => tile.type === matchType).slice(0, 3)) {
+    persisted.game.lastMoveSnapshot = {
+        tray: persisted.game.tray.slice(), reserve: [],
+        removedIds: persisted.game.levelData.tiles.filter(item => item.removed).map(item => item.id),
+    };
+    persisted.game.locked = true;
+    tile.removed = true;
+    persisted.game.insertIntoTray(tile.type);
+    const beforeResolve = persisted.writes.length;
+    persisted.game.checkpointGame();
+    assert.strictEqual(persisted.writes.length, beforeResolve, 'flying tiles must not save half-settled state');
+    persisted.game.resolveTray();
+    assert.strictEqual(persisted.writes.length, beforeResolve + 1);
+}
+assert.strictEqual(persisted.writes.at(-1).tray.length, 0, 'save commits match immediately, before animation completes');
+const saved = persisted.writes.at(-1);
+const afterRestore = persisted.writes.length;
+persisted.game.restoreGame(saved);
+assert.strictEqual(persisted.writes.length, afterRestore, 'restoring a checkpoint must not overwrite it with a fresh level');
+assert.deepStrictEqual(JSON.parse(JSON.stringify(persisted.game.levelData)), JSON.parse(JSON.stringify(saveDomain.restoreLevel(saved))));
+persisted.game.useUndoTool();
+assert.strictEqual(persisted.writes.at(-1).tray.length, 2);
+assert.strictEqual(persisted.writes.at(-1).toolUses.undo, 0);
+
+const savedRevive = persistedGame();
+const selected = [];
+const typeCounts = {};
+for (const tile of savedRevive.game.levelData.tiles.filter(tile => tile.layer === 1)) {
+    if ((typeCounts[tile.type] || 0) < 2 && selected.length < 7) {
+        selected.push(tile); typeCounts[tile.type] = (typeCounts[tile.type] || 0) + 1;
+    }
+}
+assert.strictEqual(selected.length, 7);
+selected.forEach(tile => {tile.removed = true; savedRevive.game.insertIntoTray(tile.type);});
+savedRevive.game.endGame(false);
+assert.strictEqual(savedRevive.writes.at(-1).status, 'lost');
+savedRevive.game.revive();
+assert.strictEqual(savedRevive.writes.at(-1).reserve.length, 3);
+assert.strictEqual(savedRevive.writes.at(-1).tray.length, 4);
+assert(savedRevive.writes.at(-1).reviveUsed);
+const revivalCheckpoint = savedRevive.writes.at(-1);
+savedRevive.game.restoreGame(revivalCheckpoint);
+assert(savedRevive.game.reviveUsed && savedRevive.game.reserve.length === 3);
+savedRevive.game.takeReservedTile(0);
+savedRevive.game.useUndoTool();
+assert.strictEqual(savedRevive.writes.at(-1).reserve.length, 3, 'reserve/undo remains available after restoration');
+
+completions.splice(0);
+const savedFlip = persistedGame();
+savedFlip.game.drawTile = () => {};
+savedFlip.game.levelData.tiles.forEach(tile => {
+    const node = new Node(tile.id); node.scale = new Vec3(1, 1, 1);
+    node.position = new Vec3(tile.x, tile.y, tile.layer);
+    savedFlip.game.tileNodes.set(tile.id, node);
+});
+const writesBeforeFlip = savedFlip.writes.length;
+savedFlip.game.useShuffleTool();
+assert.strictEqual(savedFlip.writes.length, writesBeforeFlip, 'shuffle must wait until food types settle');
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(savedFlip.writes.length, writesBeforeFlip + 1);
+assert.strictEqual(savedFlip.writes.at(-1).toolUses.shuffle, 0);
+assert.deepStrictEqual(JSON.parse(JSON.stringify(savedFlip.writes.at(-1).types)), JSON.parse(JSON.stringify(savedFlip.game.levelData.tiles.map(tile => tile.type))));
+console.log('Real save hooks: settled picks/matches, no restore overwrite, revive/reserve/undo and completed shuffle: OK');

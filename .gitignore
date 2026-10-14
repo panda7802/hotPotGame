@@ -3,3 +3,5 @@
 /.codex-work/wechat-build.*.log
 /.codex-work/wechat-package-check.json
 /.codex-work/regions-source/
+/app/HotPot/cloudfunctions/**/node_modules/
+/.codex-work/cloudbase-dev/

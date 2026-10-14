@@ -3,17 +3,24 @@ param(
     [string]$AppId = 'wx943cc2d81ec6f820',
     [string]$CreatorPath = 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe',
     [string]$WeChatCliPath = '',
+    [ValidatePattern('^[a-z0-9-]{1,64}$')]
+    [string]$OutputName = 'wechatgame',
     [switch]$Open,
     [switch]$SkipBuild
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$buildRoot = Join-Path $projectRoot 'build\wechatgame'
+$buildRoot = Join-Path (Join-Path $projectRoot 'build') $OutputName
 $projectConfigPath = Join-Path $buildRoot 'project.config.json'
 $gameConfigPath = Join-Path $buildRoot 'game.json'
 $startScene = '7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb'
 $testAppId = 'wx6ac3f5090a6b99c5'
+
+# Cloud 开发分支只输出独立测试目录，避免覆盖已归档/申请发布的构建目录。
+if ($OutputName -eq 'wechatgame' -and (Test-Path -LiteralPath (Join-Path $projectRoot 'assets\scripts\data\CloudConfig.ts'))) {
+    throw 'This cloud-development checkout must use tools/build-cloud-dev.ps1; the release export is protected.'
+}
 
 function Assert-WeChatBuildOutput {
     if (-not (Test-Path -LiteralPath $projectConfigPath)) {
@@ -43,7 +50,7 @@ if (-not $SkipBuild) {
     $buildOptions = @(
         'platform=wechatgame'
         'buildPath=project://build'
-        'outputName=wechatgame'
+        "outputName=$OutputName"
         'name=HotPot'
         'debug=false'
         'mainBundleCompressionType=subpackage'
