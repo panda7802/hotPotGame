@@ -279,6 +279,7 @@ export class HotPotGame extends Component {
     private soundButtonLabel!: Label;
     private playerService: PlayerService | null = null;
     private playerStatusLabel: Label | null = null;
+    private playerSaveLabel: Label | null = null;
     private profileButtonLabel!: Label;
     private lastResult: SaveStatus = 'playing';
     private restoringSave = false;
@@ -356,6 +357,7 @@ export class HotPotGame extends Component {
             if (!this.node.isValid) return;
             this.profileButtonLabel.string = this.playerService!.isConflict ? '存档' : '档案';
             if (this.playerStatusLabel?.node.isValid) this.playerStatusLabel.string = this.playerService!.statusText;
+            if (this.playerSaveLabel?.node.isValid) this.playerSaveLabel.string = this.playerSaveText();
         };
         await this.playerService.initialize();
         if (!this.node.isValid) return;
@@ -1495,6 +1497,7 @@ export class HotPotGame extends Component {
         const overlay = this.node.getChildByName(name);
         overlay?.removeFromParent(); overlay?.destroy();
         this.playerStatusLabel = null;
+        this.playerSaveLabel = null;
     }
 
     private makePlayerMenu(name: string, height: number): Node | null {
@@ -1508,6 +1511,12 @@ export class HotPotGame extends Component {
         return panel;
     }
 
+    private playerSaveText(): string {
+        const service = this.playerService!;
+        const save = service.state.save;
+        return save ? `第${save.levelIndex + 1}关 · ${save.removedIds.length}张已拿取 · 云版本${service.revision}` : '还没有存档';
+    }
+
     private showPlayerProfile(): void {
         const panel = this.makePlayerMenu('PlayerOverlay', 720);
         if (!panel) return;
@@ -1519,8 +1528,7 @@ export class HotPotGame extends Component {
         makeLabel(panel, path.length ? path.map(item => item.name).join(' / ') : '地区尚未选择',
             27, '#775145', new Vec3(0, 147), 580, 64, true);
         this.playerStatusLabel = makeLabel(panel, service.statusText, 24, '#A15E37', new Vec3(0, 79), 580, 42);
-        const save = service.state.save;
-        makeLabel(panel, save ? `第${save.levelIndex + 1}关 · ${save.removedIds.length}张已拿取 · 云版本${service.revision}` : '还没有存档',
+        this.playerSaveLabel = makeLabel(panel, this.playerSaveText(),
             23, '#94735D', new Vec3(0, 22), 590, 40);
         makeButton(panel, '选择地区', new Vec3(0, -61), 370, 66, '#A3613B', () => {
             if (service.status === 'connecting') return;
