@@ -1,7 +1,49 @@
 {
   "__version__": "1.3.9",
   "platform": "wechatgame",
+  "name": "HotPot",
+  "taskName": "wechatgame-cloud-dev",
+  "buildPath": "project://build",
   "outputName": "wechatgame-cloud-dev",
+  "buildMode": "normal",
+  "engineModulesConfigKey": "defaultConfig",
+  "debug": false,
+  "sourceMaps": false,
+  "md5Cache": false,
+  "mangleProperties": true,
+  "inlineEnum": true,
+  "mainBundleCompressionType": "subpackage",
+  "mainBundleIsRemote": false,
+  "startSceneAssetBundle": false,
+  "startScene": "7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb",
+  "scenes": [
+    {
+      "url": "db://assets/scene/main.scene",
+      "uuid": "7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb"
+    }
+  ],
+  "nativeCodeBundleMode": "wasm",
+  "wasmCompressionMode": "brotli",
+  "bundleConfigs": [],
+  "packAutoAtlas": true,
+  "useSplashScreen": true,
+  "useBuiltinServer": false,
+  "bundleCommonChunk": false,
+  "skipCompressTexture": false,
+  "polyfills": {"asyncFunctions": false},
+  "binGroupConfig": {"enable": false, "threshold": 16},
+  "packages": {
+    "wechatgame": {
+      "__version__": "1.0.4",
+      "appid": "wx943cc2d81ec6f820",
+      "orientation": "portrait",
+      "buildOpenDataContextTemplate": "",
+      "separateEngine": false,
+      "highPerformanceMode": false,
+      "wasmSubpackage": false
+    },
+    "hotpot-cloud-build": {}
+  },
   "overwriteProjectSettings": {
     "includeModules": {
       "mask": "on"

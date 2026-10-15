@@ -18,16 +18,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Cloud preparation failed.' }
 & (Join-Path $PSScriptRoot 'build-wechat.ps1') -CreatorPath $CreatorPath -WeChatCliPath $WeChatCliPath `
     -OutputName 'wechatgame-cloud-dev' -BuildConfigPath (Join-Path $PSScriptRoot 'wechat-cloud-dev.build.json') -SkipBuild:$SkipBuild
 $buildRoot = Join-Path $projectRoot 'build\wechatgame-cloud-dev'
-$gameConfigPath = Join-Path $buildRoot 'game.json'
-$gameConfig = Get-Content -LiteralPath $gameConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
-$gameConfig | Add-Member -NotePropertyName cloud -NotePropertyValue $true -Force
-[System.IO.File]::WriteAllText($gameConfigPath, ($gameConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
-$projectConfigPath = Join-Path $buildRoot 'project.config.json'
-$projectConfig = Get-Content -LiteralPath $projectConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
-$projectConfig | Add-Member -NotePropertyName cloudfunctionRoot -NotePropertyValue '../../cloudfunctions/' -Force
-$projectConfig.projectname = 'HotPot-Cloud-Dev'
-[System.IO.File]::WriteAllText($projectConfigPath, ($projectConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
-& node (Join-Path $PSScriptRoot 'verify-cloud-build.cjs')
+# GUI hooks and CLI builds share the same finalizer; repeated processing is idempotent.
+& node (Join-Path $PSScriptRoot 'cloud-build-pipeline.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Cloud Dev artifact validation failed.' }
 $totalBytes = (Get-ChildItem -LiteralPath $buildRoot -Recurse -File | Measure-Object Length -Sum).Sum
 if ($totalBytes -ge 4000000) { throw "Development export exceeds 4 MB: $totalBytes bytes." }

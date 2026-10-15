@@ -1646,7 +1646,7 @@ export class HotPotGame extends Component {
                 g.moveTo(234, 8); g.lineTo(242, 0); g.lineTo(234, -8); g.stroke();
             }
         });
-        makeLabel(panel, options.length * 92 + 8 > 616 ? '上下滑动，找到你的小城' : '点选地区，记录小馆所在地',
+        makeLabel(panel, options.length * 92 + 8 > 616 ? '上下滑动，找到你的地域' : '点选地区，记录小馆所在地',
             23, '#94735D', new Vec3(0, -359), 580, 42);
         makeButton(panel, codes.length ? '上一级' : '返回档案', new Vec3(-150, -445), 230, 64, '#B88261', () => {
             this.dismissPlayerMenu('RegionOverlay');
