@@ -19,8 +19,9 @@ const configModule = {exports: {}};
 vm.runInNewContext(compile('CloudConfig'), {exports: configModule.exports});
 const config = configModule.exports.CLOUD_CONFIG;
 if (config.enabled) configModule.exports.validateDevelopmentConfig(config);
-fs.mkdirSync(path.join(output, 'generated'), {recursive: true});
-for (const name of ['GameData', 'PlayerData']) fs.writeFileSync(path.join(output, 'generated', `${name}.js`), compile(name));
+fs.mkdirSync(output, {recursive: true});
+// Keep runtime modules at the function root: the live WeChat upload omitted the nested modules.
+for (const name of ['GameData', 'PlayerData']) fs.writeFileSync(path.join(output, `${name}.js`), compile(name));
 fs.writeFileSync(path.join(output, 'settings.json'), JSON.stringify({
     enabled: config.enabled, environmentId: config.environmentId,
     allowSharedEnvironment: config.allowSharedEnvironment,

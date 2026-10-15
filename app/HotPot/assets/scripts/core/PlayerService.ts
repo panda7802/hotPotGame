@@ -193,18 +193,26 @@ export class PlayerService {
     }
 
     private describeFailure(error: any): void {
-        const message = String(error?.message || error?.errMsg || '');
+        const messages = [error?.message, error?.errMsg].filter(value => typeof value === 'string');
+        const message = messages.join(' ');
         const descriptions: Record<string, string> = {
             IDENTITY_REQUIRED: '微信身份未确认，请检查云环境关联',
             DEVELOPMENT_ENV_REQUIRED: '云环境配置不匹配',
             DATABASE_UNAVAILABLE: '云存档服务暂不可用',
             INVALID_STATE: '当前存档校验失败',
         };
-        const code = Object.keys(descriptions).find(item => message === item) ||
-            (message.includes('超时') ? 'TIMEOUT' : String(error?.errCode || error?.code || 'NETWORK_ERROR'));
+        // 微信有时只在外层给出 -1，具体平台错误码包含在 errMsg 中。
+        const embeddedCodes = (message.match(/(?:errCode|errorCode)\s*[:=]\s*-?\d+/gi) || [])
+            .map(value => value.replace(/^[\s\S]*[:=]\s*/, ''));
+        const platformCode = embeddedCodes.find(value => Math.abs(Number(value)) > 1);
+        const code = Object.keys(descriptions).find(item => messages.indexOf(item) >= 0) ||
+            (message.includes('超时') ? 'TIMEOUT' : platformCode || String(error?.errCode || error?.code || 'NETWORK_ERROR'));
         this.failureText = descriptions[code] || (code === 'TIMEOUT' ? '云端请求超时，请重试' : '云端连接失败，请重试');
         // 只记录已知业务代码或平台数字错误码，不输出响应、OpenID 或原始异常。
-        console.warn('[HotPot Cloud Dev]', Object.hasOwnProperty.call(descriptions, code) || /^-?\d+$/.test(code) || code === 'TIMEOUT' ? code : 'NETWORK_ERROR');
+        const reason = ['INVALID_ENV', 'FUNCTIONS_EXECUTE_FAIL', 'FUNCTIONS_NOT_FOUND',
+            'DATABASE_PERMISSION_DENIED', 'FUNCTIONS_TIME_LIMIT_EXCEEDED', 'RESOURCE_INSUFFICIENT']
+            .find(value => message.includes(value));
+        console.warn('[HotPot Cloud Dev]', Object.hasOwnProperty.call(descriptions, code) || /^-?\d+$/.test(code) || code === 'TIMEOUT' ? code : 'NETWORK_ERROR', reason || '');
     }
 
     private callbackRequest(start: (success: (value: any) => void, fail: (error: any) => void) => void): Promise<any> {

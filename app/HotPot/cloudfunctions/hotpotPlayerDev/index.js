@@ -4,7 +4,7 @@ const settings = require('./settings.json');
 const sdk = require('@cloudbase/node-sdk');
 const {requestIdentity} = require('./request-context');
 const {createHandler} = require('./handler');
-const domain = require('./generated/PlayerData');
+const domain = require('./PlayerData.js');
 const regions = require('./regions.json');
 cloud.init({env: cloud.DYNAMIC_CURRENT_ENV});
 exports.main = (event, context) => {

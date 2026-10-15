@@ -27,6 +27,8 @@ const configDomain = load(path.join(root, 'assets/scripts/data/CloudConfig'));
 const {PlayerService} = load(path.join(root, 'assets/scripts/core/PlayerService'));
 const regions = domain.validateRegions(JSON.parse(fs.readFileSync(path.join(root, 'assets/resources/data/regions.json'), 'utf8')));
 const {createHandler} = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/handler'));
+assert.strictEqual(typeof require(path.join(root, 'cloudfunctions/hotpotPlayerDev/index')).main, 'function',
+    'the deployed function entry must load every runtime module');
 const plain = value => JSON.parse(JSON.stringify(value));
 
 function freshSave(index) {
@@ -322,4 +324,17 @@ function service(server, localStorage = storage(), options = {}, config = settin
     broken.setSave(freshSave(0));
     assert(!broken.storageAvailable && broken.statusText.includes('不可用'));
     console.log('Edits during sync, account changes, unverified offline identity, disabled cloud and broken storage: OK');
+
+    const diagnostics = [];
+    const originalWarn = console.warn;
+    try {
+        console.warn = (...values) => diagnostics.push(values);
+        local.describeFailure({errCode: -1, message: 'Generic host error',
+            errMsg: 'cloud.callFunction:fail errCode: -501005 FUNCTIONS_EXECUTE_FAIL openid=private-player token=private-token'});
+        assert.deepStrictEqual(plain(diagnostics[0]), ['[HotPot Cloud Dev]', '-501005', 'FUNCTIONS_EXECUTE_FAIL']);
+        local.describeFailure({errCode: -1, errMsg: 'private-player private-token'});
+        assert.deepStrictEqual(plain(diagnostics[1]), ['[HotPot Cloud Dev]', '-1', '']);
+        assert(!JSON.stringify(diagnostics).includes('private-'), 'diagnostics must not expose raw identity or tokens');
+    } finally {console.warn = originalWarn;}
+    console.log('Nested platform error code diagnostics without raw identity or token leakage: OK');
 })().catch(error => {console.error(error); process.exitCode = 1;});

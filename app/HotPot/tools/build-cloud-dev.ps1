@@ -27,6 +27,8 @@ $projectConfig = Get-Content -LiteralPath $projectConfigPath -Raw -Encoding UTF8
 $projectConfig | Add-Member -NotePropertyName cloudfunctionRoot -NotePropertyValue '../../cloudfunctions/' -Force
 $projectConfig.projectname = 'HotPot-Cloud-Dev'
 [System.IO.File]::WriteAllText($projectConfigPath, ($projectConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
+& node (Join-Path $PSScriptRoot 'verify-cloud-build.cjs')
+if ($LASTEXITCODE -ne 0) { throw 'Cloud Dev artifact validation failed.' }
 $totalBytes = (Get-ChildItem -LiteralPath $buildRoot -Recurse -File | Measure-Object Length -Sum).Sum
 if ($totalBytes -ge 4000000) { throw "Development export exceeds 4 MB: $totalBytes bytes." }
 Write-Host "Development build ready: $buildRoot ($totalBytes bytes)"
