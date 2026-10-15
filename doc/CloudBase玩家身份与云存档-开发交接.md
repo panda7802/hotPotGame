@@ -23,8 +23,10 @@
 - `hotpotPlayerDev` 函数 ID 为 `lam-hbbxul1p`，普通云函数，Node.js 20.19，入口 `index.main`，自动安装依赖，状态正常。体验版执行超时固定为3秒，初始化超时65秒，未升级套餐。
 - 最新代码包包含按次调用上下文解析。真实控制台测试 `load`（含伪造身份参数）成功运行并返回 `IDENTITY_REQUIRED`，未创建玩家文档。
 - 微信开发者工具已重新登录、服务端口已连通，已导入 `HotPot-Cloud-Dev`。实际拿取一张牛肉后重新编译，恢复了17/18张棋盘及一张牛肉托盘；这是本地恢复，尚未证明云恢复。
-- 微信端连接云函数仍失败，CLI列举函数报 `ResourceNotFound.Namespace`，列举云环境没有显示该环境。CloudBase“身份认证 → 登录方式”显示“如需管理小程序登录方式，需先进行小程序认证”。接入关联需要进一步核实和完成；不能把这些现象当作存档事务已成功的证据。
-- 补充原环境认证关联超出此前仅新增两个 Dev 资源的授权范围，已单独询问用户。未修改任何原认证设置、密钥、授权、地区文件或已有资源。
+- 微信端连接云函数仍失败，CLI列举函数报 `ResourceNotFound.Namespace`，列举云环境没有显示该环境。接入关联需要进一步核实和完成；不能把这些现象当作存档事务已成功的证据。
+- 2026-10-15 用户明确授权关联小游戏 AppID `wx943cc2d81ec6f820`，已重新登录腾讯云，并确认扫码微信是该小游戏登记的管理员。
+- 已纠正入口判断：CloudBase“身份认证 → 登录方式 → 小程序认证”的扫码授权实际进入“微搭低代码”第三方代开发。官方文档说明该模式会禁用小程序后台版本管理，因此不适用于本项目保护原发布流程的要求。用户明确确认尚未最终授权并已取消，已关闭微搭授权页；不得再次引导到该路径，也不能根据此入口的“无账号”提示判断小游戏管理员无效。
+- 已在腾讯云账号中心只读确认“微信公众号”（支持小程序/公众号授权登录）为未关联。后续需核对原生小游戏与腾讯云账号关联，再在微信开发者工具云开发控制台接入已有环境；不得创建替代环境或切换主体。腾讯云账号关联同时涉及账号登录方式，应由管理员核对权限并完成扫码。当前未提交关联变更，未修改原密钥、地区文件或其他已有资源。
 
 部署凭证保存在 `.codex-work/cloudbase-dev/collection-live.jpg`、`function-live.jpg`、`login-association-needed.jpg`（本地忽略目录）。
 
@@ -58,7 +60,7 @@ lastMutationId    最近成功请求的编号，用于网络重试去重
 
 ## 云端部署
 
-1. 登录腾讯云 CloudBase 控制台，确认环境为 `hotpot-d9g7g17ifb99bdd1b`；确认该环境可供本 AppID 调用。
+1. 登录腾讯云 CloudBase 控制台，确认环境为 `hotpot-d9g7g17ifb99bdd1b`；确认该环境可供本 AppID 调用。关联流程参考官方账号FAQ：账号中心核对微信公众平台绑定关系；在微信开发者工具云开发控制台“设置 → 环境设置 → 管理我的环境 → 使用已有腾讯云环境”接入。不要使用微搭“小程序认证”替代原生小游戏接入。
 2. 检查是否已有 `hotpotPlayerDev` 和 `hotpot_players_dev`；若是其他用途的同名资源，先核对，不覆盖其他资源。
 3. 在文档型云数据库中新建集合 `hotpot_players_dev`，仅该新集合设置“仅管理员可读写”，或自定义 `{ "read": false, "write": false }`。源码中的 `cloudfunctions/database.rules.json` 是配置参考，文件存在不等于云端已应用。
 4. 新建普通 Node.js 云函数 `hotpotPlayerDev`，入口为 `index.main`，使用控制台提供的 Node.js18 或更新运行时。上传整个 `app/HotPot/cloudfunctions/hotpotPlayerDev`（不上传 node_modules），安装 npm 依赖并部署。当前使用 Node.js20.19，体验版执行超时固定3秒；其他套餐可考虑20秒，但需另行确认，不能自动升级。客户端单次等待8秒，超时会保存本地并允许重试。
@@ -108,6 +110,8 @@ node "$env:COCOS_CREATOR_388\resources\app.asar.unpacked\node_modules\typescript
 
 ## 官方资料
 
+- [CloudBase 账号与已有环境关联FAQ](https://cloud.tencent.com/document/faq/876/57380)
+- [微搭扫码认证的第三方代开发与版本管理限制](https://cloud.tencent.com/document/product/1301/86886)
 - [微信云函数服务端 SDK](https://github.com/wechat-miniprogram/wx-server-sdk)
 - [CloudBase 实例复用与身份残留说明](https://docs.cloudbase.net/cloud-function/instance)
 - [CloudBase Node SDK 上下文解析](https://docs.cloudbase.net/api-reference/server/node-sdk/env)
