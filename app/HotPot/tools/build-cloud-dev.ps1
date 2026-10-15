@@ -16,7 +16,7 @@ $env:COCOS_CREATOR_388 = $creatorRoot
 & node (Join-Path $PSScriptRoot 'prepare-cloud.cjs')
 if ($LASTEXITCODE -ne 0) { throw 'Cloud preparation failed.' }
 & (Join-Path $PSScriptRoot 'build-wechat.ps1') -CreatorPath $CreatorPath -WeChatCliPath $WeChatCliPath `
-    -OutputName 'wechatgame-cloud-dev' -SkipBuild:$SkipBuild
+    -OutputName 'wechatgame-cloud-dev' -BuildConfigPath (Join-Path $PSScriptRoot 'wechat-cloud-dev.build.json') -SkipBuild:$SkipBuild
 $buildRoot = Join-Path $projectRoot 'build\wechatgame-cloud-dev'
 $gameConfigPath = Join-Path $buildRoot 'game.json'
 $gameConfig = Get-Content -LiteralPath $gameConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json

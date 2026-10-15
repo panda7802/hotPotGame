@@ -8,6 +8,12 @@ const settings = JSON.parse(fs.readFileSync(path.join(root, 'cloudfunctions', 'h
 const project = JSON.parse(fs.readFileSync(path.join(build, 'project.config.json'), 'utf8'));
 const game = JSON.parse(fs.readFileSync(path.join(build, 'game.json'), 'utf8'));
 const main = fs.readFileSync(path.join(build, 'subpackages', 'main', 'game.js'), 'utf8');
+const engine = fs.readFileSync(path.join(build, 'cocos-js', 'cc.js'), 'utf8');
+for (const component of ['Mask', 'ScrollView']) {
+    if (!new RegExp(`\\b${component}\\s*:`).test(engine)) {
+        throw new Error(`Region picker needs the ${component} engine export. Use the Cloud Dev build config.`);
+    }
+}
 const declarations = main.match(/environmentId\s*:\s*["'][^"']+["']/g) || [];
 const environments = declarations.map(value => value.match(/["']([^"']+)["']$/)[1]);
 if (!settings.enabled || !environments.length || environments.some(value => value !== settings.environmentId) ||

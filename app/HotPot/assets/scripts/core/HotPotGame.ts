@@ -5,15 +5,18 @@ import {
     BlockInputEvents,
     Color,
     Component,
+    Font,
     Graphics,
     game as cocosGame,
     Game,
     JsonAsset,
     Label,
+    Mask,
     Node,
     Rect,
     ResolutionPolicy,
     resources,
+    ScrollView,
     Sprite,
     SpriteFrame,
     sys,
@@ -280,6 +283,7 @@ export class HotPotGame extends Component {
     private playerService: PlayerService | null = null;
     private playerStatusLabel: Label | null = null;
     private playerSaveLabel: Label | null = null;
+    private regionFont: Font | null = null;
     private profileButtonLabel!: Label;
     private lastResult: SaveStatus = 'playing';
     private restoringSave = false;
@@ -340,6 +344,12 @@ export class HotPotGame extends Component {
     }
 
     private async initializePlayer(): Promise<void> {
+        await new Promise<void>(resolve => {
+            resources.load('fonts/HotPotRegion', Font, (error, font) => {
+                if (!error) this.regionFont = font;
+                resolve();
+            });
+        });
         const regions = await new Promise<RegionNode[]>((resolve) => {
             resources.load('data/regions', JsonAsset, (error, asset) => {
                 if (error || !asset) { resolve([]); return; }
@@ -1532,7 +1542,7 @@ export class HotPotGame extends Component {
             23, '#94735D', new Vec3(0, 22), 590, 40);
         makeButton(panel, '选择地区', new Vec3(0, -61), 370, 66, '#A3613B', () => {
             if (service.status === 'connecting') return;
-            this.dismissPlayerMenu('PlayerOverlay'); this.showRegionPicker([], 0);
+            this.dismissPlayerMenu('PlayerOverlay'); this.showRegionPicker([]);
         });
         makeButton(panel, service.isConflict ? '选择保留哪份存档' : service.playerId ? '同步存档' : '连接云端',
             new Vec3(0, -147), 370, 66, '#D75542', () => {
@@ -1574,8 +1584,8 @@ export class HotPotGame extends Component {
         });
     }
 
-    private showRegionPicker(codes: string[], page: number): void {
-        const panel = this.makePlayerMenu('RegionOverlay', 760);
+    private showRegionPicker(codes: string[]): void {
+        const panel = this.makePlayerMenu('RegionOverlay', 1040);
         if (!panel) return;
         const service = this.playerService!;
         let options = service.regions;
@@ -1584,35 +1594,66 @@ export class HotPotGame extends Component {
             const selected = options.find(item => item.code === code)!;
             names.push(selected.name); options = selected.children || [];
         }
-        const pages = Math.ceil(options.length / 6);
-        page = Math.max(0, Math.min(pages - 1, page));
-        makeLabel(panel, '选择地区', 40, '#8D3426', new Vec3(0, 303), 580, 58);
+        const title = makeLabel(panel, '选择地区', 46, '#8D3426', new Vec3(0, 437), 580, 70);
+        if (this.regionFont) { title.font = this.regionFont; title.useSystemFont = false; }
         makeLabel(panel, names.length ? names.join(' / ') : '请选择省份或海外', 25, '#775145',
-            new Vec3(0, 242), 590, 44);
-        options.slice(page * 6, page * 6 + 6).forEach((region, index) => {
-            makeButton(panel, region.name, new Vec3(0, 170 - index * 65), 540, 53, '#A3613B', () => {
+            new Vec3(0, 367), 590, 50, true);
+
+        // 独立裁剪窗口：滚动只移动地区卡片，标题和底部操作始终可见。
+        const viewport = new Node('RegionViewport');
+        panel.addChild(viewport);
+        viewport.setPosition(0, -5);
+        transform(viewport, 584, 616);
+        viewport.addComponent(Mask);
+        const content = new Node('RegionContent');
+        viewport.addChild(content);
+        const contentTransform = transform(content, 584, Math.max(616, options.length * 92 + 8));
+        contentTransform.setAnchorPoint(0.5, 1);
+        content.setPosition(0, 308);
+        const scroll = viewport.addComponent(ScrollView);
+        scroll.content = content;
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.inertia = true;
+        scroll.elastic = false;
+        // 拖动会取消卡片触摸，松手时不会误选滑过的城市。
+        scroll.cancelInnerEvents = true;
+        const currentCodes = service.state.profile.regionCodes;
+        options.forEach((region, index) => {
+            const selected = codes.every((code, i) => currentCodes[i] === code) &&
+                currentCodes[codes.length] === region.code;
+            const button = makeButton(content, region.name, new Vec3(0, -48 - index * 92), 548, 76,
+                selected ? '#F6C887' : '#F3E2CA', () => {
                 const next = [...codes, region.code];
                 if (region.children?.length) {
-                    this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(next, 0);
+                    this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(next);
                 } else {
                     service.setRegion(next);
                     this.dismissPlayerMenu('RegionOverlay'); this.showPlayerProfile();
                 }
             });
+            const label = button.getChildByName('Label')!.getComponent(Label)!;
+            transform(label.node, 438, 62);
+            label.fontSize = 35;
+            label.lineHeight = 46;
+            label.color = hex('#744329');
+            if (this.regionFont) { label.font = this.regionFont; label.useSystemFont = false; }
+            if (region.children?.length) {
+                const arrow = new Node('RegionArrow');
+                button.addChild(arrow);
+                const g = arrow.addComponent(Graphics);
+                g.strokeColor = hex('#AD7950'); g.lineWidth = 4;
+                g.moveTo(234, 8); g.lineTo(242, 0); g.lineTo(234, -8); g.stroke();
+            }
         });
-        makeButton(panel, '上一页', new Vec3(-170, -222), 145, 48, '#B88261', () => {
-            this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(codes, page - 1);
-        });
-        makeLabel(panel, `${page + 1} / ${pages}`, 24, '#775145', new Vec3(0, -222), 130, 38);
-        makeButton(panel, '下一页', new Vec3(170, -222), 145, 48, '#B88261', () => {
-            this.dismissPlayerMenu('RegionOverlay'); this.showRegionPicker(codes, page + 1);
-        });
-        makeButton(panel, codes.length ? '上一级' : '返回档案', new Vec3(-150, -305), 230, 58, '#B88261', () => {
+        makeLabel(panel, options.length * 92 + 8 > 616 ? '上下滑动，找到你的小城' : '点选地区，记录小馆所在地',
+            23, '#94735D', new Vec3(0, -359), 580, 42);
+        makeButton(panel, codes.length ? '上一级' : '返回档案', new Vec3(-150, -445), 230, 64, '#B88261', () => {
             this.dismissPlayerMenu('RegionOverlay');
-            if (codes.length) this.showRegionPicker(codes.slice(0, -1), 0);
+            if (codes.length) this.showRegionPicker(codes.slice(0, -1));
             else this.showPlayerProfile();
         });
-        makeButton(panel, '取消', new Vec3(150, -305), 230, 58, '#B88261', () => {
+        makeButton(panel, '取消', new Vec3(150, -445), 230, 64, '#B88261', () => {
             this.dismissPlayerMenu('RegionOverlay'); this.showPlayerProfile();
         });
     }

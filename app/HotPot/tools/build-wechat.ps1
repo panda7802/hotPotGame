@@ -3,6 +3,7 @@ param(
     [string]$AppId = 'wx943cc2d81ec6f820',
     [string]$CreatorPath = 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe',
     [string]$WeChatCliPath = '',
+    [string]$BuildConfigPath = '',
     [ValidatePattern('^[a-z0-9-]{1,64}$')]
     [string]$OutputName = 'wechatgame',
     [switch]$Open,
@@ -64,6 +65,12 @@ if (-not $SkipBuild) {
         'highPerformanceMode=false'
         'wasmSubpackage=false'
     ) -join ';'
+    if ($BuildConfigPath) {
+        if (-not (Test-Path -LiteralPath $BuildConfigPath -PathType Leaf)) {
+            throw "Build config not found: $BuildConfigPath"
+        }
+        $buildOptions += ';configPath=' + (Resolve-Path -LiteralPath $BuildConfigPath).Path.Replace('\', '/')
+    }
 
     $buildStartedAt = Get-Date
     Write-Host "Building WeChat Mini Game: $projectRoot"
