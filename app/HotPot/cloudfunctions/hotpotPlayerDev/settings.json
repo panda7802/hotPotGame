@@ -1,8 +1,8 @@
 {
   "enabled": true,
-  "environmentId": "hotpot-d9g7g17ifb99bdd1b",
-  "allowSharedEnvironment": true,
-  "regionsFileId": "cloud://hotpot-d9g7g17ifb99bdd1b.686f-hotpot-d9g7g17ifb99bdd1b-1252911381/res/regions.json",
+  "environmentId": "cloud1-d2gc9q7cobffff893",
+  "allowSharedEnvironment": false,
+  "regionsFileId": "",
   "collectionName": "hotpot_players_dev",
   "appId": "wx943cc2d81ec6f820"
 }

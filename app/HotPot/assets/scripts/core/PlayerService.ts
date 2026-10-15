@@ -160,11 +160,12 @@ export class PlayerService {
     }
 
     private async loadRegions(): Promise<void> {
-        const key = `hotpot.regions.dev.v1:${this.config.regionsFileId}`;
+        const key = `hotpot.regions.dev.v1:${this.config.environmentId}:${this.config.regionsFileId || 'bundled'}`;
         try {
             const cached = this.storage.getItem(key);
             if (cached) this.regions = validateRegions(JSON.parse(cached));
         } catch { /* 损坏缓存使用随包数据。 */ }
+        if (!this.config.regionsFileId) return;
         try {
             const downloaded: any = await this.callbackRequest((success, fail) =>
                 this.cloud.downloadFile({fileID: this.config.regionsFileId, success, fail}));

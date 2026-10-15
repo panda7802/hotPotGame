@@ -1,34 +1,39 @@
 # CloudBase 玩家身份、地区保存与云存档
 
-日期：2026-10-14。开发分支：`codex/cloudbase-player-save`。基线：`f1509dbea642439a0abf86131f8f272c8095ed12`。
+日期：2026-10-15。开发分支：`codex/cloudbase-player-save`。基线：`f1509dbea642439a0abf86131f8f272c8095ed12`。
 
-## 隔离范围
+## 当前环境与隔离范围
 
-用户已明确选择沿用环境 `hotpot-d9g7g17ifb99bdd1b`，允许新增 `hotpotPlayerDev` 云函数及 `hotpot_players_dev` 集合，只读原地区文件，不修改原有资源。
+用户已同意在小游戏所属腾讯云账号下创建独立微信云开发环境，并手动完成创建。
 
-- 小游戏 AppID：`wx943cc2d81ec6f820`。
-- 地区 File ID：`cloud://hotpot-d9g7g17ifb99bdd1b.686f-hotpot-d9g7g17ifb99bdd1b-1252911381/res/regions.json`。
-- 原 `main` 分支、旧 `build/wechatgame` 目录、已归档发布 ZIP 不覆盖、不发布。
-- 测试构建目录固定为 `app/HotPot/build/wechatgame-cloud-dev`；新脚本拒绝在其他分支部署。
-- 客户端和云函数限制使用上述 Dev 名称。共用原环境必须显式设置 `allowSharedEnvironment: true`，未授权配置会被拒绝。
-- 原地区文件继续保持原权限即可：客户端可直接读取时直接下载；无权限时由新增云函数只读下载后返回地区选项。两条路径失败时使用随包副本。
+- 小游戏 AppID：`wx943cc2d81ec6f820`，名称“锅里捞啥”。
+- 所属腾讯云账号：`100053731772`。
+- 新环境名称：`cloud1`，环境 ID：`cloud1-d2gc9q7cobffff893`，微信体验版。微信 CLI 已成功列举该环境。
+- 开发云函数固定为 `hotpotPlayerDev`，集合固定为 `hotpot_players_dev`。2026-10-15 用户确认已按“仅管理员可读写 / ADMINONLY”的操作要求创建集合；尚未独立读取云端权限配置。
+- 地区数据使用随包副本，与服务端校验数据保持一致。`regionsFileId` 留空，不跨账号读取旧环境私有文件。
+- `allowSharedEnvironment: false`。旧环境 `hotpot-d9g7g17ifb99bdd1b` 仍受发布环境保护，不作为当前客户端目标。
+- 原 `main` 分支、旧 `build/wechatgame` 目录、已归档发布 ZIP 不覆盖、不发布。用户原有 `settings/v2/packages/engine.json` 修改不纳入本任务提交。
+- 测试构建目录固定为 `app/HotPot/build/wechatgame-cloud-dev`；构建与部署脚本只允许当前开发分支。
 
 ## 当前完成状态
 
-代码、共享存档校验规则、云函数源码、部署脚本和本地验证已完成。Cocos 浏览器预览已实际验证“江苏→南京→鼓楼”选择与刷新恢复，以及拿牌后棋盘/托盘恢复；无运行时错误。
+代码、共享校验规则和本地验证已完成，包括三关936次稳定拿牌、存档往返、身份隔离、事务版本冲突、重试去重、断网队列和同步期间继续操作。新增验证确认新环境不读取旧环境地区文件。
 
-**Dev 云函数和集合已真实部署；微信身份与云存档联调尚未通过。**
+**新环境云函数已部署；微信真实身份与云恢复验收待用户操作确认。**
 
-- `hotpot_players_dev` 已创建，权限页面确认选中 `ADMINONLY`（无客户端权限），未手工添加玩家文档。
-- `hotpotPlayerDev` 函数 ID 为 `lam-hbbxul1p`，普通云函数，Node.js 20.19，入口 `index.main`，自动安装依赖，状态正常。体验版执行超时固定为3秒，初始化超时65秒，未升级套餐。
-- 最新代码包包含按次调用上下文解析。真实控制台测试 `load`（含伪造身份参数）成功运行并返回 `IDENTITY_REQUIRED`，未创建玩家文档。
-- 微信开发者工具已重新登录、服务端口已连通，已导入 `HotPot-Cloud-Dev`。实际拿取一张牛肉后重新编译，恢复了17/18张棋盘及一张牛肉托盘；这是本地恢复，尚未证明云恢复。
-- 微信端连接云函数仍失败，CLI列举函数报 `ResourceNotFound.Namespace`，列举云环境没有显示该环境。接入关联需要进一步核实和完成；不能把这些现象当作存档事务已成功的证据。
-- 2026-10-15 用户明确授权关联小游戏 AppID `wx943cc2d81ec6f820`，已重新登录腾讯云，并确认扫码微信是该小游戏登记的管理员。
-- 已纠正入口判断：CloudBase“身份认证 → 登录方式 → 小程序认证”的扫码授权实际进入“微搭低代码”第三方代开发。官方文档说明该模式会禁用小程序后台版本管理，因此不适用于本项目保护原发布流程的要求。用户明确确认尚未最终授权并已取消，已关闭微搭授权页；不得再次引导到该路径，也不能根据此入口的“无账号”提示判断小游戏管理员无效。
-- 已在腾讯云账号中心只读确认“微信公众号”（支持小程序/公众号授权登录）为未关联。后续需核对原生小游戏与腾讯云账号关联，再在微信开发者工具云开发控制台接入已有环境；不得创建替代环境或切换主体。腾讯云账号关联同时涉及账号登录方式，应由管理员核对权限并完成扫码。当前未提交关联变更，未修改原密钥、地区文件或其他已有资源。
+2026-10-15 微信 CLI 部署返回 `hotpotPlayerDev: success true`（10个文件，23.7 KB），随后列举新环境函数可见该名称。独立 Cocos 构建完成，大小3757842字节，低于4 MB。构建没有打开或接管用户界面。部署成功、本地验证与重新编译后的本地恢复，均不能单独证明云恢复已通过。
 
-部署凭证保存在 `.codex-work/cloudbase-dev/collection-live.jpg`、`function-live.jpg`、`login-association-needed.jpg`（本地忽略目录）。
+此前 Cocos 浏览器预览已验证“江苏→南京→鼓楼”选择与刷新恢复；微信开发者工具中拿取一张牛肉后重新编译也已恢复17/18张棋盘和一张托盘。这些都是本地恢复证据。
+
+### 旧环境接入排查记录
+
+旧 `hotpot` 环境属于腾讯云账号 `814252020`，小游戏已经绑定 `100053731772`。腾讯云官网账号绑定页面明确返回账号冲突，未完成换绑；这与管理员微信、个人/企业主体类型无关。用户后续选择新建原生微信云环境，未解绑或迁移旧资源。
+
+旧环境曾按此前授权新增 `hotpotPlayerDev`（ID `lam-hbbxul1p`）与 `hotpot_players_dev`（ADMINONLY）；函数无微信身份时实际返回 `IDENTITY_REQUIRED`。旧 Dev 资源保留，不自动删除。原地区文件和原有其他资源未修改。
+
+CloudBase“身份认证→登录方式→小程序认证”曾误进入微搭低代码代开发授权，用户未最终授权并取消。不得再次使用该入口替代小游戏原生云开发。官方文档说明代开发涉及版本管理限制。用户希望自行操作电脑；后续只提供界面步骤，后台 CLI、代码修改与构建不接管鼠标或切换窗口。
+
+旧环境部署和账号冲突的截图保存在本地忽略目录 `.codex-work/cloudbase-dev`，仅作为旧环境排查记录。
 
 ## 玩家档案和存档
 
@@ -60,13 +65,12 @@ lastMutationId    最近成功请求的编号，用于网络重试去重
 
 ## 云端部署
 
-1. 登录腾讯云 CloudBase 控制台，确认环境为 `hotpot-d9g7g17ifb99bdd1b`；确认该环境可供本 AppID 调用。关联流程参考官方账号FAQ：账号中心核对微信公众平台绑定关系；在微信开发者工具云开发控制台“设置 → 环境设置 → 管理我的环境 → 使用已有腾讯云环境”接入。不要使用微搭“小程序认证”替代原生小游戏接入。
-2. 检查是否已有 `hotpotPlayerDev` 和 `hotpot_players_dev`；若是其他用途的同名资源，先核对，不覆盖其他资源。
-3. 在文档型云数据库中新建集合 `hotpot_players_dev`，仅该新集合设置“仅管理员可读写”，或自定义 `{ "read": false, "write": false }`。源码中的 `cloudfunctions/database.rules.json` 是配置参考，文件存在不等于云端已应用。
-4. 新建普通 Node.js 云函数 `hotpotPlayerDev`，入口为 `index.main`，使用控制台提供的 Node.js18 或更新运行时。上传整个 `app/HotPot/cloudfunctions/hotpotPlayerDev`（不上传 node_modules），安装 npm 依赖并部署。当前使用 Node.js20.19，体验版执行超时固定3秒；其他套餐可考虑20秒，但需另行确认，不能自动升级。客户端单次等待8秒，超时会保存本地并允许重试。
-5. 原 `res/regions.json` 无需覆盖、移动或开放权限。云函数读取该文件，无法读取时游戏仍能使用随包地区副本。
+1. 在小游戏的微信开发者工具中打开“云开发”，确认顶部环境为 `cloud1`；环境 ID 必须是 `cloud1-d2gc9q7cobffff893`。不要再次接入旧账号环境或微搭代开发。
+2. 数据库仅使用新集合 `hotpot_players_dev`，权限应为“仅管理员可读写 / ADMINONLY”，或自定义 `{ "read": false, "write": false }`。源码中的 `cloudfunctions/database.rules.json` 是规则参考，文件存在不代表云端已经应用。
+3. 检查是否存在同名其他用途的函数；仅部署本分支 `hotpotPlayerDev`，入口 `index.main`，远程安装锁定的 npm 依赖。不更改套餐或购买资源。
+4. 新环境不需要创建地区文件。客户端和云函数都使用准备脚本生成的随包地区副本。
 
-可以通过已登录的微信开发者工具部署：
+通过已登录且开启服务端口的微信开发者工具部署：
 
 ```powershell
 $env:COCOS_CREATOR_388 = 'D:\ProgramData\cocos\editor\Creator\3.8.8'
@@ -74,9 +78,9 @@ node .\app\HotPot\tools\prepare-cloud.cjs
 powershell -ExecutionPolicy Bypass -File .\app\HotPot\tools\deploy-cloud-dev.ps1 -CreatorRoot $env:COCOS_CREATOR_388
 ```
 
-CLI只指定上传 `hotpotPlayerDev`，不上传小游戏版本、不部署其他云函数。当前微信CLI无法列举此环境的Namespace，因此本次通过CloudBase新版平台代码包部署。不要在未核实关联前重复CLI部署或创建其他资源。控制台单独测试 `{"action":"load"}` 没有真实微信身份，返回 `IDENTITY_REQUIRED` 符合预期；真实登录必须从小游戏调用验证。
+CLI 固定上传该函数绝对路径，目标环境来自开发配置，不上传小游戏版本。部署脚本兼容 Windows PowerShell 对 stderr 进度输出的处理，再根据完整输出和退出码判定失败。控制台单独测试 `{"action":"load"}` 没有真实微信身份，返回 `IDENTITY_REQUIRED` 符合预期；真实身份必须从小游戏调用验证。
 
-部署前运行 `prepare-cloud.cjs`，由客户端配置生成云函数设置，并将 `GameData.ts`、`PlayerData.ts` 编译到 `generated/`。地区副本同时写入客户端资源和云函数目录。地区数据更新时应一起更新这两份规则数据。
+部署前运行 `prepare-cloud.cjs`，由客户端配置生成云函数设置，并将 `GameData.ts`、`PlayerData.ts` 编译到 `generated/`。地区副本同时写入客户端资源和云函数目录，源数据位于 `doc/res/regions.json`，更新时应一起生成。
 
 ## 构建和验收
 

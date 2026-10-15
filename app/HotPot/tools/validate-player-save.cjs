@@ -146,6 +146,7 @@ function wxClient(server, options = {}) {
     return {cloud: {
         init({env}) {assert.strictEqual(env, settings.environmentId); options.initCount = (options.initCount || 0) + 1;},
         downloadFile({success, fail}) {
+            options.regionDownloads = (options.regionDownloads || 0) + 1;
             if (options.failRegion) fail(new Error('Permission denied'));
             else success({tempFilePath: '/regions.json'});
         },
@@ -225,6 +226,22 @@ function service(server, localStorage = storage(), options = {}, config = settin
     assert.throws(() => configDomain.validateDevelopmentConfig({...settings, collectionName: 'production_players'}));
     assert.throws(() => configDomain.validateDevelopmentConfig({...settings, functionName: 'productionPlayer'}));
     console.log('Read-only private region-file access and explicitly authorized shared environment with fixed Dev names: OK');
+
+    const bundledConfig = {...settings, regionsFileId: ''};
+    configDomain.validateDevelopmentConfig(bundledConfig);
+    assert.throws(() => configDomain.validateDevelopmentConfig({...bundledConfig, regionsFileId: 'cloud://another-account.bucket/res/regions.json'}));
+    const bundledCloud = {getWXContext: () => ({ENV: settings.environmentId, APPID: settings.appId, OPENID: 'alice'}),
+        downloadFile: () => {throw new Error('Bundled regions must not access cloud storage');}};
+    const bundledResponse = await createHandler(bundledCloud, bundledConfig, domain, regions)({action: 'regions'});
+    assert(bundledResponse.ok);
+    assert.deepStrictEqual(plain(bundledResponse.regions), plain(regions));
+    const bundledOptions = {};
+    const bundledClient = service(backend(), storage(), bundledOptions, bundledConfig);
+    await bundledClient.initialize();
+    assert.strictEqual(bundledClient.status, 'synced');
+    assert.strictEqual(bundledOptions.regionDownloads || 0, 0, 'a new environment must not request the old account storage file');
+    assert.deepStrictEqual(plain(bundledClient.regions), plain(regions));
+    console.log('Native development environment: bundled regions and no cross-account storage access: OK');
 
     const syncServer = backend();
     const cache = storage();

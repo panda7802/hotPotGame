@@ -15,6 +15,7 @@ exports.createHandler = function createHandler(cloud, settings, domain, regions,
         if (!context.OPENID || context.APPID !== settings.appId) return {ok: false, code: 'IDENTITY_REQUIRED'};
         if (!['load', 'save', 'regions'].includes(event.action)) return {ok: false, code: 'INVALID_ACTION'};
         if (event.action === 'regions') {
+            if (!settings.regionsFileId) return {ok: true, regions: domain.validateRegions(regions)};
             if (!settings.regionsFileId?.startsWith(`cloud://${settings.environmentId}.`)) return {ok: false, code: 'INVALID_REGION_FILE'};
             try {
                 // 原文件不开放权限、不改写；由新增云函数读取公开地区选项。
