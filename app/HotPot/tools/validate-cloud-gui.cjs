@@ -22,6 +22,7 @@ try {
     assertBranch(root, () => BRANCH);
     assert.throws(() => assertBranch(root, () => 'main'), /分支/);
     for (const change of [c => c.outputName = 'wechatgame', c => c.outputName = 'wechatgame-001',
+        c => c.outputName = 'wechatgame-cloud-dev-001',
         c => c.buildPath = '../build', c => c.buildMode = 'script', c => c.mainBundleIsRemote = true,
         c => c.packages.wechatgame.appid = 'wrong', c => c.overwriteProjectSettings.includeModules.mask = 'off']) {
         const invalid = clone(config); change(invalid);
@@ -76,7 +77,16 @@ try {
     assert.strictEqual(typeof hooks.onAfterBuild, 'function');
     const rule = require('../extensions/hotpot-cloud-build/builder.js').configs.wechatgame.verifyRuleMap.cloudDevelopmentTarget;
     assert.strictEqual(rule.func(true, config), true);
-    assert.strictEqual(rule.func(true, {...config, outputName: 'wechatgame-001'}), false);
+    const diagnostics = [];
+    const originalError = console.error;
+    try {
+        console.error = message => diagnostics.push(message);
+        assert.strictEqual(rule.func(true, {...config, outputName: 'wechatgame-001'}), false);
+        // Creator may retain the task name while appending a suffix to the actual output.
+        assert.strictEqual(rule.func(true, {...config, outputName: 'wechatgame-cloud-dev-001'}), false);
+    } finally { console.error = originalError; }
+    assert(diagnostics.some(message => message.includes('wechatgame-cloud-dev-001') && message.includes('不要只改任务名')),
+        'GUI validation must report the actual output name and how to correct it');
     console.log('GUI build pipeline: output protection, branch/config checks, region validation, CloudBase flags, idempotency, stale environment, missing Mask and size limit: OK');
 } finally {
     const resolved = path.resolve(fixture);

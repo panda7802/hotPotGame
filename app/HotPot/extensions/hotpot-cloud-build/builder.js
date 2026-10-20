@@ -9,7 +9,7 @@ exports.configs = {
         options: {
             protectRelease: {
                 label: '保护旧发布目录',
-                description: '请导入云开发配置，输出 build/wechatgame-cloud-dev。',
+                description: '发布包名称须为 wechatgame-cloud-dev；若自动追加了 -001，请手动去掉。任务名不能代替输出目录名称。',
                 default: true,
                 render: {ui: 'ui-checkbox', attributes: {disabled: true}},
                 verifyRules: ['cloudDevelopmentTarget'],
@@ -17,10 +17,13 @@ exports.configs = {
         },
         verifyRuleMap: {
             cloudDevelopmentTarget: {
-                message: '请新建任务并导入 tools/wechat-cloud-dev.build.json；旧发布目录禁止覆盖。',
+                message: '云开发配置校验失败，具体原因见控制台 [HotPot Cloud Build]。发布包名称须为 wechatgame-cloud-dev，不能带 -001。',
                 func: (_value, options) => {
                     try { assertBuildOptions(root, options); return true; }
-                    catch { return false; }
+                    catch (error) {
+                        console.error(`[HotPot Cloud Build] ${error.message}`);
+                        return false;
+                    }
                 },
             },
         },

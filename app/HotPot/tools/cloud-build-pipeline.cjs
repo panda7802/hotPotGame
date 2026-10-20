@@ -31,8 +31,12 @@ function assertBuildOptions(root, options) {
     const expected = path.join(root, 'build');
     const buildPath = options.buildPath?.startsWith('project://')
         ? path.resolve(root, options.buildPath.slice('project://'.length)) : options.buildPath;
-    if (options.platform !== 'wechatgame' || options.outputName !== OUTPUT || !buildPath || !samePath(buildPath, expected)) {
-        throw new Error('旧发布目录受保护。请新建任务并导入 tools/wechat-cloud-dev.build.json，输出 build/wechatgame-cloud-dev。');
+    if (options.platform !== 'wechatgame') throw new Error('云开发构建的平台必须是微信小游戏。');
+    if (options.outputName !== OUTPUT) {
+        throw new Error(`当前发布包名称为“${options.outputName || '未设置'}”，必须改为“${OUTPUT}”。请修改输出目录名称，不要只改任务名；若 Cocos 自动追加了 -001，请去掉后再构建。旧发布目录仍受保护。`);
+    }
+    if (!buildPath || !samePath(buildPath, expected)) {
+        throw new Error(`发布路径必须为 project://build（${expected}），当前为“${options.buildPath || '未设置'}”。`);
     }
     if (options.buildMode !== 'normal' || options.debug !== false || options.md5Cache !== false ||
         options.mainBundleCompressionType !== 'subpackage' || options.startScene !== START_SCENE ||
