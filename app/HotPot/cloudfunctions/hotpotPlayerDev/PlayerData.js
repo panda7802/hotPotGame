@@ -1,8 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BOARD_VERSION = exports.SAVE_VERSION = void 0;
+exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = void 0;
 exports.clone = clone;
+exports.emptyProgress = emptyProgress;
 exports.emptyPlayerState = emptyPlayerState;
+exports.validateProgress = validateProgress;
+exports.mergeProgress = mergeProgress;
 exports.validateRegions = validateRegions;
 exports.regionPath = regionPath;
 exports.validateGameSave = validateGameSave;
@@ -11,6 +14,7 @@ exports.validatePlayerState = validatePlayerState;
 const GameData_1 = require("./GameData");
 exports.SAVE_VERSION = 1;
 exports.BOARD_VERSION = 'hotpot-20260929';
+exports.PROGRESS_VERSION = 1;
 function check(condition, message) {
     if (!condition)
         throw new Error(message);
@@ -19,7 +23,58 @@ function integer(value, min, max) {
     return Number.isInteger(value) && value >= min && value <= max;
 }
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
-function emptyPlayerState() { return { profile: { regionCodes: [] }, save: null }; }
+function emptyProgress() {
+    return { version: 1, discovered: [], bestCleared: GameData_1.LEVELS.map(() => 0), completedLevels: [], cleanWins: [], regionChosen: false };
+}
+function emptyPlayerState() { return { profile: { regionCodes: [] }, save: null, progress: emptyProgress() }; }
+/** 永久记录使用集合和关卡最高值；重开、撤回、重复同步均不重复累计。 */
+function validateProgress(value) {
+    if (value === undefined)
+        return emptyProgress(); // 兼容旧存档。
+    check(value && value.version === exports.PROGRESS_VERSION, '图鉴成就版本不兼容');
+    check(typeof value.regionChosen === 'boolean', '地区成就记录错误');
+    const ingredientIds = GameData_1.INGREDIENTS.map(item => item.id);
+    check(Array.isArray(value.discovered) && value.discovered.length <= ingredientIds.length &&
+        value.discovered.every(id => ingredientIds.indexOf(id) >= 0) && new Set(value.discovered).size === value.discovered.length, '图鉴记录错误');
+    check(Array.isArray(value.bestCleared) && value.bestCleared.length === GameData_1.LEVELS.length &&
+        value.bestCleared.every((count, index) => integer(count, 0, GameData_1.LEVELS[index].layers.reduce((sum, size) => sum + size, 0)) && count % 3 === 0), '消除里程碑错误');
+    const levels = (items) => {
+        check(Array.isArray(items) && items.length <= GameData_1.LEVELS.length && new Set(items).size === items.length &&
+            items.every(index => integer(index, 0, GameData_1.LEVELS.length - 1)), '通关记录错误');
+        return items.slice().sort((a, b) => a - b);
+    };
+    const completedLevels = levels(value.completedLevels);
+    const cleanWins = levels(value.cleanWins);
+    check(cleanWins.every(index => completedLevels.indexOf(index) >= 0) && completedLevels.every(index => value.bestCleared[index] === GameData_1.LEVELS[index].layers.reduce((sum, size) => sum + size, 0)), '通关里程碑不一致');
+    return { version: 1, discovered: ingredientIds.filter(id => value.discovered.indexOf(id) >= 0),
+        bestCleared: value.bestCleared.slice(), completedLevels, cleanWins, regionChosen: value.regionChosen };
+}
+function mergeProgress(a, b) {
+    return { version: 1, discovered: GameData_1.INGREDIENTS.map(item => item.id).filter(id => a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >= 0),
+        bestCleared: GameData_1.LEVELS.map((_, i) => Math.max(a.bestCleared[i], b.bestCleared[i])),
+        completedLevels: GameData_1.LEVELS.map((_, i) => i).filter(i => a.completedLevels.indexOf(i) >= 0 || b.completedLevels.indexOf(i) >= 0),
+        cleanWins: GameData_1.LEVELS.map((_, i) => i).filter(i => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
+        regionChosen: a.regionChosen || b.regionChosen };
+}
+function recordProgress(progress, save) {
+    const next = clone(progress);
+    if (!save)
+        return next;
+    const removed = new Set(save.removedIds);
+    const seen = new Set([...next.discovered, ...save.tray, ...save.reserve]);
+    template(save.levelIndex).tiles.forEach((tile, index) => { if (removed.has(tile.id))
+        seen.add(save.types[index]); });
+    next.discovered = GameData_1.INGREDIENTS.map(item => item.id).filter(id => seen.has(id));
+    const cleared = save.removedIds.length - save.tray.length - save.reserve.length;
+    next.bestCleared[save.levelIndex] = Math.max(next.bestCleared[save.levelIndex], cleared);
+    if (save.status === 'won') {
+        if (next.completedLevels.indexOf(save.levelIndex) < 0)
+            next.completedLevels.push(save.levelIndex);
+        if (!save.reviveUsed && next.cleanWins.indexOf(save.levelIndex) < 0)
+            next.cleanWins.push(save.levelIndex);
+    }
+    return validateProgress(next);
+}
 function validateRegions(value) {
     const seen = new Set();
     const walk = (items, depth) => {
@@ -124,5 +179,10 @@ function restoreLevel(save) {
 function validatePlayerState(value, regions) {
     check(value && value.profile, '玩家档案格式错误');
     const path = regionPath(regions, value.profile.regionCodes);
-    return { profile: { regionCodes: path.map(item => item.code) }, save: value.save === null ? null : validateGameSave(value.save) };
+    const save = value.save === null ? null : validateGameSave(value.save);
+    const progress = validateProgress(value.progress);
+    if (path.length)
+        progress.regionChosen = true;
+    return { profile: { regionCodes: path.map(item => item.code) }, save,
+        progress: recordProgress(progress, save) };
 }

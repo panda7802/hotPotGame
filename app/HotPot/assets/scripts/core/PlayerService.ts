@@ -1,7 +1,7 @@
 import {CLOUD_CONFIG, validateDevelopmentConfig} from '../data/CloudConfig';
 import {
     clone, CloudPlayer, emptyPlayerState, GameSave, PlayerState, RegionNode,
-    validatePlayerState, validateRegions,
+    validatePlayerState, validateRegions, mergeProgress, PROGRESS_VERSION,
 } from '../data/PlayerData';
 
 export interface PlayerStorage {getItem(key: string): string | null; setItem(key: string, value: string): void;}
@@ -127,7 +127,11 @@ export class PlayerService {
                     this.local.dirty = false;
                     this.local.state = remote.state;
                     this.status = 'synced';
-                } else this.status = 'pending';
+                } else {
+                    // 云端可能合并了另一设备的永久记录，保留同步期间新操作及云端图鉴。
+                    this.local.state.progress = mergeProgress(this.local.state.progress, remote.state.progress);
+                    this.status = 'pending';
+                }
                 this.persist(); this.changed();
             } catch (error) {
                 this.describeFailure(error);
@@ -140,11 +144,16 @@ export class PlayerService {
     resolveConflict(useCloud: boolean): PlayerState {
         if (!this.remote || !this.playerId || this.status !== 'conflict') throw new Error('当前没有存档冲突');
         const remote = this.remote;
+        const progress = mergeProgress(this.local.state.progress, remote.state.progress);
         this.remote = null;
         if (useCloud) {
             this.local = this.blank(this.playerId, remote.revision, remote.state);
-            this.status = 'synced';
+            this.local.state.progress = progress;
+            this.local.dirty = JSON.stringify(progress) !== JSON.stringify(remote.state.progress);
+            if (this.local.dirty) this.local.mutationId = this.newMutationId();
+            this.status = this.local.dirty ? 'pending' : 'synced';
         } else {
+            this.local.state.progress = progress;
             this.local.baseRevision = remote.revision;
             this.local.dirty = true;
             this.local.mutationId = this.newMutationId();
@@ -189,6 +198,9 @@ export class PlayerService {
             name: this.config.functionName, config: {env: this.config.environmentId}, data, success, fail,
         }));
         if (!response.result?.ok) throw new Error(response.result?.code || '云端请求失败');
+        if (data.action !== 'regions' && response.result.progressVersion !== PROGRESS_VERSION) {
+            throw new Error('CLOUD_UPGRADE_REQUIRED');
+        }
         return response.result;
     }
 
@@ -200,6 +212,7 @@ export class PlayerService {
             DEVELOPMENT_ENV_REQUIRED: '云环境配置不匹配',
             DATABASE_UNAVAILABLE: '云存档服务暂不可用',
             INVALID_STATE: '当前存档校验失败',
+            CLOUD_UPGRADE_REQUIRED: '请先更新云函数再同步图鉴与成就',
         };
         // 微信有时只在外层给出 -1，具体平台错误码包含在 errMsg 中。
         const embeddedCodes = (message.match(/(?:errCode|errorCode)\s*[:=]\s*-?\d+/gi) || [])

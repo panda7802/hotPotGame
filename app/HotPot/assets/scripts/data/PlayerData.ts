@@ -2,6 +2,7 @@ import {createLevel, IngredientType, INGREDIENTS, LevelData, LEVELS} from './Gam
 
 export const SAVE_VERSION = 1;
 export const BOARD_VERSION = 'hotpot-20260929';
+export const PROGRESS_VERSION = 1;
 export type SaveStatus = 'playing' | 'lost' | 'won';
 export interface SavedMove {
     tray: IngredientType[];
@@ -20,9 +21,18 @@ export interface GameSave extends SavedMove {
     status: SaveStatus;
 }
 export interface RegionNode {code: string; name: string; children?: RegionNode[];}
+export interface CollectionProgress {
+    version: 1;
+    discovered: IngredientType[];
+    bestCleared: number[];
+    completedLevels: number[];
+    cleanWins: number[];
+    regionChosen: boolean;
+}
 export interface PlayerState {
     profile: {regionCodes: string[]};
     save: GameSave | null;
+    progress: CollectionProgress;
 }
 export interface CloudPlayer {
     playerId: string;
@@ -39,7 +49,59 @@ function integer(value: unknown, min: number, max: number): value is number {
     return Number.isInteger(value) && (value as number) >= min && (value as number) <= max;
 }
 export function clone<T>(value: T): T { return JSON.parse(JSON.stringify(value)); }
-export function emptyPlayerState(): PlayerState { return {profile: {regionCodes: []}, save: null}; }
+export function emptyProgress(): CollectionProgress {
+    return {version: 1, discovered: [], bestCleared: LEVELS.map(() => 0), completedLevels: [], cleanWins: [], regionChosen: false};
+}
+export function emptyPlayerState(): PlayerState { return {profile: {regionCodes: []}, save: null, progress: emptyProgress()}; }
+
+/** 永久记录使用集合和关卡最高值；重开、撤回、重复同步均不重复累计。 */
+export function validateProgress(value: any): CollectionProgress {
+    if (value === undefined) return emptyProgress(); // 兼容旧存档。
+    check(value && value.version === PROGRESS_VERSION, '图鉴成就版本不兼容');
+    check(typeof value.regionChosen === 'boolean', '地区成就记录错误');
+    const ingredientIds = INGREDIENTS.map(item => item.id);
+    check(Array.isArray(value.discovered) && value.discovered.length <= ingredientIds.length &&
+        value.discovered.every(id => ingredientIds.indexOf(id) >= 0) && new Set(value.discovered).size === value.discovered.length,
+    '图鉴记录错误');
+    check(Array.isArray(value.bestCleared) && value.bestCleared.length === LEVELS.length &&
+        value.bestCleared.every((count, index) => integer(count, 0, LEVELS[index].layers.reduce((sum, size) => sum + size, 0)) && count % 3 === 0),
+    '消除里程碑错误');
+    const levels = (items: any): number[] => {
+        check(Array.isArray(items) && items.length <= LEVELS.length && new Set(items).size === items.length &&
+            items.every(index => integer(index, 0, LEVELS.length - 1)), '通关记录错误');
+        return items.slice().sort((a, b) => a - b);
+    };
+    const completedLevels = levels(value.completedLevels);
+    const cleanWins = levels(value.cleanWins);
+    check(cleanWins.every(index => completedLevels.indexOf(index) >= 0) && completedLevels.every(index =>
+        value.bestCleared[index] === LEVELS[index].layers.reduce((sum, size) => sum + size, 0)), '通关里程碑不一致');
+    return {version: 1, discovered: ingredientIds.filter(id => value.discovered.indexOf(id) >= 0),
+        bestCleared: value.bestCleared.slice(), completedLevels, cleanWins, regionChosen: value.regionChosen};
+}
+
+export function mergeProgress(a: CollectionProgress, b: CollectionProgress): CollectionProgress {
+    return {version: 1, discovered: INGREDIENTS.map(item => item.id).filter(id => a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >= 0),
+        bestCleared: LEVELS.map((_, i) => Math.max(a.bestCleared[i], b.bestCleared[i])),
+        completedLevels: LEVELS.map((_, i) => i).filter(i => a.completedLevels.indexOf(i) >= 0 || b.completedLevels.indexOf(i) >= 0),
+        cleanWins: LEVELS.map((_, i) => i).filter(i => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
+        regionChosen: a.regionChosen || b.regionChosen};
+}
+
+function recordProgress(progress: CollectionProgress, save: GameSave | null): CollectionProgress {
+    const next = clone(progress);
+    if (!save) return next;
+    const removed = new Set(save.removedIds);
+    const seen = new Set<IngredientType>([...next.discovered, ...save.tray, ...save.reserve]);
+    template(save.levelIndex).tiles.forEach((tile, index) => { if (removed.has(tile.id)) seen.add(save.types[index]); });
+    next.discovered = INGREDIENTS.map(item => item.id).filter(id => seen.has(id));
+    const cleared = save.removedIds.length - save.tray.length - save.reserve.length;
+    next.bestCleared[save.levelIndex] = Math.max(next.bestCleared[save.levelIndex], cleared);
+    if (save.status === 'won') {
+        if (next.completedLevels.indexOf(save.levelIndex) < 0) next.completedLevels.push(save.levelIndex);
+        if (!save.reviveUsed && next.cleanWins.indexOf(save.levelIndex) < 0) next.cleanWins.push(save.levelIndex);
+    }
+    return validateProgress(next);
+}
 
 export function validateRegions(value: unknown): RegionNode[] {
     const seen = new Set<string>();
@@ -145,5 +207,9 @@ export function restoreLevel(save: GameSave): LevelData {
 export function validatePlayerState(value: any, regions: RegionNode[]): PlayerState {
     check(value && value.profile, '玩家档案格式错误');
     const path = regionPath(regions, value.profile.regionCodes);
-    return {profile: {regionCodes: path.map(item => item.code)}, save: value.save === null ? null : validateGameSave(value.save)};
+    const save = value.save === null ? null : validateGameSave(value.save);
+    const progress = validateProgress(value.progress);
+    if (path.length) progress.regionChosen = true;
+    return {profile: {regionCodes: path.map(item => item.code)}, save,
+        progress: recordProgress(progress, save)};
 }

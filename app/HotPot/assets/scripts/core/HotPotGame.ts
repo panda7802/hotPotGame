@@ -39,6 +39,7 @@ import {
 } from '../data/GameData';
 import {BOARD_VERSION, clone, GameSave, RegionNode, regionPath, restoreLevel, SaveStatus} from '../data/PlayerData';
 import {PlayerService} from './PlayerService';
+import {achievementEntries, INGREDIENT_STORIES, unlockedAchievementIds} from '../data/CollectionData';
 
 const {ccclass} = _decorator;
 const DESIGN_WIDTH = 720;
@@ -285,6 +286,9 @@ export class HotPotGame extends Component {
     private playerSaveLabel: Label | null = null;
     private regionFont: Font | null = null;
     private profileButtonLabel!: Label;
+    private knownAchievements = new Set<string>();
+    private achievementOwner: string | null = null;
+    private achievementNotificationsReady = false;
     private lastResult: SaveStatus = 'playing';
     private restoringSave = false;
 
@@ -368,9 +372,20 @@ export class HotPotGame extends Component {
             this.profileButtonLabel.string = this.playerService!.isConflict ? '存档' : '档案';
             if (this.playerStatusLabel?.node.isValid) this.playerStatusLabel.string = this.playerService!.statusText;
             if (this.playerSaveLabel?.node.isValid) this.playerSaveLabel.string = this.playerSaveText();
+            if (this.achievementNotificationsReady) {
+                const entries = achievementEntries(this.playerService!.state).filter(item => item.unlocked);
+                const newlyUnlocked = this.achievementOwner === this.playerService!.playerId
+                    ? entries.filter(item => !this.knownAchievements.has(item.id)) : [];
+                this.achievementOwner = this.playerService!.playerId;
+                this.knownAchievements = new Set(entries.map(item => item.id));
+                if (newlyUnlocked.length) this.showToast(`成就达成：${newlyUnlocked[0].title}${newlyUnlocked.length > 1 ? ` 等${newlyUnlocked.length}项` : ''}`, '#B64B31');
+            }
         };
         await this.playerService.initialize();
         if (!this.node.isValid) return;
+        this.knownAchievements = new Set(unlockedAchievementIds(this.playerService.state));
+        this.achievementOwner = this.playerService.playerId;
+        this.achievementNotificationsReady = true;
         const saved = this.playerService.state.save;
         if (saved) {
             this.restoreGame(saved);
@@ -414,7 +429,8 @@ export class HotPotGame extends Component {
     }
 
     private hasPlayerMenu(): boolean {
-        return ['PlayerOverlay', 'RegionOverlay', 'CloudConflictOverlay', 'ConnectedSaveOverlay']
+        return ['PlayerOverlay', 'RegionOverlay', 'CloudConflictOverlay', 'ConnectedSaveOverlay',
+            'CollectionOverlay', 'CollectionDetailOverlay']
             .some(name => !!this.node?.getChildByName?.(name));
     }
 
@@ -559,7 +575,8 @@ export class HotPotGame extends Component {
         this.node.addChild(levelBar);
         levelBar.setPosition(0, 480 + this.topSpread);
         drawRoundRect(levelBar, 650, 58, 16, '#F5DEB2');
-        this.levelLabel = makeLabel(levelBar, '', 27, '#63351F', new Vec3(-48, 0), 510, 44);
+        this.levelLabel = makeLabel(levelBar, '', 25, '#63351F', Vec3.ZERO, 398, 44);
+        makeButton(levelBar, '图鉴', new Vec3(-265, 0), 102, 48, '#A3613B', () => this.showCollection());
         const profile = makeButton(levelBar, '档案', new Vec3(265, 0), 102, 48, '#A3613B', () => this.showPlayerProfile());
         this.profileButtonLabel = profile.getChildByName('Label')!.getComponent(Label)!;
 
@@ -1465,6 +1482,7 @@ export class HotPotGame extends Component {
     }
 
     private endGame(won: boolean): void {
+        const previousAchievements = this.knownAchievements;
         this.locked = true;
         this.gameEnded = true;
         this.lastResult = won ? 'won' : 'lost';
@@ -1490,6 +1508,10 @@ export class HotPotGame extends Component {
         makeLabel(panel, '锅底见啦！', 48, '#C94836', new Vec3(0, 150), 500, 70);
         makeLabel(panel, this.levelIndex < LEVELS.length - 1 ? '所有食材都已经下锅\n下一关会有更多叠层' :
             '所有食材都已经下锅\n三关盛宴，圆满收锅！', 25, '#775145', new Vec3(0, 55), 480, 100, true);
+        const earned = this.playerService ? achievementEntries(this.playerService.state)
+            .filter(item => item.unlocked && !previousAchievements.has(item.id)) : [];
+        if (earned.length) makeLabel(panel, `新成就：${earned.map(item => item.title).join(' · ')}`,
+            21, '#A3613B', new Vec3(0, -17), 500, 30);
         if (this.levelIndex < LEVELS.length - 1) {
             makeButton(panel, '下一关', new Vec3(0, -73), 300, 72, '#D75542', () => this.nextLevel());
         } else {
@@ -1581,6 +1603,113 @@ export class HotPotGame extends Component {
         });
         makeButton(panel, '将当前这锅保存到账号', new Vec3(0, -186), 450, 66, '#A3613B', () => {
             this.dismissPlayerMenu('ConnectedSaveOverlay'); this.checkpointGame(); finish();
+        });
+    }
+
+    private makeCollectionScroll(panel: Node, height: number): Node {
+        const viewport = new Node('CollectionViewport');
+        panel.addChild(viewport);
+        transform(viewport, 584, 618);
+        viewport.addComponent(Mask);
+        const content = new Node('CollectionContent');
+        viewport.addChild(content);
+        transform(content, 584, Math.max(618, height)).setAnchorPoint(0.5, 1);
+        content.setPosition(0, 309);
+        const scroll = viewport.addComponent(ScrollView);
+        scroll.content = content;
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.elastic = false;
+        scroll.inertia = true;
+        scroll.cancelInnerEvents = true;
+        return content;
+    }
+
+    private showCollection(tab: 'ingredients' | 'achievements' = 'ingredients'): void {
+        const panel = this.makePlayerMenu('CollectionOverlay', 1120);
+        if (!panel) return;
+        const state = this.playerService!.state;
+        const achievements = achievementEntries(state);
+        const unlocked = achievements.filter(item => item.unlocked).length;
+        const discovered = state.progress.discovered;
+        const heading = makeLabel(panel, '小馆珍藏', 42, '#8D3426', new Vec3(0, 485), 570, 62);
+        heading.isBold = true;
+        makeLabel(panel, `食材 ${discovered.length} / ${INGREDIENTS.length}  ·  成就 ${unlocked} / ${achievements.length}`,
+            25, '#94735D', new Vec3(0, 425), 570, 42);
+        const switchTab = (next: 'ingredients' | 'achievements'): void => {
+            this.dismissPlayerMenu('CollectionOverlay'); this.showCollection(next);
+        };
+        makeButton(panel, '食材图鉴', new Vec3(-148, 360), 270, 60,
+            tab === 'ingredients' ? '#D75542' : '#B88261', () => switchTab('ingredients'));
+        makeButton(panel, '我的成就', new Vec3(148, 360), 270, 60,
+            tab === 'achievements' ? '#D75542' : '#B88261', () => switchTab('achievements'));
+
+        if (tab === 'ingredients') {
+            const content = this.makeCollectionScroll(panel, Math.ceil(INGREDIENTS.length / 2) * 188 + 8);
+            INGREDIENTS.forEach((ingredient, index) => {
+                const known = discovered.indexOf(ingredient.id) >= 0;
+                const card = makeButton(content, '', new Vec3(index % 2 ? 145 : -145, -96 - Math.floor(index / 2) * 188),
+                    274, 172, known ? '#F4DFC0' : '#ECE4D8', () => {
+                        this.dismissPlayerMenu('CollectionOverlay'); this.showIngredientDetail(ingredient.id);
+                    });
+                const icon = new Node('CollectionIngredient'); card.addChild(icon); icon.setPosition(0, 22);
+                if (known && this.ingredientFrames.has(ingredient.id)) this.addIngredientImage(icon, ingredient.id, false, 92, 88);
+                else makeLabel(icon, known ? ingredient.name.slice(0, 1) : '?', 64,
+                    known ? ingredient.dark : '#B59C83', Vec3.ZERO, 100, 96);
+                const name = makeLabel(card, known ? ingredient.name : '神秘食材', 28,
+                    known ? '#744329' : '#9D8B77', new Vec3(0, -40), 250, 38);
+                name.isBold = known;
+                makeLabel(card, known ? INGREDIENT_STORIES[ingredient.id].tag : '拿取一次即可点亮', 19,
+                    '#94735D', new Vec3(0, -69), 252, 27);
+            });
+        } else {
+            const content = this.makeCollectionScroll(panel, achievements.length * 156 + 8);
+            achievements.forEach((item, index) => {
+                const card = new Node(`Achievement_${item.id}`); content.addChild(card);
+                card.setPosition(0, -80 - index * 156);
+                drawRoundRect(card, 566, 140, 20, item.unlocked ? '#F6DFC0' : '#EEE7DC');
+                const title = makeLabel(card, item.title, 29, item.unlocked ? '#8D3426' : '#806C57',
+                    new Vec3(-57, 40), 414, 42);
+                title.isBold = true;
+                makeLabel(card, item.unlocked ? '已达成' : '进行中', 21, item.unlocked ? '#477345' : '#A88A6C',
+                    new Vec3(216, 40), 100, 32);
+                makeLabel(card, item.description, 22, '#94735D', new Vec3(0, -4), 520, 45, true);
+                const bar = new Node('AchievementProgress'); card.addChild(bar); bar.setPosition(-45, -46);
+                drawRoundRect(bar, 390, 10, 5, '#D8C5AD');
+                const g = bar.getComponent(Graphics)!;
+                const filled = 390 * item.current / item.target;
+                if (filled > 0) {
+                    g.fillColor = hex(item.unlocked ? '#80A16A' : '#D39457');
+                    g.roundRect(-195, -5, filled, 10, Math.min(5, filled / 2)); g.fill();
+                }
+                makeLabel(card, `${item.current} / ${item.target}`, 21, '#806C57', new Vec3(218, -46), 104, 32);
+            });
+        }
+        makeLabel(panel, tab === 'ingredients' ? '上下滑动浏览，点选食材查看小档案' : '上下滑动浏览，达成后永久记录',
+            22, '#94735D', new Vec3(0, -356), 580, 40);
+        this.playerStatusLabel = makeLabel(panel, this.playerService!.statusText,
+            21, '#94735D', new Vec3(0, -407), 580, 42, true);
+        makeButton(panel, '返回游戏', new Vec3(0, -485), 330, 66, '#B88261', () => this.dismissPlayerMenu('CollectionOverlay'));
+    }
+
+    private showIngredientDetail(type: IngredientType): void {
+        const panel = this.makePlayerMenu('CollectionDetailOverlay', 780);
+        if (!panel) return;
+        const ingredient = getIngredient(type);
+        const known = this.playerService!.state.progress.discovered.indexOf(type) >= 0;
+        const title = makeLabel(panel, known ? ingredient.name : '尚未发现', 44, '#8D3426', new Vec3(0, 285), 560, 66);
+        title.isBold = true;
+        const icon = new Node('IngredientPortrait'); panel.addChild(icon); icon.setPosition(0, 135);
+        if (known && this.ingredientFrames.has(type)) this.addIngredientImage(icon, type, false, 182, 174);
+        else makeLabel(icon, '?', 100, '#B59C83', Vec3.ZERO, 190, 180);
+        makeLabel(panel, known ? INGREDIENT_STORIES[type].tag : '食材还藏在锅里', 27, '#A3613B', new Vec3(0, 9), 560, 45);
+        makeLabel(panel, known ? INGREDIENT_STORIES[type].story :
+            '在游戏中拿取这份食材即可点亮。继续挑战不同关卡，寻找藏在层层食材间的伙伴，收齐13份小档案。',
+            27, '#775145', new Vec3(0, -94), 550, 148, true);
+        makeLabel(panel, known ? '已收录 · 重开和撤回不会熄灭图鉴' : '发现方式：在棋盘上拿取一次',
+            22, '#94735D', new Vec3(0, -216), 570, 40);
+        makeButton(panel, '返回图鉴', new Vec3(0, -307), 330, 66, '#B88261', () => {
+            this.dismissPlayerMenu('CollectionDetailOverlay'); this.showCollection();
         });
     }
 

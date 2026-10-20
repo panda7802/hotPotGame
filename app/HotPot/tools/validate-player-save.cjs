@@ -23,6 +23,7 @@ function load(filename) {
 }
 const data = load(path.join(root, 'assets/scripts/data/GameData'));
 const domain = load(path.join(root, 'assets/scripts/data/PlayerData'));
+const collection = load(path.join(root, 'assets/scripts/data/CollectionData'));
 const configDomain = load(path.join(root, 'assets/scripts/data/CloudConfig'));
 const {PlayerService} = load(path.join(root, 'assets/scripts/core/PlayerService'));
 const regions = domain.validateRegions(JSON.parse(fs.readFileSync(path.join(root, 'assets/resources/data/regions.json'), 'utf8')));
@@ -58,6 +59,7 @@ function pick(save, id) {
     return save;
 }
 
+let collected = domain.emptyPlayerState();
 for (let index = 0; index < 3; index += 1) {
     const save = freshSave(index);
     assert.deepStrictEqual(plain(domain.validateGameSave(save)), plain(save));
@@ -68,6 +70,7 @@ for (let index = 0; index < 3; index += 1) {
             for (const tile of level.tiles.filter(tile => tile.layer === layer && tile.type === type)) {
                 pick(save, tile.id);
                 assert.deepStrictEqual(plain(domain.validateGameSave(JSON.parse(JSON.stringify(save)))), plain(save));
+                collected = domain.validatePlayerState({...collected, save}, regions);
             }
         }
     }
@@ -75,6 +78,29 @@ for (let index = 0; index < 3; index += 1) {
     assert(domain.restoreLevel(save).tiles.every(tile => tile.removed));
     assert(Buffer.byteLength(JSON.stringify(save), 'utf8') < 100000);
 }
+assert.strictEqual(collected.progress.discovered.length, 13);
+assert.deepStrictEqual(plain(collected.progress.completedLevels), [0, 1, 2]);
+assert.deepStrictEqual(plain(collected.progress.cleanWins), [0, 1, 2]);
+assert.deepStrictEqual(plain(collected.progress.bestCleared), [18, 30, 888]);
+assert(collection.achievementEntries(collected).every(item => item.unlocked || item.id === 'hometown'));
+const withRegion = domain.validatePlayerState({...collected, profile: {regionCodes: ['OVERSEAS']}}, regions);
+assert.strictEqual(collection.unlockedAchievementIds(withRegion).length, 14);
+const replay = domain.validatePlayerState({...withRegion, save: freshSave(0), profile: {regionCodes: []}}, regions);
+assert.deepStrictEqual(plain(replay.progress), plain(withRegion.progress), 'restart and clearing region must retain permanent achievements');
+assert.deepStrictEqual(plain(domain.validatePlayerState(replay, regions)), plain(replay), 'restoring repeatedly must be idempotent');
+const legacy = freshSave(0);
+const firstTile = domain.restoreLevel(legacy).tiles.find(tile => tile.blockedBy.length === 0);
+pick(legacy, firstTile.id);
+const migrated = domain.validatePlayerState({profile: {regionCodes: []}, save: legacy}, regions);
+assert.deepStrictEqual(plain(migrated.progress.discovered), [firstTile.type]);
+const undone = domain.validatePlayerState({...migrated, save: freshSave(0)}, regions);
+assert.deepStrictEqual(plain(undone.progress), plain(migrated.progress), 'undo must not revoke a discovery or add clears');
+for (const patch of [{discovered: ['unknown']}, {discovered: ['beef', 'beef']}, {bestCleared: [999, 0, 0]},
+    {bestCleared: [1, 0, 0]}, {cleanWins: [0]}, {completedLevels: [0]}, {version: 99}, {regionChosen: 'yes'}]) {
+    assert.throws(() => domain.validateProgress({...domain.emptyProgress(), ...patch}));
+}
+assert.deepStrictEqual(plain(domain.mergeProgress(replay.progress, migrated.progress)), plain(replay.progress));
+console.log('Collection/achievements: all 13 ingredients and 14 goals, legacy migration, invalid progress, restore/restart/undo idempotency: OK');
 const flipped = freshSave(1);
 [flipped.types[0], flipped.types[5]] = [flipped.types[5], flipped.types[0]];
 assert.deepStrictEqual(plain(domain.restoreLevel(flipped).tiles.map(tile => tile.type)), plain(flipped.types));
@@ -216,6 +242,40 @@ function service(server, localStorage = storage(), options = {}, config = settin
     server.setEnvironment(settings.environmentId); server.setApp('wrong-app');
     assert.strictEqual((await server.handler({action: 'load'})).code, 'IDENTITY_REQUIRED');
     console.log('Server identity isolation, atomic CAS, idempotency, sanitization and release-environment guard: OK');
+
+    const progressServer = backend();
+    const progressLocal = storage();
+    const progressClient = service(progressServer, progressLocal);
+    await progressClient.initialize();
+    progressClient.setSave(legacy);
+    await progressClient.flush();
+    assert.strictEqual(progressClient.state.progress.discovered.length, 1);
+    const progressDevice = service(progressServer, storage());
+    await progressDevice.initialize();
+    assert.deepStrictEqual(plain(progressDevice.state.progress), plain(progressClient.state.progress));
+    // A legacy client omits progress: server must retain previously earned records.
+    const legacyWrite = await progressServer.handler({action: 'save', expectedRevision: progressClient.revision,
+        mutationId: 'legacy-write-0001', state: {profile: {regionCodes: []}, save: null}});
+    assert.strictEqual(legacyWrite.progressVersion, 1);
+    assert.deepStrictEqual(plain(legacyWrite.player.state.progress), plain(progressClient.state.progress));
+    progressClient.setRegion(['OVERSEAS']);
+    await progressClient.flush();
+    assert.strictEqual(progressClient.status, 'conflict');
+    progressClient.resolveConflict(true);
+    await progressClient.flush();
+    assert.strictEqual(progressClient.state.progress.regionChosen, true, 'cloud checkpoint choice retains permanent local achievements');
+    const oldHandler = progressServer.handler;
+    progressServer.handler = async event => {const response = await oldHandler(event); delete response.progressVersion; return response;};
+    const progressCacheKey = [...progressLocal.items.keys()].find(key => key.endsWith(progressClient.playerId));
+    const preservedCache = progressLocal.items.get(progressCacheKey);
+    const oldEndpoint = service(progressServer, progressLocal);
+    await oldEndpoint.initialize();
+    assert.strictEqual(oldEndpoint.playerId, null);
+    assert.strictEqual(oldEndpoint.status, 'error');
+    assert(oldEndpoint.statusText.includes('更新云函数'));
+    assert.strictEqual(progressLocal.items.get(progressCacheKey), preservedCache, 'an old function must not erase the private local cache');
+    progressServer.handler = oldHandler;
+    console.log('Collection cloud flow: cross-device restore, legacy-client retention, conflict union and old-function capability guard: OK');
 
     const privateFileServer = backend();
     const privateFileClient = service(privateFileServer, storage(), {failRegion: true});

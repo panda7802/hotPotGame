@@ -2,6 +2,8 @@
 
 适用日期：2026-10-15。当前是开发环境；这里的后台是腾讯云 CloudBase 控制台。
 
+2026-10-20 新增图鉴与成就，见 [开发及升级说明](图鉴与成就开发说明.md)。请先部署新版 `hotpotPlayerDev` 再构建客户端；玩家永久记录位于 `state.progress`，重置对局时保留它。
+
 ## 1. 后台地址与账号
 
 - [打开当前环境后台](https://tcb.cloud.tencent.com/dev?envId=cloud1-d2gc9q7cobffff893#/overview)
@@ -56,6 +58,7 @@ wx.cloud.callFunction({
 | `revision` | 存档版本号；每次手动修改也应在原值上加 1 |
 | `state.profile.regionCodes` | 地区代码路径，可以按下一节修改 |
 | `state.save` | 完整棋盘存档；清空时设为 JSON `null`，不可随意改其中一项 |
+| `state.progress` | 图鉴和成就永久记录；重置当前对局时保留 |
 | `updatedAt` | 数字类型的 Unix 毫秒时间戳 |
 | `lastMutationId` | 最近一次修改标记；人工修改也应换一个新标记 |
 

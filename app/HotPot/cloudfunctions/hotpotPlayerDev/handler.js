@@ -49,25 +49,28 @@ exports.createHandler = function createHandler(cloud, settings, domain, regions,
                     const message = String(error.errMsg || error.message || '');
                     if (!/document.*(not exist|not found)|doc.*does not exist/i.test(message)) throw error;
                 }
-                const current = stored || {playerId, revision: 0, state: domain.emptyPlayerState(),
+                const current = stored ? {...stored, state: domain.validatePlayerState(stored.state, regions)} :
+                    {playerId, revision: 0, state: domain.emptyPlayerState(),
                     updatedAt: Date.now(), lastMutationId: ''};
                 if (stored && stored._openid !== context.OPENID) throw new Error('Owner mismatch');
                 const expose = record => ({playerId, revision: record.revision, state: record.state,
                     updatedAt: record.updatedAt, lastMutationId: record.lastMutationId});
                 if (event.action === 'load') {
                     if (!stored) await reference.set({data: {...current, _openid: context.OPENID}});
-                    return {ok: true, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(current)};
                 }
                 if (current.lastMutationId === event.mutationId) {
-                    return {ok: true, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(current)};
                 }
                 if (current.revision !== event.expectedRevision) {
-                    return {ok: true, conflict: true, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, conflict: true, player: expose(current)};
                 }
-                const next = {playerId, revision: current.revision + 1, state,
+                // 兼容仍在运行的旧客户端：其请求没有 progress，也不能清空永久图鉴和成就。
+                const nextState = {...state, progress: domain.mergeProgress(current.state.progress, state.progress)};
+                const next = {playerId, revision: current.revision + 1, state: nextState,
                     updatedAt: Date.now(), lastMutationId: event.mutationId, _openid: context.OPENID};
                 await reference.set({data: next});
-                return {ok: true, player: expose(next)};
+                return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(next)};
             });
             return transactionResult.result || transactionResult;
         } catch {
