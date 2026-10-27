@@ -1,4 +1,13 @@
-import {Graphics, Label, Node, resources, Sprite, SpriteFrame, Texture2D, Vec3,} from 'cc';
+import {
+  Graphics,
+  Label,
+  Node,
+  resources,
+  Sprite,
+  SpriteFrame,
+  Texture2D,
+  Vec3,
+} from 'cc';
 
 import {
   DESIGN_WIDTH,
@@ -12,44 +21,90 @@ import {
   transform,
 } from './HotPotUi';
 
-import {HotPotState} from './HotPotState';
+import {HotPotResources} from './HotPotResources';
 
 /**
  * HotPotView：主界面绘制。
  */
-export abstract class HotPotView extends HotPotState {
-
+export abstract class HotPotView extends HotPotResources {
   /**
    * 创建主界面、棋盘、托盘和工具栏。
    */
   protected buildShell(): void {
     const background = new Node('WarmBackground');
     this.node.addChild(background);
-    drawRoundRect(background, DESIGN_WIDTH + 40, this.viewportHeight + 40, 0, '#FFF0D4');
+    drawRoundRect(
+      background,
+      DESIGN_WIDTH + 40,
+      this.viewportHeight + 40,
+      0,
+      '#FFF0D4',
+    );
     this.loadIllustratedBackdrop(background);
 
-    const title = makeLabel(this.node, '锅里捞啥', 60, '#FFF3CF',
-      new Vec3(0, 576 + this.topSpread), 480, 82);
+    const title = makeLabel(
+      this.node,
+      '锅里捞啥',
+      60,
+      '#FFF3CF',
+      new Vec3(0, 576 + this.topSpread),
+      480,
+      82,
+    );
     title.isBold = true;
     this.loadTitleArtwork(title);
     const levelBar = new Node('LevelBar');
     this.node.addChild(levelBar);
     levelBar.setPosition(0, 480 + this.topSpread);
     drawRoundRect(levelBar, 650, 58, 16, '#F5DEB2');
-    this.levelLabel = makeLabel(levelBar, '', 25, '#63351F', Vec3.ZERO, 398, 44);
-    makeButton(levelBar, '图鉴', new Vec3(-265, 0), 102, 48, '#A3613B', /**
-     * 在当前操作完成后更新相关游戏状态。
-     */() => this.showCollection());
-    const profile = makeButton(levelBar, '档案', new Vec3(265, 0), 102, 48, '#A3613B', /**
-     * 在当前操作完成后更新相关游戏状态。
-     */() => this.showPlayerProfile());
-    this.profileButtonLabel = profile.getChildByName('Label')!.getComponent(Label)!;
+    this.levelLabel = makeLabel(
+      levelBar,
+      '',
+      25,
+      '#63351F',
+      Vec3.ZERO,
+      398,
+      44,
+    );
+    makeButton(
+      levelBar,
+      '图鉴',
+      new Vec3(-265, 0),
+      102,
+      48,
+      '#A3613B',
+      /**
+       * 在当前操作完成后更新相关游戏状态。
+       */ () => this.showCollection(),
+    );
+    const profile = makeButton(
+      levelBar,
+      '档案',
+      new Vec3(265, 0),
+      102,
+      48,
+      '#A3613B',
+      /**
+       * 在当前操作完成后更新相关游戏状态。
+       */ () => this.showPlayerProfile(),
+    );
+    this.profileButtonLabel = profile
+      .getChildByName('Label')!
+      .getComponent(Label)!;
 
     const rulePill = new Node('RulePill');
     this.node.addChild(rulePill);
     rulePill.setPosition(0, 422 + this.topSpread);
     transform(rulePill, 640, 64);
-    this.progressLabel = makeLabel(rulePill, '', 26, '#713B2C', Vec3.ZERO, 600, 44);
+    this.progressLabel = makeLabel(
+      rulePill,
+      '',
+      26,
+      '#713B2C',
+      Vec3.ZERO,
+      600,
+      44,
+    );
 
     this.board = new Node('Board');
     this.node.addChild(this.board);
@@ -58,7 +113,6 @@ export abstract class HotPotView extends HotPotState {
     transform(this.board, 680, 830);
 
     // 背景图本身已有纸纹棋盘，不再叠加浅色面板。
-
 
     this.trayNode = new Node('Tray');
     this.node.addChild(this.trayNode);
@@ -73,18 +127,39 @@ export abstract class HotPotView extends HotPotState {
     this.toolBar = new Node('ToolBar');
     this.node.addChild(this.toolBar);
     this.toolBar.setPosition(0, -556);
-    this.toolButtons.set('undo', this.makeToolButton('undo', new Vec3(-224, 0),
-      '#875139', /**
-       * 在当前操作完成后更新相关游戏状态。
-       */() => this.useUndoTool()));
-    this.toolButtons.set('bomb', this.makeToolButton('bomb', Vec3.ZERO,
-      '#875139', /**
-       * 在当前操作完成后更新相关游戏状态。
-       */() => this.useBombTool()));
-    this.toolButtons.set('shuffle', this.makeToolButton('shuffle', new Vec3(224, 0),
-      '#875139', /**
-       * 在当前操作完成后更新相关游戏状态。
-       */() => this.useShuffleTool()));
+    this.toolButtons.set(
+      'undo',
+      this.makeToolButton(
+        'undo',
+        new Vec3(-224, 0),
+        '#875139',
+        /**
+         * 在当前操作完成后更新相关游戏状态。
+         */ () => this.useUndoTool(),
+      ),
+    );
+    this.toolButtons.set(
+      'bomb',
+      this.makeToolButton(
+        'bomb',
+        Vec3.ZERO,
+        '#875139',
+        /**
+         * 在当前操作完成后更新相关游戏状态。
+         */ () => this.useBombTool(),
+      ),
+    );
+    this.toolButtons.set(
+      'shuffle',
+      this.makeToolButton(
+        'shuffle',
+        new Vec3(224, 0),
+        '#875139',
+        /**
+         * 在当前操作完成后更新相关游戏状态。
+         */ () => this.useShuffleTool(),
+      ),
+    );
     this.toolBar.active = false;
 
     const toastBack = new Node('ToastBackground');
@@ -92,19 +167,43 @@ export abstract class HotPotView extends HotPotState {
     toastBack.setPosition(0, -619);
     drawRoundRect(toastBack, 650, 38, 12, '#FFF1D4');
     opacity(toastBack, 0);
-    this.toastLabel = makeLabel(toastBack, '', 24, '#713B2C', Vec3.ZERO, 630, 36);
+    this.toastLabel = makeLabel(
+      toastBack,
+      '',
+      24,
+      '#713B2C',
+      Vec3.ZERO,
+      630,
+      36,
+    );
     opacity(this.toastLabel.node, 0);
-    const restartButton = makeButton(this.node, '重新开始', new Vec3(-158, -676 - this.bottomSpread), 292, 82, '#C84730',
+    const restartButton = makeButton(
+      this.node,
+      '重新开始',
+      new Vec3(-158, -676 - this.bottomSpread),
+      292,
+      82,
+      '#C84730',
       /**
        * 在当前操作完成后更新相关游戏状态。
-       */() => this.showRestartConfirmation());
+       */ () => this.showRestartConfirmation(),
+    );
     styleTavernButton(restartButton, true);
-    const soundButton = makeButton(this.node, '声音：开', new Vec3(158, -676 - this.bottomSpread),
-      292, 82, '#F2D7A3', /**
+    const soundButton = makeButton(
+      this.node,
+      '声音：开',
+      new Vec3(158, -676 - this.bottomSpread),
+      292,
+      82,
+      '#F2D7A3',
+      /**
        * 在当前操作完成后更新相关游戏状态。
-       */() => this.toggleSound());
+       */ () => this.toggleSound(),
+    );
     styleTavernButton(soundButton, false);
-    this.soundButtonLabel = soundButton.getChildByName('Label')!.getComponent(Label)!;
+    this.soundButtonLabel = soundButton
+      .getChildByName('Label')!
+      .getComponent(Label)!;
 
     // 移动中的食物牌统一放在最后创建的顶层容器，避免被棋盘、托盘和按钮边框遮挡。
     this.foodTransitionLayer = new Node('FoodTransitionLayer');
@@ -116,79 +215,94 @@ export abstract class HotPotView extends HotPotState {
    * D 方案透明字标；资源未就绪时保留可读的文字标题。
    */
   protected loadTitleArtwork(fallback: Label): void {
-    resources.load('backgrounds/title-d/texture', Texture2D, /**
-     * 在资源加载完成后更新有效节点或处理失败。
-     */(error, texture) => {
-      if (!fallback.node.isValid) return;
-      if (error || !texture || texture.width <= 0 || texture.height <= 0) {
-        console.warn('[HotPotGame] 标题图加载失败，保留文字标题', error);
-        return;
-      }
-      const frame = new SpriteFrame();
-      frame.texture = texture;
-      const artwork = new Node('TitleArtwork');
-      this.node.addChild(artwork);
-      artwork.setSiblingIndex(fallback.node.getSiblingIndex());
-      artwork.setPosition(fallback.node.position);
-      const scale = Math.min(500 / texture.width, 132 / texture.height);
-      transform(artwork, texture.width * scale, texture.height * scale);
-      const sprite = artwork.addComponent(Sprite);
-      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-      sprite.spriteFrame = frame;
-      fallback.node.active = false;
-    });
+    resources.load(
+      'backgrounds/title-d/texture',
+      Texture2D,
+      /**
+       * 在资源加载完成后更新有效节点或处理失败。
+       */ (error, texture) => {
+        if (!fallback.node.isValid) {
+          return;
+        }
+        if (error || !texture || texture.width <= 0 || texture.height <= 0) {
+          console.warn('[HotPotGame] 标题图加载失败，保留文字标题', error);
+          return;
+        }
+        const frame = new SpriteFrame();
+        frame.texture = texture;
+        const artwork = new Node('TitleArtwork');
+        this.node.addChild(artwork);
+        artwork.setSiblingIndex(fallback.node.getSiblingIndex());
+        artwork.setPosition(fallback.node.position);
+        const scale = Math.min(500 / texture.width, 132 / texture.height);
+        transform(artwork, texture.width * scale, texture.height * scale);
+        const sprite = artwork.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.spriteFrame = frame;
+        fallback.node.active = false;
+      },
+    );
   }
 
   /**
    * 烟火小馆整页背景：红布顶棚、纸感棋盘与木桌。
    */
   protected loadIllustratedBackdrop(parent: Node): void {
-    resources.load('backgrounds/tavern-bg/texture', Texture2D, /**
-     * 在资源加载完成后更新有效节点或处理失败。
-     */(error, texture) => {
-      if (error || !texture || !parent.isValid) {
-        console.error('[HotPotGame] 无法加载火锅背景', error);
-        return;
-      }
-      const frame = new SpriteFrame();
-      frame.texture = texture;
-      const image = new Node('IllustratedBackdrop');
-      parent.addChild(image);
-      image.setSiblingIndex(0);
-      transform(image, DESIGN_WIDTH, this.viewportHeight);
-      const sprite = image.addComponent(Sprite);
-      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-      sprite.spriteFrame = frame;
-    });
-
+    resources.load(
+      'backgrounds/tavern-bg/texture',
+      Texture2D,
+      /**
+       * 在资源加载完成后更新有效节点或处理失败。
+       */ (error, texture) => {
+        if (error || !texture || !parent.isValid) {
+          console.error('[HotPotGame] 无法加载火锅背景', error);
+          return;
+        }
+        const frame = new SpriteFrame();
+        frame.texture = texture;
+        const image = new Node('IllustratedBackdrop');
+        parent.addChild(image);
+        image.setSiblingIndex(0);
+        transform(image, DESIGN_WIDTH, this.viewportHeight);
+        const sprite = image.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.spriteFrame = frame;
+      },
+    );
   }
 
   /**
    * 加载最终模板对应的棋盘插画，失败时仍保留代码绘制的备用火锅。
    */
   protected loadBoardIllustration(parent: Node, fallbackHotpot: Node): void {
-    resources.load('backgrounds/hotpot-board/texture', Texture2D, /**
-     * 在资源加载完成后更新有效节点或处理失败。
-     */(error, texture) => {
-      if (error || !texture || !parent.isValid) {
-        console.error('[HotPotGame] 无法加载棋盘火锅插画', error);
-        return;
-      }
-      const frame = new SpriteFrame();
-      frame.texture = texture;
-      const image = new Node('IllustratedBoard');
-      parent.addChild(image);
-      image.setSiblingIndex(0);
-      // 保持插画原始比例，新增的纵向空间由棋盘底色承接，避免火锅被拉成长椭圆。
-      transform(image, 660, 550);
-      const sprite = image.addComponent(Sprite);
-      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-      sprite.spriteFrame = frame;
+    resources.load(
+      'backgrounds/hotpot-board/texture',
+      Texture2D,
+      /**
+       * 在资源加载完成后更新有效节点或处理失败。
+       */ (error, texture) => {
+        if (error || !texture || !parent.isValid) {
+          console.error('[HotPotGame] 无法加载棋盘火锅插画', error);
+          return;
+        }
+        const frame = new SpriteFrame();
+        frame.texture = texture;
+        const image = new Node('IllustratedBoard');
+        parent.addChild(image);
+        image.setSiblingIndex(0);
+        // 保持插画原始比例，新增的纵向空间由棋盘底色承接，避免火锅被拉成长椭圆。
+        transform(image, 660, 550);
+        const sprite = image.addComponent(Sprite);
+        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+        sprite.spriteFrame = frame;
 
-      fallbackHotpot.active = false;
-      const fallbackPattern = parent.getChildByName('HotpotPattern');
-      if (fallbackPattern) fallbackPattern.active = false;
-    });
+        fallbackHotpot.active = false;
+        const fallbackPattern = parent.getChildByName('HotpotPattern');
+        if (fallbackPattern) {
+          fallbackPattern.active = false;
+        }
+      },
+    );
   }
 
   /**
@@ -234,19 +348,20 @@ export abstract class HotPotView extends HotPotState {
     graphics.bezierCurveTo(264, -13, 298, -48, 342, -58);
     graphics.stroke();
 
-    const sparkle = /**
-     * 处理 sparkle 对应的游戏逻辑。
-     */(x: number, y: number, size: number): void => {
-      graphics.moveTo(x, y + size);
-      graphics.lineTo(x + size * 0.32, y + size * 0.32);
-      graphics.lineTo(x + size, y);
-      graphics.lineTo(x + size * 0.32, y - size * 0.32);
-      graphics.lineTo(x, y - size);
-      graphics.lineTo(x - size * 0.32, y - size * 0.32);
-      graphics.lineTo(x - size, y);
-      graphics.lineTo(x - size * 0.32, y + size * 0.32);
-      graphics.close();
-    };
+    const sparkle =
+      /**
+       * 处理 sparkle 对应的游戏逻辑。
+       */ (x: number, y: number, size: number): void => {
+        graphics.moveTo(x, y + size);
+        graphics.lineTo(x + size * 0.32, y + size * 0.32);
+        graphics.lineTo(x + size, y);
+        graphics.lineTo(x + size * 0.32, y - size * 0.32);
+        graphics.lineTo(x, y - size);
+        graphics.lineTo(x - size * 0.32, y - size * 0.32);
+        graphics.lineTo(x - size, y);
+        graphics.lineTo(x - size * 0.32, y + size * 0.32);
+        graphics.close();
+      };
     sparkle(-250, 66, 13);
     sparkle(-218, 34, 9);
     sparkle(248, -12, 11);

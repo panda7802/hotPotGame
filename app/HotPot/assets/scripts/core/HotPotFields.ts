@@ -1,4 +1,12 @@
-import {AudioClip, AudioSource, Component, Font, Label, Node, SpriteFrame} from 'cc';
+import {
+  AudioClip,
+  AudioSource,
+  Component,
+  Font,
+  Label,
+  Node,
+  SpriteFrame,
+} from 'cc';
 import {IngredientType, LevelData} from '../data/GameData';
 import {SaveStatus} from '../data/PlayerData';
 import {PlayerService} from './PlayerService';
@@ -157,7 +165,11 @@ export abstract class HotPotFields extends Component {
   /**
    * 本局调试模式下各道具是否无限使用。
    */
-  protected unlimitedTools: Record<ToolType, boolean> = {undo: false, bomb: false, shuffle: false};
+  protected unlimitedTools: Record<ToolType, boolean> = {
+    undo: false,
+    bomb: false,
+    shuffle: false,
+  };
   /**
    * 撤销操作所需的上一手快照。
    */
@@ -178,5 +190,4 @@ export abstract class HotPotFields extends Component {
    * 底部界面可用的纵向偏移。
    */
   protected bottomSpread = 0;
-
 }
