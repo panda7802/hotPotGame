@@ -46,17 +46,24 @@ exports.LEVELS = [
         tileScale: 0.82
     },
 ];
-/** 由整数种子生成可重现的伪随机数。 */
+/**
+ * 由整数种子生成可重现的伪随机数。
+ */
 function seededRandom(seed) {
     let value = seed % 2147483647;
     if (value <= 0)
         value += 2147483646;
-    return /** 在当前操作完成后更新相关游戏状态。 */ () => {
+    /**
+     * 在当前操作完成后更新相关游戏状态。
+     */
+    return  () => {
         value = value * 16807 % 2147483647;
         return (value - 1) / 2147483646;
     };
 }
-/** 使用传入随机源打乱数组。 */
+/**
+ * 使用传入随机源打乱数组。
+ */
 function shuffle(list, random) {
     for (let i = list.length - 1; i > 0; i -= 1) {
         const j = Math.floor(random() * (i + 1));
@@ -64,7 +71,9 @@ function shuffle(list, random) {
     }
     return list;
 }
-/** 按食材池生成可成组三张的牌型序列。 */
+/**
+ * 按食材池生成可成组三张的牌型序列。
+ */
 function buildTypes(count, typeCount, typeOffset, layerIndex, random, pool) {
     const availableTypeCount = Math.max(1, Math.min(10, typeCount, exports.INGREDIENTS.length));
     const groupTypes = [];
@@ -72,7 +81,10 @@ function buildTypes(count, typeCount, typeOffset, layerIndex, random, pool) {
         groupTypes.push((i + layerIndex) % availableTypeCount);
     shuffle(groupTypes, random);
     const result = [];
-    groupTypes.forEach(/** 依次处理集合中的每个条目。 */ (typeIndex) => {
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    groupTypes.forEach( (typeIndex) => {
         const ingredient = pool ? pool[typeIndex] : exports.INGREDIENTS[(typeIndex + typeOffset) % 13].id;
         result.push(ingredient, ingredient, ingredient);
     });
@@ -80,7 +92,9 @@ function buildTypes(count, typeCount, typeOffset, layerIndex, random, pool) {
 }
 exports.EIGHT_ROW_IMAGE_HEIGHT = 68 * 1.2 * 1.2 * 1.15 * 0.82;
 const EIGHT_ROW_SPACING = Math.ceil(exports.EIGHT_ROW_IMAGE_HEIGHT * 1.1);
-/** 计算一层棋盘的牌位坐标。 */
+/**
+ * 计算一层棋盘的牌位坐标。
+ */
 function buildPositions(count, layerIndex, targetRows) {
     const columns = targetRows ? Math.ceil(count / targetRows) : (count <= 9 ? 3 : (count <= 15 ? 5 : 6));
     const rows = Math.ceil(count / columns);
@@ -115,7 +129,9 @@ function buildPositions(count, layerIndex, targetRows) {
 // Six separate groups alternate square/diamond arrangements. Every tile
 // overlaps two tiles in the adjacent layer by at least 20% of its area,
 // without overlaps within a layer or cumulative drift across 37 layers.
-/** 生成第三关的原有分层布局。 */
+/**
+ * 生成第三关的原有分层布局。
+ */
 function buildLevelThreePositions(config, layoutSeed) {
     const random = seededRandom(layoutSeed);
     // Seed zero keeps the original geometry for saves made before random layouts.
@@ -126,10 +142,22 @@ function buildLevelThreePositions(config, layoutSeed) {
     const spacingY = randomized ? 260 + Math.floor(random() * 19) : 252;
     const halfWidth = randomized ? 46 : 48;
     const halfHeight = randomized ? 38 : 42;
-    const rowShifts = [0, 1, 2].map(/** 将当前条目转换为后续处理所需的值。 */ () => randomized ? Math.floor(random() * 71) - 35 : 0);
-    const columnShifts = [0, 1].map(/** 将当前条目转换为后续处理所需的值。 */ () => randomized ? Math.floor(random() * 17) - 8 : 0);
-    const phases = Array.from({ length: 6 }, /** 在当前操作完成后更新相关游戏状态。 */ () => randomized ? Math.floor(random() * 2) : 0);
-    return config.layers.map(/** 将当前条目转换为后续处理所需的值。 */ (_, layer) => {
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const rowShifts = [0, 1, 2].map( () => randomized ? Math.floor(random() * 71) - 35 : 0);
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const columnShifts = [0, 1].map( () => randomized ? Math.floor(random() * 17) - 8 : 0);
+    /**
+     * 在当前操作完成后更新相关游戏状态。
+     */
+    const phases = Array.from({ length: 6 },  () => randomized ? Math.floor(random() * 2) : 0);
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    return config.layers.map( (_, layer) => {
         const positions = [];
         for (let row = 0; row < 3; row += 1) {
             for (let col = 0; col < 2; col += 1) {
@@ -138,7 +166,10 @@ function buildLevelThreePositions(config, layoutSeed) {
                         { x: -halfWidth, y: halfHeight }, { x: halfWidth, y: halfHeight }]
                     : [{ x: -halfWidth * 2, y: 0 }, { x: halfWidth * 2, y: 0 },
                         { x: 0, y: -halfHeight * 2 }, { x: 0, y: halfHeight * 2 }];
-                offsets.forEach(/** 依次处理集合中的每个条目。 */ offset => positions.push({
+                /**
+                 * 依次处理集合中的每个条目。
+                 */
+                offsets.forEach( offset => positions.push({
                     x: (col - 0.5) * spacingX + rowShifts[row] + offset.x,
                     y: (1 - row) * spacingY + columnShifts[col] + offset.y,
                 }));
@@ -152,12 +183,20 @@ function buildLevelThreePositions(config, layoutSeed) {
 exports.RANDOM_LAYOUT_SEED_START = 2147483647;
 exports.RANDOM_LAYOUT_SEED_END = 4294967292;
 exports.INGREDIENT_SEED_MAX = 2147483646;
-/** 新局抽取整个食材组合；牛羊肉互斥，翻锅只重排该组合已有的牌。 */
+/**
+ * 新局抽取整个食材组合；牛羊肉互斥，翻锅只重排该组合已有的牌。
+ */
 function selectLevelIngredients(levelIndex, seed) {
     const config = exports.LEVELS[levelIndex];
     if (seed === 0)
-        return Array.from({ length: config.typeCount }, /** 在当前操作完成后更新相关游戏状态。 */ (_, i) => exports.INGREDIENTS[(i + (config.typeOffset || 0)) % 13].id);
-    const shuffled = shuffle(exports.INGREDIENTS.map(/** 将当前条目转换为后续处理所需的值。 */ item => item.id), seededRandom(seed));
+        /**
+         * 在当前操作完成后更新相关游戏状态。
+         */
+        return Array.from({ length: config.typeCount },  (_, i) => exports.INGREDIENTS[(i + (config.typeOffset || 0)) % 13].id);
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const shuffled = shuffle(exports.INGREDIENTS.map( item => item.id), seededRandom(seed));
     const selected = [];
     for (const type of shuffled) {
         if ((type === 'beef' && selected.indexOf('lamb') >= 0) ||
@@ -169,11 +208,15 @@ function selectLevelIngredients(levelIndex, seed) {
     }
     return selected;
 }
-/** 根据种子选取第三关的布局族。 */
+/**
+ * 根据种子选取第三关的布局族。
+ */
 function levelThreeLayoutFamily(seed = 0) {
     return seed < exports.RANDOM_LAYOUT_SEED_START ? -1 : (seed - exports.RANDOM_LAYOUT_SEED_START) % 3;
 }
-/** 根据种子生成第三关的随机布局。 */
+/**
+ * 根据种子生成第三关的随机布局。
+ */
 function buildNewLevelThreePositions(config, seed) {
     const family = levelThreeLayoutFamily(seed);
     const centers = family === 0 ? [{ x: -172, y: 235 }, { x: 172, y: 235 }, { x: -172, y: -235 }, { x: 172, y: -235 }]
@@ -185,12 +228,21 @@ function buildNewLevelThreePositions(config, seed) {
     const width = 92 * 1.2 * config.tileScale;
     const height = 76 * 1.2 * config.tileScale;
     const random = seededRandom(seed);
-    const phases = centers.map(/** 将当前条目转换为后续处理所需的值。 */ () => Math.floor(random() * 2));
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const phases = centers.map( () => Math.floor(random() * 2));
     // Alternating half-step rings cover every lower tile with at least two
     // upper tiles. Their tested radii prevent same-layer and incidental overlaps.
-    return config.layers.map(/** 将当前条目转换为后续处理所需的值。 */ (_, layer) => {
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    return config.layers.map( (_, layer) => {
         const positions = [];
-        centers.forEach(/** 依次处理集合中的每个条目。 */ (center, group) => {
+        /**
+         * 依次处理集合中的每个条目。
+         */
+        centers.forEach( (center, group) => {
             for (let i = 0; i < count; i += 1) {
                 const angle = (i + ((layer + phases[group]) % 2) / 2) * Math.PI * 2 / count;
                 positions.push({ x: center.x + Math.cos(angle) * radiusX * width,
@@ -201,7 +253,9 @@ function buildNewLevelThreePositions(config, seed) {
     });
 }
 // Explicit seeds restore exactly; retries request a different formation family.
-/** 根据关卡配置和种子生成完整棋盘。 */
+/**
+ * 根据关卡配置和种子生成完整棋盘。
+ */
 function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed) {
     // 显式传入牌阵种子但未传食材种子时，保持旧版本的食材配比与顺序。
     if (ingredientSeed === undefined)
@@ -223,7 +277,10 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
     const stackedPositions = config.level === 3
         ? newLayout ? buildNewLevelThreePositions(config, layoutSeed) : buildLevelThreePositions(config, layoutSeed)
         : undefined;
-    config.layers.forEach(/** 依次处理集合中的每个条目。 */ (count, layerIndex) => {
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    config.layers.forEach( (count, layerIndex) => {
         const positions = stackedPositions ? stackedPositions[layerIndex] : buildPositions(count, layerIndex, config.rows);
         const types = buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random, pool);
         for (let i = 0; i < count; i += 1) {
@@ -254,19 +311,35 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
         ...(ingredientSeed ? { ingredientSeed } : {}),
         ...(config.level === 3 && layoutSeed !== 0 ? { layoutSeed } : {}) };
 }
-/** 按食材编号查找显示配置。 */
+/**
+ * 按食材编号查找显示配置。
+ */
 function getIngredient(type) {
-    return exports.INGREDIENTS.find(/** 按条件筛选或判断条目：item.id === type。 */ (item) => item.id === type) || exports.INGREDIENTS[0];
+    /**
+     * 按条件筛选或判断条目：item.id === type。
+     */
+    return exports.INGREDIENTS.find( (item) => item.id === type) || exports.INGREDIENTS[0];
 }
-/** 只选择棋盘上未拿取的牌（含被遮挡的牌），不修改棋盘或托盘。 */
+/**
+ * 只选择棋盘上未拿取的牌（含被遮挡的牌），不修改棋盘或托盘。
+ */
 function selectBombTargets(tiles, random = Math.random) {
     const groups = new Map();
-    tiles.filter(/** 按条件筛选或判断条目：!tile.removed。 */ (tile) => !tile.removed).forEach(/** 依次处理集合中的每个条目。 */ (tile) => {
+    /**
+     * 按条件筛选或判断条目：!tile.removed。
+     */
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    tiles.filter( (tile) => !tile.removed).forEach( (tile) => {
         const group = groups.get(tile.type) || [];
         group.push(tile);
         groups.set(tile.type, group);
     });
-    const eligible = Array.from(groups.values()).filter(/** 按条件筛选或判断条目：group.length >= 3。 */ (group) => group.length >= 3);
+    /**
+     * 按条件筛选或判断条目：group.length >= 3。
+     */
+    const eligible = Array.from(groups.values()).filter( (group) => group.length >= 3);
     if (eligible.length === 0)
         return [];
     const candidates = eligible[Math.floor(random() * eligible.length)].slice();

@@ -18,29 +18,49 @@ exports.SAVE_VERSION = 1;
 exports.BOARD_VERSION = 'hotpot-20260929';
 exports.PROGRESS_VERSION = 1;
 exports.PLAY_SESSION_VERSION = 4;
-/** 断言数据条件成立，否则抛出校验错误。 */
+/**
+ * 断言数据条件成立，否则抛出校验错误。
+ */
 function check(condition, message) {
     if (!condition)
         throw new Error(message);
 }
-/** 检查值是否位于允许范围内的整数。 */
+/**
+ * 检查值是否位于允许范围内的整数。
+ */
 function integer(value, min, max) {
     return Number.isInteger(value) && value >= min && value <= max;
 }
-/** 通过 JSON 创建可序列化数据的深拷贝。 */
+/**
+ * 通过 JSON 创建可序列化数据的深拷贝。
+ */
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
-/** 创建未解锁图鉴与成就的初始进度。 */
+/**
+ * 创建未解锁图鉴与成就的初始进度。
+ */
 function emptyProgress() {
-    return { version: 1, discovered: [], bestCleared: GameData_1.LEVELS.map(/** 将当前条目转换为后续处理所需的值。 */ () => 0), completedLevels: [], cleanWins: [], regionChosen: false };
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    return { version: 1, discovered: [], bestCleared: GameData_1.LEVELS.map( () => 0), completedLevels: [], cleanWins: [], regionChosen: false };
 }
-/** 创建空的玩家档案。 */
+/**
+ * 创建空的玩家档案。
+ */
 function emptyPlayerState() { return { profile: { regionCodes: [] }, save: null, progress: emptyProgress(), playDate: '' }; }
-/** 使用设备本地自然日，不用 UTC 日期，避免本地午夜前后误判。 */
+/**
+ * 使用设备本地自然日，不用 UTC 日期，避免本地午夜前后误判。
+ */
 function localPlayDate(now = new Date()) {
-    const twoDigits = /** 处理 twoDigits 对应的游戏逻辑。 */ (value) => value < 10 ? `0${value}` : String(value);
+    /**
+     * 处理 twoDigits 对应的游戏逻辑。
+     */
+    const twoDigits =  (value) => value < 10 ? `0${value}` : String(value);
     return `${now.getFullYear()}-${twoDigits(now.getMonth() + 1)}-${twoDigits(now.getDate())}`;
 }
-/** 验证存档中的自然日格式和日期有效性。 */
+/**
+ * 验证存档中的自然日格式和日期有效性。
+ */
 function validatePlayDate(value) {
     if (value === undefined || value === '')
         return ''; // 旧存档首次进入时开启新一天。
@@ -48,51 +68,122 @@ function validatePlayDate(value) {
         new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value, '对局日期错误');
     return value;
 }
-/** 跨日时清空当前对局，同时保留地区与永久进度。 */
+/**
+ * 跨日时清空当前对局，同时保留地区与永久进度。
+ */
 function enterPlayDay(state, day) {
     check(validatePlayDate(day) !== '', '对局日期不能为空');
     return state.playDate === day ? state : { ...state, playDate: day, save: null };
 }
-/** 永久记录使用集合和关卡最高值；重开、撤回、重复同步均不重复累计。 */
+/**
+ * 永久记录使用集合和关卡最高值；重开、撤回、重复同步均不重复累计。
+ */
 function validateProgress(value) {
     if (value === undefined)
         return emptyProgress(); // 兼容旧存档。
     check(value && value.version === exports.PROGRESS_VERSION, '图鉴成就版本不兼容');
     check(typeof value.regionChosen === 'boolean', '地区成就记录错误');
-    const ingredientIds = GameData_1.INGREDIENTS.map(/** 将当前条目转换为后续处理所需的值。 */ item => item.id);
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const ingredientIds = GameData_1.INGREDIENTS.map( item => item.id);
     check(Array.isArray(value.discovered) && value.discovered.length <= ingredientIds.length &&
-        value.discovered.every(/** 按条件筛选或判断条目：ingredientIds.indexOf(id) >= 0。 */ id => ingredientIds.indexOf(id) >= 0) && new Set(value.discovered).size === value.discovered.length, '图鉴记录错误');
+        /**
+         * 按条件筛选或判断条目：ingredientIds.indexOf(id) >= 0。
+         */
+        value.discovered.every( id => ingredientIds.indexOf(id) >= 0) && new Set(value.discovered).size === value.discovered.length, '图鉴记录错误');
     check(Array.isArray(value.bestCleared) && value.bestCleared.length === GameData_1.LEVELS.length &&
-        value.bestCleared.every(/** 按条件筛选或判断条目：integer(count, 0, GameData_1.LEVELS[index].layers.reduce((su。 */ (count, index) => integer(count, 0, GameData_1.LEVELS[index].layers.reduce(/** 把集合条目汇总为一个结果。 */ (sum, size) => sum + size, 0)) && count % 3 === 0), '消除里程碑错误');
-    const levels = /** 处理 levels 对应的游戏逻辑。 */ (items) => {
+        /**
+         * 按条件筛选或判断条目：integer(count, 0, GameData_1.LEVELS[index].layers.reduce((su。
+         */
+        /**
+         * 把集合条目汇总为一个结果。
+         */
+        value.bestCleared.every( (count, index) => integer(count, 0, GameData_1.LEVELS[index].layers.reduce( (sum, size) => sum + size, 0)) && count % 3 === 0), '消除里程碑错误');
+    /**
+     * 处理 levels 对应的游戏逻辑。
+     */
+    const levels =  (items) => {
         check(Array.isArray(items) && items.length <= GameData_1.LEVELS.length && new Set(items).size === items.length &&
-            items.every(/** 按条件筛选或判断条目：integer(index, 0, GameData_1.LEVELS.length - 1)。 */ index => integer(index, 0, GameData_1.LEVELS.length - 1)), '通关记录错误');
-        return items.slice().sort(/** 按指定顺序比较并排列条目。 */ (a, b) => a - b);
+            /**
+             * 按条件筛选或判断条目：integer(index, 0, GameData_1.LEVELS.length - 1)。
+             */
+            items.every( index => integer(index, 0, GameData_1.LEVELS.length - 1)), '通关记录错误');
+        /**
+         * 按指定顺序比较并排列条目。
+         */
+        return items.slice().sort( (a, b) => a - b);
     };
     const completedLevels = levels(value.completedLevels);
     const cleanWins = levels(value.cleanWins);
-    check(cleanWins.every(/** 按条件筛选或判断条目：completedLevels.indexOf(index) >= 0。 */ index => completedLevels.indexOf(index) >= 0) && completedLevels.every(/** 按条件筛选或判断条目：value.bestCleared[index] === GameData_1.LEVELS[index].layers。 */ index => value.bestCleared[index] === GameData_1.LEVELS[index].layers.reduce(/** 把集合条目汇总为一个结果。 */ (sum, size) => sum + size, 0)), '通关里程碑不一致');
-    return { version: 1, discovered: ingredientIds.filter(/** 按条件筛选或判断条目：value.discovered.indexOf(id) >= 0。 */ id => value.discovered.indexOf(id) >= 0),
+    /**
+     * 按条件筛选或判断条目：completedLevels.indexOf(index) >= 0。
+     */
+    /**
+     * 按条件筛选或判断条目：value.bestCleared[index] === GameData_1.LEVELS[index].layers。
+     */
+    /**
+     * 把集合条目汇总为一个结果。
+     */
+    check(cleanWins.every( index => completedLevels.indexOf(index) >= 0) && completedLevels.every( index => value.bestCleared[index] === GameData_1.LEVELS[index].layers.reduce( (sum, size) => sum + size, 0)), '通关里程碑不一致');
+    /**
+     * 按条件筛选或判断条目：value.discovered.indexOf(id) >= 0。
+     */
+    return { version: 1, discovered: ingredientIds.filter( id => value.discovered.indexOf(id) >= 0),
         bestCleared: value.bestCleared.slice(), completedLevels, cleanWins, regionChosen: value.regionChosen };
 }
-/** 合并两份永久进度中的集合和最大值。 */
+/**
+ * 合并两份永久进度中的集合和最大值。
+ */
 function mergeProgress(a, b) {
-    return { version: 1, discovered: GameData_1.INGREDIENTS.map(/** 将当前条目转换为后续处理所需的值。 */ item => item.id).filter(/** 按条件筛选或判断条目：a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >=。 */ id => a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >= 0),
-        bestCleared: GameData_1.LEVELS.map(/** 将当前条目转换为后续处理所需的值。 */ (_, i) => Math.max(a.bestCleared[i], b.bestCleared[i])),
-        completedLevels: GameData_1.LEVELS.map(/** 将当前条目转换为后续处理所需的值。 */ (_, i) => i).filter(/** 按条件筛选或判断条目：a.completedLevels.indexOf(i) >= 0 || b.completedLevels.index。 */ i => a.completedLevels.indexOf(i) >= 0 || b.completedLevels.indexOf(i) >= 0),
-        cleanWins: GameData_1.LEVELS.map(/** 将当前条目转换为后续处理所需的值。 */ (_, i) => i).filter(/** 按条件筛选或判断条目：a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0。 */ i => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    /**
+     * 按条件筛选或判断条目：a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >=。
+     */
+    return { version: 1, discovered: GameData_1.INGREDIENTS.map( item => item.id).filter( id => a.discovered.indexOf(id) >= 0 || b.discovered.indexOf(id) >= 0),
+        /**
+         * 将当前条目转换为后续处理所需的值。
+         */
+        bestCleared: GameData_1.LEVELS.map( (_, i) => Math.max(a.bestCleared[i], b.bestCleared[i])),
+        /**
+         * 将当前条目转换为后续处理所需的值。
+         */
+        /**
+         * 按条件筛选或判断条目：a.completedLevels.indexOf(i) >= 0 || b.completedLevels.index。
+         */
+        completedLevels: GameData_1.LEVELS.map( (_, i) => i).filter( i => a.completedLevels.indexOf(i) >= 0 || b.completedLevels.indexOf(i) >= 0),
+        /**
+         * 将当前条目转换为后续处理所需的值。
+         */
+        /**
+         * 按条件筛选或判断条目：a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0。
+         */
+        cleanWins: GameData_1.LEVELS.map( (_, i) => i).filter( i => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
         regionChosen: a.regionChosen || b.regionChosen };
 }
-/** 根据当前对局更新发现食材与关卡成就。 */
+/**
+ * 根据当前对局更新发现食材与关卡成就。
+ */
 function recordProgress(progress, save) {
     const next = clone(progress);
     if (!save)
         return next;
     const removed = new Set(save.removedIds);
     const seen = new Set([...next.discovered, ...save.tray, ...save.reserve]);
-    template(save.levelIndex).tiles.forEach(/** 依次处理集合中的每个条目。 */ (tile, index) => { if (removed.has(tile.id))
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    template(save.levelIndex).tiles.forEach( (tile, index) => { if (removed.has(tile.id))
         seen.add(save.types[index]); });
-    next.discovered = GameData_1.INGREDIENTS.map(/** 将当前条目转换为后续处理所需的值。 */ item => item.id).filter(/** 按条件筛选或判断条目：seen.has(id)。 */ id => seen.has(id));
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    /**
+     * 按条件筛选或判断条目：seen.has(id)。
+     */
+    next.discovered = GameData_1.INGREDIENTS.map( item => item.id).filter( id => seen.has(id));
     const cleared = save.removedIds.length - save.tray.length - save.reserve.length;
     next.bestCleared[save.levelIndex] = Math.max(next.bestCleared[save.levelIndex], cleared);
     if (save.status === 'won') {
@@ -103,12 +194,20 @@ function recordProgress(progress, save) {
     }
     return validateProgress(next);
 }
-/** 验证地区树的编码、名称和层级。 */
+/**
+ * 验证地区树的编码、名称和层级。
+ */
 function validateRegions(value) {
     const seen = new Set();
-    const walk = /** 处理 walk 对应的游戏逻辑。 */ (items, depth) => {
+    /**
+     * 处理 walk 对应的游戏逻辑。
+     */
+    const walk =  (items, depth) => {
         check(Array.isArray(items) && items.length > 0 && items.length <= 200 && depth <= 3, '地区数据格式错误');
-        return items.map(/** 将当前条目转换为后续处理所需的值。 */ item => {
+        /**
+         * 将当前条目转换为后续处理所需的值。
+         */
+        return items.map( item => {
             check(item && typeof item.code === 'string' && /^[A-Z0-9_]{1,20}$/.test(item.code) &&
                 typeof item.name === 'string' && item.name.length > 0 && item.name.length <= 30 &&
                 !seen.has(item.code), '地区节点格式错误');
@@ -121,13 +220,21 @@ function validateRegions(value) {
     };
     return walk(value, 1);
 }
-/** 根据地区编码解析地区树中的路径。 */
+/**
+ * 根据地区编码解析地区树中的路径。
+ */
 function regionPath(regions, codes, allowEmpty = true) {
     check(Array.isArray(codes) && codes.length <= 3 && (allowEmpty || codes.length > 0), '请选择完整地区');
     const result = [];
     let nodes = regions;
-    codes.forEach(/** 依次处理集合中的每个条目。 */ code => {
-        const selected = nodes.find(/** 按条件筛选或判断条目：item.code === code。 */ item => item.code === code);
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    codes.forEach( code => {
+        /**
+         * 按条件筛选或判断条目：item.code === code。
+         */
+        const selected = nodes.find( item => item.code === code);
         check(selected, '地区代码或上下级关系错误');
         result.push(selected);
         nodes = selected.children || [];
@@ -137,7 +244,9 @@ function regionPath(regions, codes, allowEmpty = true) {
 }
 const templates = new Map();
 const randomTemplates = new Map();
-/** 使用关卡种子创建可验证的棋盘模板。 */
+/**
+ * 使用关卡种子创建可验证的棋盘模板。
+ */
 function template(index, layoutSeed = 0, ingredientSeed = 0) {
     const cache = layoutSeed === 0 && ingredientSeed === 0 ? templates : randomTemplates;
     if (!cache.has(index) || (cache.get(index).layoutSeed || 0) !== layoutSeed ||
@@ -146,7 +255,9 @@ function template(index, layoutSeed = 0, ingredientSeed = 0) {
     }
     return cache.get(index);
 }
-/** 检查稳定结算后的存档；不接受飞牌中或三消未结算的半成品。 */
+/**
+ * 检查稳定结算后的存档；不接受飞牌中或三消未结算的半成品。
+ */
 function validateGameSave(value) {
     check(value && value.version === exports.SAVE_VERSION && value.boardVersion === exports.BOARD_VERSION, '存档版本不兼容');
     check(integer(value.levelIndex, 0, GameData_1.LEVELS.length - 1), '关卡编号错误');
@@ -156,29 +267,62 @@ function validateGameSave(value) {
     const level = template(value.levelIndex, 0, value.ingredientSeed);
     check(Array.isArray(value.types) && value.types.length === level.total, '食材牌数错误');
     const expected = new Map();
-    level.tiles.forEach(/** 依次处理集合中的每个条目。 */ tile => expected.set(tile.type, (expected.get(tile.type) || 0) + 1));
-    value.types.forEach(/** 依次处理集合中的每个条目。 */ (type) => {
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    level.tiles.forEach( tile => expected.set(tile.type, (expected.get(tile.type) || 0) + 1));
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    value.types.forEach( (type) => {
         check(expected.has(type), '食材种类错误');
         expected.set(type, expected.get(type) - 1);
     });
-    check(Array.from(expected.values()).every(/** 按条件筛选或判断条目：count === 0。 */ count => count === 0), '食材总数不守恒');
-    const ids = new Set(level.tiles.map(/** 将当前条目转换为后续处理所需的值。 */ tile => tile.id));
+    /**
+     * 按条件筛选或判断条目：count === 0。
+     */
+    check(Array.from(expected.values()).every( count => count === 0), '食材总数不守恒');
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    const ids = new Set(level.tiles.map( tile => tile.id));
     const allowed = new Set(Array.from(expected.keys()));
-    const validateMove = /** 检查 validateMove 对应的条件并报告不符合项。 */ (move, full) => {
+    /**
+     * 检查 validateMove 对应的条件并报告不符合项。
+     */
+    const validateMove =  (move, full) => {
         check(move && Array.isArray(move.removedIds) && move.removedIds.length <= level.total &&
-            new Set(move.removedIds).size === move.removedIds.length && move.removedIds.every(/** 按条件筛选或判断条目：ids.has(id)。 */ (id) => ids.has(id)), '移除牌记录错误');
+            /**
+             * 按条件筛选或判断条目：ids.has(id)。
+             */
+            new Set(move.removedIds).size === move.removedIds.length && move.removedIds.every( (id) => ids.has(id)), '移除牌记录错误');
         check(Array.isArray(move.tray) && move.tray.length <= 7 && Array.isArray(move.reserve) && move.reserve.length <= 3 &&
-            [...move.tray, ...move.reserve].every(/** 按条件筛选或判断条目：allowed.has(type)。 */ type => allowed.has(type)), '托盘或寄存区错误');
+            /**
+             * 按条件筛选或判断条目：allowed.has(type)。
+             */
+            [...move.tray, ...move.reserve].every( type => allowed.has(type)), '托盘或寄存区错误');
         const counts = new Map();
         const removed = new Set(move.removedIds);
-        level.tiles.forEach(/** 依次处理集合中的每个条目。 */ (tile, i) => {
+        /**
+         * 依次处理集合中的每个条目。
+         */
+        level.tiles.forEach( (tile, i) => {
             if (!removed.has(tile.id))
                 counts.set(value.types[i], (counts.get(value.types[i]) || 0) + 1);
         });
-        [...move.tray, ...move.reserve].forEach(/** 依次处理集合中的每个条目。 */ type => counts.set(type, (counts.get(type) || 0) + 1));
-        check(Array.from(counts.values()).every(/** 按条件筛选或判断条目：count % 3 === 0。 */ count => count % 3 === 0), '剩余食材不守恒');
+        /**
+         * 依次处理集合中的每个条目。
+         */
+        [...move.tray, ...move.reserve].forEach( type => counts.set(type, (counts.get(type) || 0) + 1));
+        /**
+         * 按条件筛选或判断条目：count % 3 === 0。
+         */
+        check(Array.from(counts.values()).every( count => count % 3 === 0), '剩余食材不守恒');
         for (const type of allowed)
-            check(move.tray.filter(/** 按条件筛选或判断条目：item === type。 */ (item) => item === type).length < 3, '托盘包含未结算三消');
+            /**
+             * 按条件筛选或判断条目：item === type。
+             */
+            check(move.tray.filter( (item) => item === type).length < 3, '托盘包含未结算三消');
         if (!full)
             check(move.tray.length < 7, '撤回快照托盘已满');
         return { tray: move.tray.slice(), reserve: move.reserve.slice(), removedIds: move.removedIds.slice() };
@@ -190,7 +334,10 @@ function validateGameSave(value) {
     const cleared = move.removedIds.length - move.tray.length - move.reserve.length;
     check(cleared >= 0 && cleared % 3 === 0 && value.rewardedMilestones * 100 <= cleared + 3, '消除记录错误');
     const toolUses = value.toolUses;
-    check(toolUses && ['undo', 'bomb', 'shuffle'].every(/** 按条件筛选或判断条目：integer(toolUses[type], 0, value.levelIndex === 0 ? 0 : 9)。 */ type => integer(toolUses[type], 0, value.levelIndex === 0 ? 0 : 9)), '道具次数错误');
+    /**
+     * 按条件筛选或判断条目：integer(toolUses[type], 0, value.levelIndex === 0 ? 0 : 9)。
+     */
+    check(toolUses && ['undo', 'bomb', 'shuffle'].every( type => integer(toolUses[type], 0, value.levelIndex === 0 ? 0 : 9)), '道具次数错误');
     check(toolUses.undo + toolUses.bomb + toolUses.shuffle <= (value.levelIndex === 0 ? 0 : 3) + value.rewardedMilestones, '道具次数超过已获奖励');
     const empty = cleared === level.total;
     check(['playing', 'lost', 'won'].indexOf(value.status) >= 0, '对局状态错误');
@@ -200,7 +347,10 @@ function validateGameSave(value) {
     if (value.lastMove !== null) {
         lastMove = validateMove(value.lastMove, false);
         const removed = new Set(move.removedIds);
-        check(lastMove.removedIds.every(/** 按条件筛选或判断条目：removed.has(id)。 */ id => removed.has(id)), '撤回记录包含未来拿牌');
+        /**
+         * 按条件筛选或判断条目：removed.has(id)。
+         */
+        check(lastMove.removedIds.every( id => removed.has(id)), '撤回记录包含未来拿牌');
         check(value.reviveUsed || lastMove.reserve.length === 0, '撤回寄存区错误');
     }
     return { ...move, version: 1, boardVersion: exports.BOARD_VERSION, levelIndex: value.levelIndex, types: value.types.slice(),
@@ -209,15 +359,22 @@ function validateGameSave(value) {
         reviveUsed: value.reviveUsed, rewardedMilestones: value.rewardedMilestones,
         toolUses: { undo: toolUses.undo, bomb: toolUses.bomb, shuffle: toolUses.shuffle }, lastMove, status: value.status };
 }
-/** 从合法存档重建关卡布局与移除状态。 */
+/**
+ * 从合法存档重建关卡布局与移除状态。
+ */
 function restoreLevel(save) {
     const valid = validateGameSave(save);
     const level = clone(template(valid.levelIndex, valid.layoutSeed, valid.ingredientSeed));
     const removed = new Set(valid.removedIds);
-    level.tiles.forEach(/** 依次处理集合中的每个条目。 */ (tile, i) => { tile.type = valid.types[i]; tile.removed = removed.has(tile.id); });
+    /**
+     * 依次处理集合中的每个条目。
+     */
+    level.tiles.forEach( (tile, i) => { tile.type = valid.types[i]; tile.removed = removed.has(tile.id); });
     return level;
 }
-/** 校验玩家地区、对局与永久记录。 */
+/**
+ * 校验玩家地区、对局与永久记录。
+ */
 function validatePlayerState(value, regions) {
     check(value && value.profile, '玩家档案格式错误');
     const path = regionPath(regions, value.profile.regionCodes);
@@ -225,6 +382,9 @@ function validatePlayerState(value, regions) {
     const progress = validateProgress(value.progress);
     if (path.length)
         progress.regionChosen = true;
-    return { profile: { regionCodes: path.map(/** 将当前条目转换为后续处理所需的值。 */ item => item.code) }, save,
+    /**
+     * 将当前条目转换为后续处理所需的值。
+     */
+    return { profile: { regionCodes: path.map( item => item.code) }, save,
         progress: recordProgress(progress, save), playDate: validatePlayDate(value.playDate) };
 }

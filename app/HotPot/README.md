@@ -100,7 +100,15 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 
 ## 代码位置
 
-- `assets/scripts/core/HotPotGame.ts`：场景 UI、点击、托盘、三消、胜负和动画。
+- `assets/scripts/core/HotPotGame.ts`：调试入口、地区与结果弹窗；场景仍挂载此组件。
+- `assets/scripts/core/HotPotPlayerMenus.ts`：玩家档案、云存档选择、图鉴与成就菜单。
+- `assets/scripts/core/HotPotState.ts`：场景生命周期、资源加载与玩家初始化。
+- `assets/scripts/core/HotPotFields.ts`：场景状态字段与界面引用。
+- `assets/scripts/core/HotPotView.ts`：主界面、背景和装饰。
+- `assets/scripts/core/HotPotBoard.ts`：棋盘、取牌、托盘、三消、寄存与复活。
+- `assets/scripts/core/HotPotTools.ts`：道具、奖励、翻锅动画和胜负结算。
+- `assets/scripts/core/HotPotUi.ts`：布局常量与通用界面绘制函数。
+- `assets/scripts/core/PlayerService.ts`：本机存档、CloudBase 同步与冲突处理。
 - `assets/scripts/data/GameData.ts`：食材、3 关配置、可复现牌堆与遮挡关系生成。
 - `assets/resources/ingredients/`：原手绘图集 12 种、独立茶树菇 1 种、新增两张图集 10 种，总计 23 种，单关最多抽取 10 种，牛羊肉互斥。
 - `assets/resources/backgrounds/`：当前加载 `tavern-bg.png` 烟火小馆背景和 `title-d.png` 透明标题，旧背景保留。
@@ -108,7 +116,8 @@ powershell -ExecutionPolicy Bypass -File .\tools\build-wechat.ps1 -Open
 - `tools/validate-levels.cjs`：关卡结构与可解路径验证。
 - `tools/validate-tray-animation.cjs`：三消逻辑与异步动画回调的回归验证。
 - `tools/build-wechat.ps1`：构建微信小游戏并可直接用微信开发者工具打开。
-- `../../doc/火锅叠叠消-项目文件说明.md`：完整的目录与文件用途说明。
+- `../../doc/锅里捞啥-项目架构与目录索引.md`：当前架构、目录与功能位置；同目录提供 Word 版。
+- `../../doc/火锅叠叠消-项目文件说明.md`：旧版目录说明，仅供历史对照。
 - `../../doc/火锅叠叠消-手动开发指南.md`：手动修改代码、关卡、图片、音频和刷新构建的具体步骤。
 
 ## 食材图片映射
