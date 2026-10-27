@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
+/** 从 Cocos Creator 安装目录加载 TypeScript 编译器。 */
 function loadTypeScript(creatorRoot = process.env.COCOS_CREATOR_388) {
     const resourceRoots = [creatorRoot && path.join(creatorRoot, 'resources'),
         process.resourcesPath, path.join(path.dirname(process.execPath), 'resources')].filter(Boolean);
@@ -12,9 +13,10 @@ function loadTypeScript(creatorRoot = process.env.COCOS_CREATOR_388) {
     throw new Error('Cannot find Creator TypeScript. Run inside Creator or set COCOS_CREATOR_388.');
 }
 
+/** 生成云函数共享模块、地区数据与开发环境设置。 */
 function prepareCloud({root = path.resolve(__dirname, '..'), ts = loadTypeScript(), requireEnabled = false} = {}) {
     const output = path.join(root, 'cloudfunctions', 'hotpotPlayerDev');
-    const compile = name => {
+    const compile = /** 为测试场景提供 compile 所需的模拟行为。 */ name => {
         const source = path.join(root, 'assets', 'scripts', 'data', `${name}.ts`);
         const result = ts.transpileModule(fs.readFileSync(source, 'utf8'), {
             compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019},
@@ -37,7 +39,7 @@ function prepareCloud({root = path.resolve(__dirname, '..'), ts = loadTypeScript
     const gameModule = {exports: {}};
     vm.runInNewContext(compile('GameData'), {exports: gameModule.exports});
     vm.runInNewContext(compile('PlayerData'), {exports: domainModule.exports,
-        require: name => {
+        require: /** 为测试场景提供 require 所需的模拟行为。 */ name => {
             if (name !== './GameData') throw new Error(`Unexpected domain dependency: ${name}`);
             return gameModule.exports;
         }});

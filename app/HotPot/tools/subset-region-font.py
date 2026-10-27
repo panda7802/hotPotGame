@@ -14,6 +14,7 @@ output = root / 'app/HotPot/assets/resources/fonts/HotPotRegion.ttf'
 regions = json.loads((root / 'doc/res/regions.json').read_text(encoding='utf-8-sig'))
 
 def names(nodes):
+    """递归收集地区名称，供字体子集保留全部地区文字。"""
     return ''.join(node['name'] + names(node.get('children', [])) for node in nodes)
 
 text = names(regions) + '选择地区'

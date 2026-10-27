@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '../..');
 
 exports.throwError = true;
 exports.title = '火锅云开发构建';
-exports.onBeforeBuild = async function(options) {
+exports.onBeforeBuild = /** 处理 onBeforeBuild 对应的事件。 */ async function(options) {
     // Check before writing any generated files or allowing Creator to touch old exports.
     assertBuildOptions(root, options);
     assertBranch(root);
@@ -17,7 +17,7 @@ exports.onBeforeBuild = async function(options) {
     console.log('[HotPot Cloud Build] 已准备地区与云函数本地文件。');
 };
 
-exports.onAfterBuild = async function(options, result) {
+exports.onAfterBuild = /** 处理 onAfterBuild 对应的事件。 */ async function(options, result) {
     assertBuildOptions(root, options);
     assertBranch(root);
     assertDestination(root, result?.dest);

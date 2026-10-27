@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+/** 验证微信构建包中的云环境、入口和资源配置。 */
 function verifyCloudBuild({root = path.resolve(__dirname, '..'),
     build = path.join(root, 'build', 'wechatgame-cloud-dev')} = {}) {
     const settings = JSON.parse(fs.readFileSync(path.join(root, 'cloudfunctions', 'hotpotPlayerDev', 'settings.json'), 'utf8'));
@@ -15,8 +16,8 @@ function verifyCloudBuild({root = path.resolve(__dirname, '..'),
         }
     }
     const declarations = main.match(/environmentId\s*:\s*["'][^"']+["']/g) || [];
-    const environments = declarations.map(value => value.match(/["']([^"']+)["']$/)[1]);
-    if (!settings.enabled || !environments.length || environments.some(value => value !== settings.environmentId) ||
+    const environments = declarations.map(/** 将当前条目转换为后续处理所需的值。 */ value => value.match(/["']([^"']+)["']$/)[1]);
+    if (!settings.enabled || !environments.length || environments.some(/** 按条件筛选或判断条目：value !== settings.environmentId。 */ value => value !== settings.environmentId) ||
         project.appid !== settings.appId || game.cloud !== true || project.cloudfunctionRoot !== '../../cloudfunctions/') {
         throw new Error('Cloud Dev build does not match the prepared environment/AppID. Rebuild before importing.');
     }

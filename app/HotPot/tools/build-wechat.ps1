@@ -23,6 +23,7 @@ if ($OutputName -eq 'wechatgame' -and (Test-Path -LiteralPath (Join-Path $projec
     throw 'This cloud-development checkout must use tools/build-cloud-dev.ps1; the release export is protected.'
 }
 
+# 检查 Cocos 是否已生成微信小游戏项目所需的配置文件。
 function Assert-WeChatBuildOutput {
     if (-not (Test-Path -LiteralPath $projectConfigPath)) {
         throw "Build output is missing project.config.json: $projectConfigPath"

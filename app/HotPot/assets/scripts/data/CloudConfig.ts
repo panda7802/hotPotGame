@@ -11,6 +11,7 @@ export const CLOUD_CONFIG = {
 };
 export const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
 
+/** 检查云开发环境、地区文件和资源名称是否符合开发配置。 */
 export function validateDevelopmentConfig(config = CLOUD_CONFIG): void {
     if (!config.enabled) throw new Error('开发云环境尚未配置');
     if (!config.environmentId || (config.environmentId === RELEASE_ENVIRONMENT_ID && !config.allowSharedEnvironment)) {

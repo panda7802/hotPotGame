@@ -18,7 +18,7 @@ exports.configs = {
         verifyRuleMap: {
             cloudDevelopmentTarget: {
                 message: '云开发配置校验失败，具体原因见控制台 [HotPot Cloud Build]。发布包名称须为 wechatgame-cloud-dev，不能带 -001。',
-                func: (_value, options) => {
+                func: /** 验证编辑器当前的云开发构建选项。 */ (_value, options) => {
                     try { assertBuildOptions(root, options); return true; }
                     catch (error) {
                         console.error(`[HotPot Cloud Build] ${error.message}`);

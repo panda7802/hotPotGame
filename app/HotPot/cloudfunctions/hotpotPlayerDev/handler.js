@@ -4,8 +4,8 @@ const crypto = require('crypto');
 const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
 
 /** 从平台上下文读取身份；event 中的 openid/playerId/env 永远不用于选取档案。 */
-exports.createHandler = function createHandler(cloud, settings, domain, regions, runtimeEnvironment) {
-    return async function main(event = {}) {
+exports.createHandler = /** 构造处理玩家档案和地区请求的云函数。 */ function createHandler(cloud, settings, domain, regions, runtimeEnvironment) {
+    return /** 在当前操作完成后更新相关游戏状态。 */ async function main(event = {}) {
         const context = cloud.getWXContext();
         if (!settings.enabled || !settings.environmentId || (settings.environmentId === RELEASE_ENVIRONMENT_ID && !settings.allowSharedEnvironment) ||
             (context.ENV || runtimeEnvironment) !== settings.environmentId ||
@@ -38,7 +38,7 @@ exports.createHandler = function createHandler(cloud, settings, domain, regions,
         }
         const db = cloud.database({env: settings.environmentId});
         try {
-            const transactionResult = await db.runTransaction(async transaction => {
+            const transactionResult = await db.runTransaction(/** 在数据库事务中读取并更新玩家档案。 */ async transaction => {
                 const reference = transaction.collection(settings.collectionName).doc(playerId);
                 let stored;
                 try {
@@ -53,24 +53,24 @@ exports.createHandler = function createHandler(cloud, settings, domain, regions,
                     {playerId, revision: 0, state: domain.emptyPlayerState(),
                     updatedAt: Date.now(), lastMutationId: ''};
                 if (stored && stored._openid !== context.OPENID) throw new Error('Owner mismatch');
-                const expose = record => ({playerId, revision: record.revision, state: record.state,
+                const expose = /** 处理 expose 对应的游戏逻辑。 */ record => ({playerId, revision: record.revision, state: record.state,
                     updatedAt: record.updatedAt, lastMutationId: record.lastMutationId});
                 if (event.action === 'load') {
                     if (!stored) await reference.set({data: {...current, _openid: context.OPENID}});
-                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION, player: expose(current)};
                 }
                 if (current.lastMutationId === event.mutationId) {
-                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION, player: expose(current)};
                 }
                 if (current.revision !== event.expectedRevision) {
-                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, conflict: true, player: expose(current)};
+                    return {ok: true, progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION, conflict: true, player: expose(current)};
                 }
                 // 兼容仍在运行的旧客户端：其请求没有 progress，也不能清空永久图鉴和成就。
                 const nextState = {...state, progress: domain.mergeProgress(current.state.progress, state.progress)};
                 const next = {playerId, revision: current.revision + 1, state: nextState,
                     updatedAt: Date.now(), lastMutationId: event.mutationId, _openid: context.OPENID};
                 await reference.set({data: next});
-                return {ok: true, progressVersion: domain.PROGRESS_VERSION, player: expose(next)};
+                return {ok: true, progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION, player: expose(next)};
             });
             return transactionResult.result || transactionResult;
         } catch {

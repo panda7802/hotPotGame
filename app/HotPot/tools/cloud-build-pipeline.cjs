@@ -6,10 +6,11 @@ const {verifyCloudBuild} = require('./verify-cloud-build.cjs');
 const OUTPUT = 'wechatgame-cloud-dev';
 const BRANCH = 'codex/cloudbase-player-save';
 const START_SCENE = '7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb';
-const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
-const samePath = (a, b) => process.platform === 'win32'
+const readJson = /** 读取并解析 JSON 文件，兼容 UTF-8 BOM。 */ file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+const samePath = /** 比较两个路径是否指向同一目录。 */ (a, b) => process.platform === 'win32'
     ? path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase() : path.resolve(a) === path.resolve(b);
 
+/** 读取工作区当前 Git 分支。 */
 function readCurrentBranch(repository) {
     let gitDirectory = path.join(repository, '.git');
     if (fs.statSync(gitDirectory).isFile()) {
@@ -21,12 +22,14 @@ function readCurrentBranch(repository) {
     return head.startsWith('ref: refs/heads/') ? head.slice('ref: refs/heads/'.length) : '';
 }
 
+/** 确认构建仅在指定开发分支进行。 */
 function assertBranch(root, readBranch = readCurrentBranch) {
     if (readBranch(path.resolve(root, '../..')) !== BRANCH) {
         throw new Error(`云开发构建仅允许在 ${BRANCH} 分支执行。`);
     }
 }
 
+/** 校验微信小游戏的构建参数和输出名称。 */
 function assertBuildOptions(root, options) {
     const expected = path.join(root, 'build');
     const buildPath = options.buildPath?.startsWith('project://')
@@ -54,6 +57,7 @@ function assertBuildOptions(root, options) {
     }
 }
 
+/** 确认构建目录未越界或被链接重定向。 */
 function assertDestination(root, destination) {
     const expected = path.join(root, 'build', OUTPUT);
     if (!destination || !samePath(destination, expected)) {
@@ -65,6 +69,7 @@ function assertDestination(root, destination) {
     }
 }
 
+/** 写入云开发构建配置并检查最终包大小。 */
 function finalizeCloudBuild({root = path.resolve(__dirname, '..'), build = path.join(root, 'build', OUTPUT)} = {}) {
     assertDestination(root, build);
     const settings = readJson(path.join(root, 'cloudfunctions/hotpotPlayerDev/settings.json'));
@@ -83,9 +88,16 @@ function finalizeCloudBuild({root = path.resolve(__dirname, '..'), build = path.
     game.cloud = true;
     fs.writeFileSync(projectFile, JSON.stringify(project));
     fs.writeFileSync(gameFile, JSON.stringify(game));
+    // Also enforce the project startup template for existing GUI build tasks.
+    fs.copyFileSync(path.join(root, 'build-templates/wechatgame/first-screen.js'), path.join(build, 'first-screen.js'));
+    const runtimeSettingsFile = path.join(build, 'src/settings.json');
+    const runtimeSettings = readJson(runtimeSettingsFile);
+    runtimeSettings.splashScreen = {...runtimeSettings.splashScreen, totalTime: 0, logo: {type: 'none'}};
+    fs.writeFileSync(runtimeSettingsFile, JSON.stringify(runtimeSettings));
     const target = verifyCloudBuild({root, build});
+    /** 为测试场景提供 size 所需的模拟行为。 */
     function size(folder) {
-        return fs.readdirSync(folder, {withFileTypes: true}).reduce((total, item) => {
+        return fs.readdirSync(folder, {withFileTypes: true}).reduce(/** 把集合条目汇总为一个结果。 */ (total, item) => {
             const file = path.join(folder, item.name);
             if (item.isSymbolicLink()) throw new Error('构建产物中不允许目录/文件链接。');
             return total + (item.isDirectory() ? size(file) : fs.statSync(file).size);

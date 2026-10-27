@@ -27,6 +27,14 @@
   "bundleConfigs": [],
   "packAutoAtlas": true,
   "useSplashScreen": true,
+  "splashScreen": {
+    "totalTime": 0,
+    "displayRatio": 1,
+    "autoFit": true,
+    "watermarkLocation": "default",
+    "logo": {"type": "none"},
+    "background": {"type": "color", "color": {"x": 1, "y": 0.9411764706, "z": 0.8313725490, "w": 1}}
+  },
   "useBuiltinServer": false,
   "bundleCommonChunk": false,
   "skipCompressTexture": false,
