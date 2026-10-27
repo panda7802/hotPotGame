@@ -3,6 +3,7 @@ Add-Type -AssemblyName System.Drawing
 $outputDirectory = Join-Path $PSScriptRoot '..\assets\resources\ingredients'
 New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
+# 按食材名称与配色绘制本地占位图片。
 function New-IngredientPlaceholder {
     param(
         [Parameter(Mandatory = $true)][string]$FileName,

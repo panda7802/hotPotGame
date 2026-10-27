@@ -1,20 +1,29 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
     [string]$AppId = 'wx943cc2d81ec6f820',
     [string]$CreatorPath = 'C:\ProgramData\cocos\editors\Creator\3.8.8\CocosCreator.exe',
     [string]$WeChatCliPath = '',
+    [string]$BuildConfigPath = '',
+    [ValidatePattern('^[a-z0-9-]{1,64}$')]
+    [string]$OutputName = 'wechatgame',
     [switch]$Open,
     [switch]$SkipBuild
 )
 
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$buildRoot = Join-Path $projectRoot 'build\wechatgame'
+$buildRoot = Join-Path (Join-Path $projectRoot 'build') $OutputName
 $projectConfigPath = Join-Path $buildRoot 'project.config.json'
 $gameConfigPath = Join-Path $buildRoot 'game.json'
 $startScene = '7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb'
 $testAppId = 'wx6ac3f5090a6b99c5'
 
+# Cloud 开发分支只输出独立测试目录，避免覆盖已归档/申请发布的构建目录。
+if ($OutputName -eq 'wechatgame' -and (Test-Path -LiteralPath (Join-Path $projectRoot 'assets\scripts\data\CloudConfig.ts'))) {
+    throw 'This cloud-development checkout must use tools/build-cloud-dev.ps1; the release export is protected.'
+}
+
+# 检查 Cocos 是否已生成微信小游戏项目所需的配置文件。
 function Assert-WeChatBuildOutput {
     if (-not (Test-Path -LiteralPath $projectConfigPath)) {
         throw "Build output is missing project.config.json: $projectConfigPath"
@@ -43,7 +52,7 @@ if (-not $SkipBuild) {
     $buildOptions = @(
         'platform=wechatgame'
         'buildPath=project://build'
-        'outputName=wechatgame'
+        "outputName=$OutputName"
         'name=HotPot'
         'debug=false'
         'mainBundleCompressionType=subpackage'
@@ -57,6 +66,12 @@ if (-not $SkipBuild) {
         'highPerformanceMode=false'
         'wasmSubpackage=false'
     ) -join ';'
+    if ($BuildConfigPath) {
+        if (-not (Test-Path -LiteralPath $BuildConfigPath -PathType Leaf)) {
+            throw "Build config not found: $BuildConfigPath"
+        }
+        $buildOptions += ';configPath=' + (Resolve-Path -LiteralPath $BuildConfigPath).Path.Replace('\', '/')
+    }
 
     $buildStartedAt = Get-Date
     Write-Host "Building WeChat Mini Game: $projectRoot"
@@ -109,9 +124,9 @@ Assert-WeChatBuildOutput
 # Platform options passed as flat CLI parameters can be ignored by Creator 3.8.
 # Apply the requested AppId to the generated WeChat project explicitly.
 if (-not $SkipBuild) {
-    $wechatConfig = Get-Content -LiteralPath $projectConfigPath -Raw | ConvertFrom-Json
+    $wechatConfig = Get-Content -LiteralPath $projectConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $wechatConfig.appid = $AppId.Trim()
-    $wechatConfig | ConvertTo-Json -Depth 20 -Compress | Set-Content -LiteralPath $projectConfigPath -Encoding utf8
+    [System.IO.File]::WriteAllText($projectConfigPath, ($wechatConfig | ConvertTo-Json -Depth 20 -Compress), (New-Object System.Text.UTF8Encoding($false)))
 }
 
 $totalBytes = (Get-ChildItem -LiteralPath $buildRoot -Recurse -File | Measure-Object Length -Sum).Sum

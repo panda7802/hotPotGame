@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@cloudbase/adapter-cocos_native": "^1.0.0",
+    "@cloudbase/js-sdk": "^3.10.4"
+  }
+}
