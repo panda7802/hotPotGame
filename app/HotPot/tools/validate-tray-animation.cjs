@@ -1359,3 +1359,75 @@ console.log(
     'valid save/restore, idempotent rewards' +
     ' and final triple wins: OK',
 );
+
+// Exercise the real visibility refresh with the full logical inventory.
+for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
+  const {game: g, writes} = persistedGame();
+  let draws = 0;
+  let created = 0;
+  g.createTileNode = (tile) => {
+    created++;
+    const node = new Node(`Tile_${tile.id}`);
+    node.setPosition(tile.x, tile.y, tile.layer);
+    node.setScale(1, 1, 1);
+    g.board.addChild(node);
+    g.tileNodes.set(tile.id, node);
+  };
+  g.drawTile = (node) => {
+    assert(node.active !== false, 'hidden faces must never be drawn');
+    draws++;
+  };
+  g.refreshTileStates = Game.prototype.refreshTileStates.bind(g);
+  const level = actualData.createLevel(2, seed);
+  g.loadLevel(2, false, level);
+  assert.strictEqual(created, 888);
+  assert(draws <= 144, `seed ${seed} must not draw 888 hidden faces`);
+  if (seed >= 2147483647) {
+    assert.strictEqual(draws, 48, 'new layouts have 48 distinct positions');
+  }
+  const initialDraws = draws;
+  g.checkpointGame();
+  const checkpoint = writes.at(-1);
+  // Count every node creation across restore, including temporary boards.
+  created = 0;
+  draws = 0;
+  g.rebuildBoardTiles = () => assert.fail('restore must build only once');
+  g.restoreGame(checkpoint);
+  assert.strictEqual(created, 888);
+  assert.strictEqual(draws, initialDraws);
+  const inventory = g.levelData.tiles.map((tile) => tile.type).sort();
+  draws = 0;
+  g.useShuffleTool();
+  completions.splice(0).forEach((callback) => callback());
+  assert.strictEqual(draws, initialDraws * 2,
+    'shuffling must not allocate hidden Graphics');
+  assert.strictEqual(JSON.stringify(
+    g.levelData.tiles.map((tile) => tile.type).sort(),
+  ), JSON.stringify(inventory));
+  while (g.remainingTiles()) {
+    const selectable = g.levelData.tiles.filter(
+      (tile) => g.isTileSelectable(tile),
+    );
+    assert(selectable.length, 'culling cannot block the solution path');
+    for (const tile of selectable) {
+      const node = g.tileNodes.get(tile.id);
+      assert(node && node.active, 'every selectable tile must be visible');
+      tile.removed = true;
+      node.removeFromParent();
+      node.destroy();
+      g.tileNodes.delete(tile.id);
+    }
+    g.refreshTileStates();
+    const positions = new Set();
+    for (const tile of g.levelData.tiles) {
+      if (tile.removed || !g.tileNodes.get(tile.id).active) {
+        continue;
+      }
+      const key = `${tile.x}:${tile.y}`;
+      assert(!positions.has(key), 'only one face per position is rendered');
+      positions.add(key);
+    }
+  }
+}
+console.log('iOS memory: hidden faces culled, full solution visible, '
+  + 'legacy/random saves restored in one board pass: OK');

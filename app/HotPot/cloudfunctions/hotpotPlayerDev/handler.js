@@ -1,6 +1,7 @@
 'use strict';
 
 const crypto = require('crypto');
+const {handleLeaderboard} = require('./leaderboard');
 const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
 
 /**
@@ -29,10 +30,16 @@ exports.createHandler = function createHandler(
       settings.collectionName !== 'hotpot_players_dev') {
       return {ok: false, code: 'DEVELOPMENT_ENV_REQUIRED'};
     }
-    if (!context.OPENID || context.APPID !== settings.appId) {
+    // 微信关联环境也会给网页请求附带本应用 APPID，身份仍由 TCB UID 确认。
+    const web = !context.OPENID
+      && (!context.APPID || context.APPID === settings.appId)
+      && typeof context.UID === 'string'
+      && /^[a-zA-Z0-9_-]{1,128}$/.test(context.UID);
+    if (!web && (!context.OPENID || context.APPID !== settings.appId)) {
       return {ok: false, code: 'IDENTITY_REQUIRED'};
     }
-    if (!['load', 'save', 'regions'].includes(event.action)) {
+    if (!['load', 'save', 'regions', 'leaderboard', 'regionWin']
+      .includes(event.action)) {
       return {ok: false, code: 'INVALID_ACTION'};
     }
     if (event.action === 'regions') {
@@ -64,9 +71,16 @@ exports.createHandler = function createHandler(
     }
     const playerId = crypto
       .createHash('sha256')
-      .update(`${context.APPID}:${context.OPENID}`)
+      .update(web ? `web:${context.UID}`
+        : `${context.APPID}:${context.OPENID}`)
       .digest('hex')
       .slice(0, 32);
+    if (['leaderboard', 'regionWin'].includes(event.action)) {
+      return handleLeaderboard(
+        cloud.database({env: settings.environmentId}),
+        event, playerId, domain, regions,
+      );
+    }
     let state;
     if (event.action === 'save') {
       if (!Number.isSafeInteger(event.expectedRevision)
@@ -120,7 +134,8 @@ exports.createHandler = function createHandler(
               updatedAt: Date.now(),
               lastMutationId: '',
             };
-        if (stored && stored._openid !== context.OPENID) {
+        if (stored && (web ? stored._webUid !== context.UID
+          : stored._openid !== context.OPENID)) {
           throw new Error('Owner mismatch');
         }
         /**
@@ -135,7 +150,8 @@ exports.createHandler = function createHandler(
         });
         if (event.action === 'load') {
           if (!stored) {
-            await reference.set({data: {...current, _openid: context.OPENID}});
+            await reference.set({data: {...current, ...(web
+              ? {_webUid: context.UID} : {_openid: context.OPENID})}});
           }
           return {
             ok: true,
@@ -175,7 +191,7 @@ exports.createHandler = function createHandler(
           state: nextState,
           updatedAt: Date.now(),
           lastMutationId: event.mutationId,
-          _openid: context.OPENID,
+          ...(web ? {_webUid: context.UID} : {_openid: context.OPENID}),
         };
         await reference.set({data: next});
         return {

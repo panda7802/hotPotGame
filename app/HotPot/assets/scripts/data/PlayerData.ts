@@ -303,6 +303,11 @@ export function validateGameSave(value: any): GameSave {
   );
   check(integer(value.levelIndex, 0, LEVELS.length - 1), '关卡编号错误');
   check(
+    value.runId === undefined || (typeof value.runId === 'string'
+      && /^[a-z0-9-]{8,80}$/.test(value.runId)),
+    '牌局标识错误',
+  );
+  check(
     value.layoutSeed === undefined ||
       (value.levelIndex === 2 &&
         integer(value.layoutSeed, 1, RANDOM_LAYOUT_SEED_END)),
@@ -467,6 +472,7 @@ export function validateGameSave(value: any): GameSave {
   }
   return {
     ...move,
+    ...(value.runId === undefined ? {} : {runId: value.runId}),
     version: 1,
     boardVersion: BOARD_VERSION,
     levelIndex: value.levelIndex,

@@ -13,6 +13,7 @@ import {
   drawRoundRect,
   makeButton,
   makeLabel,
+  makePanelHeading,
   TOOL_NAMES,
   ToolType,
 } from './HotPotUi';
@@ -237,26 +238,20 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
    * 显示单个食材的图鉴故事。
    */
   protected showIngredientDetail(type: IngredientType): void {
-    const panel = this.makePlayerMenu('CollectionDetailOverlay', 780);
+    const panel = this.makePlayerMenu('CollectionDetailOverlay', 840);
     if (!panel) {
       return;
     }
     const ingredient = getIngredient(type);
     const known =
       this.playerService!.state.progress.discovered.indexOf(type) >= 0;
-    const title = makeLabel(
-      panel,
-      known ? ingredient.name : '尚未发现',
-      44,
-      '#8D3426',
-      new Vec3(0, 285),
-      560,
-      66,
+    const title = makePanelHeading(
+      panel, known ? ingredient.name : '尚未发现', 320, 400,
     );
     title.isBold = true;
     const icon = new Node('IngredientPortrait');
     panel.addChild(icon);
-    icon.setPosition(0, 135);
+    icon.setPosition(0, 165);
     if (known && this.ingredientFrames.has(type)) {
       this.addIngredientImage(icon, type, false, 182, 174);
     } else {
@@ -267,8 +262,8 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       known ? INGREDIENT_STORIES[type].tag : '食材还藏在锅里',
       27,
       '#A3613B',
-      new Vec3(0, 9),
-      560,
+      new Vec3(0, 29),
+      500,
       45,
     );
     makeLabel(
@@ -278,9 +273,9 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
         : `在游戏中拿取这份食材即可点亮。继续挑战不同关卡，寻找藏在层层食材间的伙伴，收齐${INGREDIENTS.length}份小档案。`,
       27,
       '#775145',
-      new Vec3(0, -94),
-      550,
-      148,
+      new Vec3(0, -90),
+      476,
+      152,
       true,
     );
     makeLabel(
@@ -289,13 +284,13 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       22,
       '#94735D',
       new Vec3(0, -216),
-      570,
+      496,
       40,
     );
     makeButton(
       panel,
       '返回图鉴',
-      new Vec3(0, -307),
+      new Vec3(0, -327),
       330,
       66,
       '#B88261',

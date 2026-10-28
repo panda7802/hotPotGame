@@ -64,7 +64,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
     const close = makeButton(
       panel,
       '×',
-      new Vec3(280, height / 2 - 43),
+      new Vec3(272, height / 2 - 98),
       44,
       44,
       '#B88261',
@@ -144,8 +144,8 @@ export abstract class HotPotProfileMenus extends HotPotTools {
           String(save.levelIndex + 1) +
           '关 · ' +
           String(save.removedIds.length) +
-          '张已拿取 · 云版本' +
-          String(service.revision) +
+          '张已拿取' +
+          ` · 云版本${service.revision}` +
           ''
       : '还没有存档';
   }
@@ -154,12 +154,16 @@ export abstract class HotPotProfileMenus extends HotPotTools {
    * 展示玩家档案、地区和同步状态。
    */
   protected showPlayerProfile(): void {
-    const panel = this.makePlayerMenu('PlayerOverlay', 970);
+    const panel = this.makePlayerMenu('PlayerOverlay', 1040);
     if (!panel) {
       return;
     }
     const service = this.playerService!;
-    makePanelHeading(panel, '我的小馆档案', 387, 470);
+    makePanelHeading(panel, '我的小馆档案', 420, 450);
+    makeLabel(
+      panel, '记录小馆身份，也为家乡添一份战绩', 22,
+      '#94735D', new Vec3(0, 355), 510, 36,
+    );
     const card =
       /**
        * 处理 card 对应的游戏逻辑。
@@ -167,11 +171,17 @@ export abstract class HotPotProfileMenus extends HotPotTools {
         const node = new Node(name);
         panel.addChild(node);
         node.setPosition(0, y);
-        drawRoundRect(node, 556, height, 16, '#F5E4C7', '#DEC498', 1.5);
+        drawRoundRect(node, 548, height, 16, '#FFF5E3', '#DEC498', 1);
       };
-    card('IdentityCard', 284, 96);
-    card('RegionCard', 153, 132);
-    card('SaveCard', -12, 158);
+    card('IdentityCard', 270, 110);
+    card('RegionCard', 123, 150);
+    card('SaveCard', -55, 162);
+    for (const [text, y] of [
+      ['玩家身份', 298], ['小馆所在地', 174],
+      ['云端存档', -6],
+    ] as Array<[string, number]>) {
+      makeLabel(panel, text, 20, '#A3613B', new Vec3(-157, y), 180, 30);
+    }
     makeLabel(
       panel,
       service.playerId
@@ -179,7 +189,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
         : '本机玩家 · 开发版',
       26,
       '#775145',
-      new Vec3(0, 284),
+      new Vec3(0, 255),
       520,
       42,
     );
@@ -197,9 +207,9 @@ export abstract class HotPotProfileMenus extends HotPotTools {
         : '地区尚未选择',
       25,
       '#775145',
-      new Vec3(-65, 153),
-      350,
-      90,
+      new Vec3(-78, 113),
+      320,
+      76,
       true,
     );
     this.playerStatusLabel = makeLabel(
@@ -207,7 +217,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
       service.statusText,
       24,
       '#547344',
-      new Vec3(0, 23),
+      new Vec3(0, -48),
       520,
       42,
     );
@@ -216,17 +226,17 @@ export abstract class HotPotProfileMenus extends HotPotTools {
       this.playerSaveText(),
       23,
       '#94735D',
-      new Vec3(0, -38),
+      new Vec3(0, -100),
       510,
-      64,
+      48,
       true,
     );
     makeButton(
       panel,
       '选择地区',
-      new Vec3(188, 153),
-      152,
-      58,
+      new Vec3(185, 110),
+      148,
+      62,
       '#A3613B',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -245,7 +255,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
         : service.playerId
           ? '同步存档'
           : '连接云端',
-      new Vec3(0, -168),
+      new Vec3(0, -190),
       510,
       70,
       '#D75542',
@@ -258,6 +268,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
           return;
         }
         if (service.playerId) {
+          service.claimGuestWins();
           void service.flush();
           return;
         }
@@ -272,6 +283,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
             if (!this.node.isValid || !service.playerId) {
               return;
             }
+            service.claimGuestWins();
             this.dismissPlayerMenu('PlayerOverlay');
             if (service.beginDailySession()) {
               this.loadLevel(0);
@@ -294,15 +306,23 @@ export abstract class HotPotProfileMenus extends HotPotTools {
       '每次操作后自动保存\n断网时先保留在本机',
       22,
       '#94735D',
-      new Vec3(0, -266),
+      new Vec3(0, -350),
       550,
-      70,
+      56,
       true,
+    );
+    makeButton(
+      panel, '云端地域排行榜',
+      new Vec3(0, -274),
+      510, 66, '#A3613B', () => {
+        this.dismissPlayerMenu('PlayerOverlay');
+        this.showRegionPicker([], true);
+      },
     );
     makeButton(
       panel,
       '继续游戏',
-      new Vec3(0, -380),
+      new Vec3(0, -427),
       510,
       66,
       '#B88261',
@@ -405,12 +425,13 @@ export abstract class HotPotProfileMenus extends HotPotTools {
   protected makeCollectionScroll(panel: Node, height: number): Node {
     const viewport = new Node('CollectionViewport');
     panel.addChild(viewport);
-    transform(viewport, 584, 618);
+    viewport.setPosition(0, -28);
+    transform(viewport, 568, 576);
     viewport.addComponent(Mask);
     const content = new Node('CollectionContent');
     viewport.addChild(content);
-    transform(content, 584, Math.max(618, height)).setAnchorPoint(0.5, 1);
-    content.setPosition(0, 309);
+    transform(content, 568, Math.max(576, height)).setAnchorPoint(0.5, 1);
+    content.setPosition(0, 288);
     const scroll = viewport.addComponent(ScrollView);
     scroll.content = content;
     scroll.horizontal = false;
@@ -440,5 +461,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
   /**
    * 打开地区选择界面。
    */
-  protected abstract showRegionPicker(codes: string[]): void;
+  protected abstract showRegionPicker(
+    codes: string[], leaderboard?: boolean,
+  ): void;
 }

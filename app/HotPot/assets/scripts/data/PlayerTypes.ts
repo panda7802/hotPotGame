@@ -25,6 +25,8 @@ export interface SavedMove {
  * GameSave 的数据结构；字段说明见各成员。
  */
 export interface GameSave extends SavedMove {
+  /** 每次新开局的标识，恢复存档时保留，用于云榜去重。 */
+  runId?: string;
   /**
    * 数据格式版本。
    */

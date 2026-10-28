@@ -18,6 +18,7 @@ import {
   RegionNode,
   restoreLevel,
 } from '../data/PlayerData';
+import {LevelData} from '../data/GameData';
 
 import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
@@ -274,6 +275,7 @@ export abstract class HotPotState extends HotPotFields {
       return;
     }
     const save: GameSave = {
+      ...(this.runId ? {runId: this.runId} : {}),
       version: 1,
       boardVersion: BOARD_VERSION,
       levelIndex: this.levelIndex,
@@ -321,7 +323,8 @@ export abstract class HotPotState extends HotPotFields {
     const restored = restoreLevel(save);
     this.restoringSave = true;
     try {
-      this.loadLevel(save.levelIndex, false);
+      this.loadLevel(save.levelIndex, false, restored);
+      this.runId = save.runId;
       this.levelData = restored;
       this.tray = save.tray.slice();
       this.reserve = save.reserve.slice();
@@ -329,7 +332,6 @@ export abstract class HotPotState extends HotPotFields {
       this.rewardedMilestones = save.rewardedMilestones;
       this.toolUses = {...save.toolUses};
       this.lastMoveSnapshot = save.lastMove ? clone(save.lastMove) : null;
-      this.rebuildBoardTiles();
       this.renderTray();
       this.renderReserve();
       this.updateProgress();
@@ -383,7 +385,11 @@ export abstract class HotPotState extends HotPotFields {
   /**
    * 加载指定关卡并按需记录存档。
    */
-  protected abstract loadLevel(index: number, persist?: boolean): void;
+  protected abstract loadLevel(
+    index: number,
+    persist?: boolean,
+    restored?: LevelData,
+  ): void;
 
   /**
    * 根据托盘数据绘制食材节点。

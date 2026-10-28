@@ -361,7 +361,11 @@ export function applyLacquerSkin(
         node.addChild(image);
         image.setSiblingIndex(0);
       }
-      transform(image, width, height);
+      // 九宫格边角保留源像素尺寸；小按钮必须连同边角一起等比缩小。
+      const scale = tone
+        ? Math.min(1, height / 128, width / 256) : 0.65;
+      transform(image, width / scale, height / scale);
+      image.setScale(scale, scale, 1);
       const frame = new SpriteFrame();
       frame.texture = texture;
       if (tone) {
@@ -440,8 +444,8 @@ export function makePanelHeading(
     32,
     '#FFF0CA',
     Vec3.ZERO,
-    width - 40,
-    48,
+    width - 64,
+    42,
   );
   heading.isBold = true;
   return heading;
@@ -525,11 +529,11 @@ export function makeButton(
   makeLabel(
     node,
     text,
-    26,
+    width < 140 ? 24 : 26,
     primary ? '#FFF2D0' : '#633C28',
     new Vec3(0, 1),
-    width - 24,
-    height - 14,
+    width - (width < 80 ? 16 : width < 140 ? 36 : 56),
+    height - (width < 80 ? 14 : height <= 60 ? 20 : 28),
   );
   node.on(
     Node.EventType.TOUCH_START,

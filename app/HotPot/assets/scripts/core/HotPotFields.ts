@@ -56,6 +56,7 @@ export abstract class HotPotFields extends Component {
    * 当前对局是否结束。
    */
   protected gameEnded = false;
+  protected runId: string | undefined;
   /**
    * 连续消除次数。
    */

@@ -55,14 +55,14 @@ export abstract class HotPotTools extends HotPotToolActions {
     }
     this.updateToolButtons();
     this.showToast('翻锅中，整锅食材重新拌匀！', '#D86A3B');
-    // Every remaining board tile joins the pile, including covered layers.
+    // Shuffle all logical tiles; animate only instantiated visible faces.
     // Independent paths and rotations imitate mixing mahjong tiles on a table.
     activeTiles.forEach(
       /**
        * 依次处理集合中的每个条目。
        */ (tile, index) => {
         const node = this.tileNodes.get(tile.id);
-        if (!node) {
+        if (!node || node.active === false) {
           return;
         }
         const start = node.position.clone();
@@ -128,7 +128,7 @@ export abstract class HotPotTools extends HotPotToolActions {
              */ (tile, index) => {
               tile.type = types[index];
               const node = this.tileNodes.get(tile.id);
-              if (!node) {
+              if (!node || node.active === false) {
                 return;
               }
               const selectable = this.isTileSelectable(tile);

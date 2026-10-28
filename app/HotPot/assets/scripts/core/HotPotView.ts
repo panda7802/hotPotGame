@@ -56,22 +56,22 @@ export abstract class HotPotView extends HotPotResources {
     const levelBar = new Node('LevelBar');
     this.node.addChild(levelBar);
     levelBar.setPosition(0, 480 + this.topSpread);
-    drawRoundRect(levelBar, 650, 58, 16, '#F5DEB2');
+    drawRoundRect(levelBar, 664, 72, 18, '#F5DEB2');
     this.levelLabel = makeLabel(
       levelBar,
       '',
       25,
       '#63351F',
       Vec3.ZERO,
-      398,
+      342,
       44,
     );
     makeButton(
       levelBar,
       '图鉴',
-      new Vec3(-265, 0),
-      102,
-      48,
+      new Vec3(-255, 0),
+      124,
+      58,
       '#A3613B',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -80,9 +80,9 @@ export abstract class HotPotView extends HotPotResources {
     const profile = makeButton(
       levelBar,
       '档案',
-      new Vec3(265, 0),
-      102,
-      48,
+      new Vec3(255, 0),
+      124,
+      58,
       '#A3613B',
       /**
        * 在当前操作完成后更新相关游戏状态。

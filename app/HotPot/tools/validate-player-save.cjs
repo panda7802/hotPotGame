@@ -17,6 +17,7 @@ const ts = require(
 );
 const root = path.resolve(__dirname, '..');
 const modules = {};
+const browserRuntime = {};
 /**
  * 载入测试模块并创建隔离的运行环境。
  */
@@ -40,6 +41,7 @@ function load(filename) {
   assert.strictEqual(compiled.diagnostics.length, 0);
   const exports = {};
   vm.runInNewContext(compiled.outputText, {
+    globalThis: browserRuntime,
     exports,
     setTimeout,
     clearTimeout,
@@ -600,12 +602,17 @@ function backend() {
              */
             const transaction = {
               collection(name) {
-                assert.strictEqual(name, settings.collectionName);
+                assert([
+                  settings.collectionName, 'hotpot_region_ranking_dev',
+                ].includes(name));
                 /**
                  * 为测试场景提供 doc 所需的模拟行为。
                  */
                 return {
                   doc(id) {
+                    if (name !== settings.collectionName) {
+                      id = `${name}:${id}`;
+                    }
                     return {
                       /**
                        * 读取或查找 get 对应的数据，供测试使用。
@@ -654,6 +661,16 @@ function backend() {
      */
     setUser(name) {
       context.OPENID = name;
+    },
+    setWebUser(uid, appId) {
+      context.OPENID = undefined;
+      context.APPID = appId;
+      context.UID = uid;
+    },
+    setWechatUser(name) {
+      context.OPENID = name;
+      context.APPID = settings.appId;
+      context.UID = undefined;
     },
     setEnvironment(env) {
       context.ENV = env;
@@ -740,8 +757,10 @@ function wxClient(server, options = {}) {
             if (data.action === 'save' && options.saveGate) {
               await options.saveGate;
             }
-            if (data.action === 'save' && options.loseResponse) {
+            if ((data.action === 'save' && options.loseResponse)
+              || (data.action === 'regionWin' && options.loseWinResponse)) {
               options.loseResponse = false;
+              options.loseWinResponse = false;
               fail(new Error('Response lost after commit'));
             } else {
               success({result});
@@ -791,6 +810,194 @@ function service(
  * 为测试提供当前调用所需的回调行为。
  */
 (async () => {
+  const rankingServer = backend();
+  const rankingCache = storage();
+  const rankingOptions = {};
+  const rankingClient = service(rankingServer, rankingCache, rankingOptions);
+  await rankingClient.initialize();
+  rankingClient.setRegion(['OVERSEAS']);
+  const completed = {...collected.save, runId: 'ranking-test-run-1'};
+  assert.strictEqual(completed.status, 'won');
+  rankingOptions.offline = true;
+  rankingClient.setSave(freshSave(2));
+  rankingClient.setSave(completed);
+  rankingClient.setSave(completed);
+  // 重开和跨日不丢失尚未补传的通关记录。
+  rankingClient.setSave(freshSave(0));
+  rankingClient.beginDailySession(new Date(2026, 9, 28));
+  await rankingClient.flush();
+  rankingOptions.offline = false;
+  const reopenedRanking = service(rankingServer, rankingCache, {
+    loseWinResponse: true,
+  });
+  await reopenedRanking.initialize();
+  await reopenedRanking.refreshLeaderboard();
+  assert.strictEqual(reopenedRanking.regionCount('OVERSEAS'), 1);
+  assert.strictEqual(reopenedRanking.pendingWins().length, 1);
+  await reopenedRanking.refreshLeaderboard();
+  assert.strictEqual(reopenedRanking.pendingWins().length, 0);
+  assert.strictEqual(reopenedRanking.regionCount('OVERSEAS'), 1);
+  const retryWin = {
+    action: 'regionWin',
+    win: {save: completed, regionCodes: ['OVERSEAS'], playDate: ''},
+  };
+  const duplicateResults = await Promise.all([
+    rankingServer.handler(retryWin), rankingServer.handler(retryWin),
+  ]);
+  assert(duplicateResults.every((result) => result.counts.OVERSEAS === 1));
+  const province = regions.find((item) => item.children?.length);
+  const path = [province.code];
+  let leaf = province;
+  while (leaf.children?.length) {
+    leaf = leaf.children[0];
+    path.push(leaf.code);
+  }
+  const nextWin = {
+    ...retryWin,
+    win: {...retryWin.win, regionCodes: path,
+      save: {...completed, runId: 'ranking-test-run-2'}},
+  };
+  let result = await rankingServer.handler(nextWin);
+  assert(path.every((code) => result.counts[code] === 1));
+  // 同一局切换地区不搬分、不重复累计。
+  result = await rankingServer.handler({
+    ...nextWin, win: {...nextWin.win, regionCodes: ['OVERSEAS']},
+  });
+  assert.strictEqual(result.counts.OVERSEAS, 1);
+  rankingServer.setUser('bob');
+  result = await rankingServer.handler(retryWin);
+  assert.strictEqual(result.counts.OVERSEAS, 2);
+  result = await rankingServer.handler({
+    ...retryWin, win: {...retryWin.win, save: freshSave(2)},
+  });
+  assert.strictEqual(result.code, 'INVALID_WIN');
+  rankingCache.setItem(
+    `hotpot.region-ranking:${settings.environmentId}`, '{broken',
+  );
+  await reopenedRanking.refreshLeaderboard();
+  assert(reopenedRanking.leaderboardText.startsWith('云端排行'));
+  const originalFirstCode = regions[0].code;
+  const sorted = reopenedRanking.sortedRegions(regions);
+  assert.strictEqual(sorted[0].code, 'OVERSEAS');
+  assert.strictEqual(regions[0].code, originalFirstCode);
+  assert(!JSON.stringify(result).includes('alice'));
+  console.log(
+    'Region ranking: offline/reopen queue, repeated and concurrent retry, '
+      + 'parent totals, region changes, identity isolation and sorting: OK',
+  );
+
+  const guestServer = backend();
+  const guestCache = storage();
+  const guestOptions = {offline: true};
+  const guest = service(guestServer, guestCache, guestOptions);
+  const qinhuai = ['320000', '320100', '320104'];
+  assert.deepStrictEqual(plain(domain.regionPath(regions, qinhuai))
+    .map((item) => item.name), ['江苏省', '南京市', '秦淮区']);
+  await guest.initialize();
+  guest.setRegion(qinhuai);
+  guest.setSave(freshSave(2));
+  guest.setSave({...completed, runId: 'guest-qinhuai-test-1'});
+  guestOptions.offline = false;
+  await guest.initialize();
+  await guest.refreshLeaderboard();
+  assert.strictEqual(guest.regionCount('320104'), 0);
+  guest.claimGuestWins();
+  await guest.flush();
+  await guest.refreshLeaderboard();
+  assert(qinhuai.every((code) => guest.regionCount(code) === 1));
+  guest.claimGuestWins();
+  await guest.flush();
+  await guest.refreshLeaderboard();
+  assert(qinhuai.every((code) => guest.regionCount(code) === 1));
+  assert(guestServer.documents.has('region_ranking_summary_v1'));
+  assert(guestServer.documents.get(guest.playerId).playerId);
+  console.log('Qinhuai guest win: explicit account sync, all parents, '
+    + 'repeat sync and player document isolation: OK');
+
+  const webServer = backend();
+  webServer.setWebUser('browser-user-one');
+  const webCache = storage();
+  const webPlayer = new PlayerService(regions, webCache, undefined, settings);
+  webPlayer.schedule = () => {};
+  webPlayer.setRegion(qinhuai);
+  webPlayer.setSave(freshSave(2));
+  webPlayer.setSave({...completed, runId: 'web-qinhuai-test-1'});
+  let signedIn = false;
+  let webSignIns = 0;
+  const session = () => ({data: {session: signedIn ? {user: {}} : null}});
+  browserRuntime.document = {createElement() { throw new Error('No CDN'); }};
+  browserRuntime.cloudbase = {
+    init({env}) {
+      assert.strictEqual(env, settings.environmentId);
+      return {
+        auth: () => ({
+          getSession: async () => session(),
+          signInAnonymously: async () => {
+            signedIn = true;
+            webSignIns++;
+            return session();
+          },
+        }),
+        callFunction: async ({data}) => ({
+          result: await webServer.handler(data),
+        }),
+      };
+    },
+  };
+  try {
+    await webPlayer.initialize();
+    await webPlayer.refreshLeaderboard();
+    await webPlayer.flush();
+    assert(webPlayer.playerId);
+    assert.strictEqual(webSignIns, 1);
+    assert.deepStrictEqual(plain(webPlayer.state.profile.regionCodes), qinhuai);
+    assert(qinhuai.every((code) => webPlayer.regionCount(code) === 1));
+    webServer.setWechatUser('wechat-user');
+    const fromWechat = await webServer.handler({action: 'leaderboard'});
+    assert(qinhuai.every((code) => fromWechat.counts[code] === 1));
+    await webServer.handler({action: 'regionWin', win: {
+      save: {...completed, runId: 'wechat-qinhuai-test-1'},
+      regionCodes: qinhuai, playDate: '',
+    }});
+    webServer.setWebUser('browser-user-one');
+    await webPlayer.refreshLeaderboard();
+    assert(qinhuai.every((code) => webPlayer.regionCount(code) === 2));
+    const webReopened = new PlayerService(
+      regions, webCache, undefined, settings,
+    );
+    webReopened.schedule = () => {};
+    await webReopened.initialize();
+    await webReopened.refreshLeaderboard();
+    assert.strictEqual(webSignIns, 1);
+    assert.strictEqual(webReopened.playerId, webPlayer.playerId);
+    assert(qinhuai.every((code) => webReopened.regionCount(code) === 2));
+    assert.strictEqual(webReopened.sortedRegions(regions)[0].code, '320000');
+    webServer.setWebUser('browser-user-two');
+    const another = await webServer.handler({
+      action: 'load', playerId: webPlayer.playerId, UID: 'browser-user-one',
+    });
+    assert.notStrictEqual(another.player.playerId, webPlayer.playerId);
+    webServer.setWebUser('browser-user-two', settings.appId);
+    const associated = await webServer.handler({action: 'load'});
+    assert.strictEqual(associated.ok, true);
+    assert.strictEqual(associated.player.playerId, another.player.playerId);
+    webServer.setWebUser('browser-user-two', 'another-application');
+    assert.strictEqual(
+      (await webServer.handler({action: 'leaderboard'})).code,
+      'IDENTITY_REQUIRED',
+    );
+    webServer.setWebUser(undefined);
+    const spoofed = await webServer.handler({
+      action: 'leaderboard', UID: 'browser-user-one',
+    });
+    assert.strictEqual(spoofed.code, 'IDENTITY_REQUIRED');
+  } finally {
+    delete browserRuntime.document;
+    delete browserRuntime.cloudbase;
+  }
+  console.log('Unified web/WeChat ranking: web login, pending Qinhuai upload, '
+    + 'both platforms share counts, reload and trusted identity isolation: OK');
+
   const dayServer = backend();
   const dayCache = storage();
   const dayClient = service(dayServer, dayCache);
@@ -912,6 +1119,15 @@ function service(
   assert.strictEqual(
     requestIdentity(sdk, aliceContext, settings.environmentId).OPENID,
     'alice',
+  );
+  const webIdentity = requestIdentity(sdk, {environment: JSON.stringify({
+    TCB_ENV: settings.environmentId, TCB_UUID: 'trusted-browser',
+  })}, settings.environmentId);
+  assert.strictEqual(webIdentity.UID, 'trusted-browser');
+  assert.strictEqual(webIdentity.OPENID, undefined);
+  assert.strictEqual(
+    requestIdentity(sdk, {environment: '{}'}, settings.environmentId).UID,
+    undefined,
   );
   assert.strictEqual(
     requestIdentity(sdk, {environment: '{}'}, settings.environmentId).OPENID,

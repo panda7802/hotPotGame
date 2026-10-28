@@ -24,6 +24,10 @@ exports.requestIdentity = function requestIdentity(
         typeof environment.WX_APPID === 'string'
           ? environment.WX_APPID
           : undefined,
+      UID:
+        typeof environment.TCB_UUID === 'string'
+          ? environment.TCB_UUID
+          : undefined,
     };
   } catch {
     return {ENV: runtimeEnvironment};

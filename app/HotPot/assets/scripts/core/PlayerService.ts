@@ -10,13 +10,15 @@ import {
   validatePlayerState,
   validateRegions,
 } from '../data/PlayerData';
-import {PlayerServiceBase, LocalPlayer} from './PlayerServiceBase';
+import {LocalPlayer} from './PlayerServiceBase';
+import {RegionLeaderboardService} from './RegionLeaderboardService';
+import {createWebCloud, hasWebCloudRuntime} from './WebCloudBridge';
 export type {PlayerStorage, SyncStatus} from './PlayerServiceBase';
 
 /**
  * 云端连接、同步队列与本地存储实现。
  */
-export class PlayerService extends PlayerServiceBase {
+export class PlayerService extends RegionLeaderboardService {
   /**
    * 验证环境、加载云档案并合并本机待同步记录。
    */
@@ -25,25 +27,39 @@ export class PlayerService extends PlayerServiceBase {
       await this.flush();
       return;
     }
-    if (!this.config.enabled || !this.wxHost?.cloud) {
+    if (!this.config.enabled
+      || (!this.wxHost?.cloud && !hasWebCloudRuntime())) {
       this.status = 'local';
       this.changed();
       return;
     }
     this.status = 'connecting';
     this.changed();
+    let connectionStage = 'config';
     try {
       validateDevelopmentConfig(this.config);
-      this.cloud = this.wxHost.cloud;
+      connectionStage = 'web-login';
+      this.cloud = this.wxHost?.cloud || await createWebCloud(this.config);
       this.cloud.init({env: this.config.environmentId});
       void this.loadRegions();
-      const remote = this.parseRemote(await this.request({action: 'load'}));
+      connectionStage = 'load';
+      const response = await this.request({action: 'load'});
+      connectionStage = 'validate-player';
+      const remote = this.parseRemote(response);
+      connectionStage = 'restore-local';
       // 确认服务器身份之后才读取该账号的本地缓存，不展示上一账号的私有进度。
       this.playerId = remote.playerId;
       const cached = this.readLocal(remote.playerId);
+      const browserGuest = this.cloud.platform === 'web' && !cached
+        && remote.revision === 0 ? this.local.state : null;
       this.local =
-        cached || this.blank(remote.playerId, remote.revision, remote.state);
-      if (cached?.dirty) {
+        cached || this.blank(remote.playerId, remote.revision,
+          browserGuest || remote.state);
+      if (browserGuest) {
+        this.local.dirty = true;
+        this.local.mutationId = this.newMutationId();
+        this.status = 'pending';
+      } else if (cached?.dirty) {
         if (cached.mutationId === remote.lastMutationId) {
           this.local = this.blank(
             remote.playerId,
@@ -64,10 +80,16 @@ export class PlayerService extends PlayerServiceBase {
       this.applyActiveDay();
       this.persist();
       this.changed();
+      if (this.cloud.platform === 'web') {
+        this.claimGuestWins();
+      }
+      void this.refreshLeaderboard();
       if (this.status === 'pending') {
         this.schedule();
       }
     } catch (error) {
+      console.warn('[HotPot Connection Stage]', connectionStage,
+        error instanceof TypeError ? 'TypeError' : 'Error');
       this.describeFailure(error);
       this.cloud = null;
       this.status = 'error';
@@ -125,10 +147,10 @@ export class PlayerService extends PlayerServiceBase {
   protected async drain(): Promise<void> {
     if (!this.cloud
       || !this.playerId ||
-      this.status === 'conflict' ||
-      !this.local.dirty) {
+      this.status === 'conflict') {
       return;
     }
+    await this.flushRegionWins();
     while (this.local.dirty && !this.isConflict) {
       const sent = clone(this.local);
       this.status = 'syncing';
@@ -309,8 +331,18 @@ export class PlayerService extends PlayerServiceBase {
        */ (value) => typeof value === 'string',
     );
     const message = messages.join(' ');
+    if (/login_type_disabled|匿名登录/.test(message)) {
+      this.failureText = '请在云环境开启网页访客登录';
+      return;
+    }
+    if (/permission_denied|INVALID_ORIGIN|安全域名|安全来源/i.test(message)) {
+      this.failureText = '请检查网页登录权限及安全来源配置';
+      return;
+    }
     const descriptions: Record<string, string> = {
       IDENTITY_REQUIRED: '微信身份未确认，请检查云环境关联',
+      WEB_IDENTITY_REQUIRED: '网页登录未完成，请重试',
+      WEB_SDK_UNAVAILABLE: '网页云服务加载失败，请检查网络后重试',
       DEVELOPMENT_ENV_REQUIRED: '云环境配置不匹配',
       DATABASE_UNAVAILABLE: '云存档服务暂不可用',
       INVALID_STATE: '当前存档校验失败',

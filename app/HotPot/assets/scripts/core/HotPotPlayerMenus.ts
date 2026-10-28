@@ -40,7 +40,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
        */ (item) => item.unlocked,
     ).length;
     const discovered = state.progress.discovered;
-    const heading = makePanelHeading(panel, '小馆珍藏', 485, 420);
+    const heading = makePanelHeading(panel, '小馆珍藏', 455, 420);
     heading.isBold = true;
     heading.node.on(
       Node.EventType.TOUCH_END,
@@ -64,7 +64,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
         '',
       25,
       '#94735D',
-      new Vec3(0, 425),
+      new Vec3(0, 395),
       570,
       42,
     );
@@ -92,9 +92,9 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
     makeButton(
       panel,
       '食材图鉴',
-      new Vec3(-148, 360),
-      270,
-      60,
+      new Vec3(-144, 326),
+      264,
+      64,
       tab === 'ingredients' ? '#D75542' : '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -103,9 +103,9 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
     makeButton(
       panel,
       '我的成就',
-      new Vec3(148, 360),
-      270,
-      60,
+      new Vec3(144, 326),
+      264,
+      64,
       tab === 'achievements' ? '#D75542' : '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -115,7 +115,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
     if (tab === 'ingredients') {
       const content = this.makeCollectionScroll(
         panel,
-        Math.ceil(INGREDIENTS.length / 2) * 188 + 8,
+        Math.ceil(INGREDIENTS.length / 2) * 204 + 12,
       );
       INGREDIENTS.forEach(
         /**
@@ -125,9 +125,11 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           const card = makeButton(
             content,
             '',
-            new Vec3(index % 2 ? 145 : -145, -96 - Math.floor(index / 2) * 188),
-            274,
-            172,
+            new Vec3(
+              index % 2 ? 140 : -140, -102 - Math.floor(index / 2) * 204,
+            ),
+            264,
+            184,
             known ? '#F8E8CD' : '#E9E0D0',
             /**
              * 在当前操作完成后更新相关游戏状态。
@@ -138,7 +140,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           );
           const icon = new Node('CollectionIngredient');
           card.addChild(icon);
-          icon.setPosition(0, 27);
+          icon.setPosition(0, 32);
           if (known && this.ingredientFrames.has(ingredient.id)) {
             this.addIngredientImage(icon, ingredient.id, false, 92, 88);
           } else {
@@ -157,8 +159,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             known ? ingredient.name : '神秘食材',
             26,
             known ? '#744329' : '#9D8B77',
-            new Vec3(0, -35),
-            250,
+            new Vec3(0, -40),
+            228,
             34,
           );
           name.isBold = known;
@@ -167,8 +169,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             known ? INGREDIENT_STORIES[ingredient.id].tag : '拿取一次即可点亮',
             18,
             '#94735D',
-            new Vec3(0, -67),
-            252,
+            new Vec3(0, -73),
+            228,
             26,
           );
         },
@@ -187,7 +189,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           card.setPosition(0, -80 - index * 156);
           drawRoundRect(
             card,
-            566,
+            548,
             140,
             20,
             item.unlocked ? '#F6DFC0' : '#EEE7DC',
@@ -197,8 +199,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             item.title,
             29,
             item.unlocked ? '#8D3426' : '#806C57',
-            new Vec3(-57, 40),
-            414,
+            new Vec3(-63, 40),
+            374,
             42,
           );
           title.isBold = true;
@@ -207,8 +209,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             item.unlocked ? '已达成' : '进行中',
             21,
             item.unlocked ? '#477345' : '#A88A6C',
-            new Vec3(216, 40),
-            100,
+            new Vec3(211, 40),
+            88,
             32,
           );
           makeLabel(
@@ -217,7 +219,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             22,
             '#94735D',
             new Vec3(0, -4),
-            520,
+            500,
             45,
             true,
           );

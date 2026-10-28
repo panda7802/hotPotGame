@@ -152,6 +152,16 @@ class Node {
   setPosition(x, y, z = 0) {
     this.position = typeof x === 'number' ? new Vec3(x, y, z) : x;
   }
+  setScale(x, y, z = 1) {
+    this.scale = new Vec3(x, y, z);
+  }
+  setSiblingIndex(index) {
+    if (this.parent) {
+      const nodes = this.parent.children;
+      nodes.splice(nodes.indexOf(this), 1);
+      nodes.splice(index, 0, this);
+    }
+  }
   /**
    * 为测试场景提供 on 所需的模拟行为。
    */
@@ -326,6 +336,16 @@ function createGame() {
   game.playerService = {
     state: emptyPlayerState(),
     statusText: '本机保存',
+    regionWins: {},
+    leaderboardText: '云端排行 · 完成第三关计 1 次',
+    regionCount(code) {
+      return this.regionWins[code] || 0;
+    },
+    sortedRegions(nodes) {
+      return nodes.slice().sort((a, b) => this.regionCount(b.code)
+        - this.regionCount(a.code));
+    },
+    refreshLeaderboard: () => Promise.resolve(),
     regions: JSON.parse(
       fs.readFileSync(
         path.join(root, 'assets/resources/data/regions.json'),
@@ -360,6 +380,17 @@ function scrollOf(game, overlayName, viewportName) {
 }
 
 const game = createGame();
+game.playerService.regionWins.OVERSEAS = 12;
+game.showPlayerProfile();
+game.node.getChildByName('PlayerOverlay').getChildByName('PlayerPanel')
+  .getChildByName('Button_云端地域排行榜').emit(Node.EventType.TOUCH_END);
+const ranking = scrollOf(game, 'RegionOverlay', 'RegionViewport');
+const topRegion = ranking.scroll.content.children[0];
+assert(topRegion.getChildByName('Label').getComponent(Label)
+  .string.includes('12次'));
+topRegion.emit(Node.EventType.TOUCH_END);
+assert.strictEqual(game.playerService.state.profile.regionCodes.length, 0);
+game.dismissPlayerMenu('RegionOverlay');
 /**
  * 为测试提供当前调用所需的回调行为。
  */
@@ -601,6 +632,9 @@ cc.Rect = class {
  * 测试中模拟 匿名组件 的最小行为。
  */
 cc.SpriteFrame = class {};
+cc.Sprite = class {};
+cc.Sprite.Type = {SLICED: 1};
+cc.Sprite.SizeMode = {CUSTOM: 1};
 /**
  * 载入测试模块并创建隔离的运行环境。
  */
@@ -615,6 +649,21 @@ cc.resources = {
     done(null, {width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20)});
   },
 };
+const ui = load(path.join(root, 'assets/scripts/core/HotPotUi'));
+for (const [width, height] of [[102, 48], [124, 58], [264, 64], [510, 70]]) {
+  const button = ui.makeButton(
+    new Node('Test'), '图鉴', Vec3.ZERO, width, height, '#A3613B', () => {},
+  );
+  const skin = button.getChildByName('LacquerSkin');
+  const frame = skin.getComponent(cc.Sprite).spriteFrame;
+  const label = button.getChildByName('Label').getComponent(UITransform);
+  assert(label.width <= width - 2 * frame.insetLeft * skin.scale.x);
+  assert(label.height <= height - 2 * frame.insetTop * skin.scale.y);
+  assert(Math.abs(skin.getComponent(UITransform).width * skin.scale.x
+    - width) < 0.001);
+  assert.strictEqual(button.children[0], skin);
+}
+console.log('Button skins: compact/large label bounds clear all borders: OK');
 const loaded = createGame();
 let ready = 0;
 /**

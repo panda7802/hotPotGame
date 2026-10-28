@@ -26,7 +26,7 @@ export class HotPotGame extends HotPotDialogs {
   /**
    * 逐级显示可选择的地区。
    */
-  protected showRegionPicker(codes: string[]): void {
+  protected showRegionPicker(codes: string[], leaderboard = false): void {
     if (!this.scrollComponentsReady()) {
       return;
     }
@@ -46,9 +46,20 @@ export class HotPotGame extends HotPotDialogs {
       names.push(selected.name);
       options = selected.children || [];
     }
+    options = service.sortedRegions(options);
+    const countsBefore = JSON.stringify(service.regionWins);
+    void service.refreshLeaderboard().then(() => {
+      if (panel.isValid
+        && countsBefore !== JSON.stringify(service.regionWins)) {
+        this.dismissPlayerMenu('RegionOverlay');
+        this.showRegionPicker(codes, leaderboard);
+      } else if (panel.isValid) {
+        rankingStatus.string = service.leaderboardText;
+      }
+    });
     const title = makeLabel(
       panel,
-      '选择地区',
+      leaderboard ? '云端地域排行榜' : '选择地区',
       46,
       '#8D3426',
       new Vec3(0, 437),
@@ -61,7 +72,8 @@ export class HotPotGame extends HotPotDialogs {
     }
     makeLabel(
       panel,
-      names.length ? names.join(' / ') : '请选择省份或海外',
+      names.length ? names.join(' / ')
+        : leaderboard ? '累计通关次数 · 点选查看下级' : '请选择省份或海外',
       25,
       '#775145',
       new Vec3(0, 367),
@@ -106,7 +118,8 @@ export class HotPotGame extends HotPotDialogs {
           ) && currentCodes[codes.length] === region.code;
         const button = makeButton(
           content,
-          region.name,
+          `${index + 1}. ${region.name}  ·  `
+            + `${service.regionCount(region.code)}次`,
           new Vec3(0, -48 - index * 92),
           548,
           76,
@@ -117,7 +130,9 @@ export class HotPotGame extends HotPotDialogs {
             const next = [...codes, region.code];
             if (region.children?.length) {
               this.dismissPlayerMenu('RegionOverlay');
-              this.showRegionPicker(next);
+              this.showRegionPicker(next, leaderboard);
+            } else if (leaderboard) {
+              this.showToast('完成第三关，为所在地域增加一次通关', '#8A4B34');
             } else {
               service.setRegion(next);
               this.dismissPlayerMenu('RegionOverlay');
@@ -126,8 +141,8 @@ export class HotPotGame extends HotPotDialogs {
           },
         );
         const label = button.getChildByName('Label')!.getComponent(Label)!;
-        transform(label.node, 438, 62);
-        label.fontSize = 35;
+        transform(label.node, 438, 48);
+        label.fontSize = 29;
         label.lineHeight = 46;
         label.color = hex('#744329');
         if (this.regionFont) {
@@ -147,11 +162,9 @@ export class HotPotGame extends HotPotDialogs {
         }
       },
     );
-    makeLabel(
+    const rankingStatus = makeLabel(
       panel,
-      options.length * 92 + 8 > 616
-        ? '上下滑动，找到你的地域'
-        : '点选地区，记录小馆所在地',
+      service.leaderboardText,
       23,
       '#94735D',
       new Vec3(0, -359),
@@ -170,7 +183,7 @@ export class HotPotGame extends HotPotDialogs {
        */ () => {
         this.dismissPlayerMenu('RegionOverlay');
         if (codes.length) {
-          this.showRegionPicker(codes.slice(0, -1));
+          this.showRegionPicker(codes.slice(0, -1), leaderboard);
         } else {
           this.showPlayerProfile();
         }

@@ -4,6 +4,7 @@ import {
   createLevel,
   getIngredient,
   IngredientType,
+  LevelData,
   LEVELS,
   TileData,
 } from '../data/GameData';
@@ -32,11 +33,17 @@ export abstract class HotPotBoardActions extends HotPotView {
   /**
    * 生成并显示指定关卡，按需保存。
    */
-  protected loadLevel(index: number, persist = true): void {
+  protected loadLevel(
+    index: number,
+    persist = true,
+    restored?: LevelData,
+  ): void {
+    this.runId = `${Date.now().toString(36)}-`
+      + Math.random().toString(36).slice(2, 14);
     this.clearMatchEffects();
     const previousLevel = this.levelData;
     this.levelIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
-    this.levelData = createLevel(
+    this.levelData = restored || createLevel(
       this.levelIndex,
       undefined,
       previousLevel?.config.level === 3 ? previousLevel.layoutSeed : undefined,
@@ -67,6 +74,7 @@ export abstract class HotPotBoardActions extends HotPotView {
        * 依次处理集合中的每个条目。
        */ (child) => {
         if (child.name.startsWith('Tile_')) {
+          child.removeFromParent();
           child.destroy();
         }
       },
@@ -87,7 +95,11 @@ export abstract class HotPotBoardActions extends HotPotView {
     this.levelData.tiles.forEach(
       /**
        * 依次处理集合中的每个条目。
-       */ (tile) => this.createTileNode(tile),
+       */ (tile) => {
+        if (!tile.removed) {
+          this.createTileNode(tile);
+        }
+      },
     );
     this.refreshTileStates();
     this.renderTray();
@@ -127,7 +139,10 @@ export abstract class HotPotBoardActions extends HotPotView {
       /**
        依次处理集合中的每个条目。
        */
-      (child) => child.destroy(),
+      (child) => {
+        child.removeFromParent();
+        child.destroy();
+      },
     );
     const ingredient = getIngredient(type);
     drawFoodTile(node, TILE_WIDTH, TILE_HEIGHT, blocked);
@@ -225,6 +240,20 @@ export abstract class HotPotBoardActions extends HotPotView {
          */ (tile) => [tile.id, tile] as const,
       ),
     );
+    // Repeated layers share exact positions. Only the highest remaining tile
+    // at each position needs Graphics and an ingredient sprite. Keep all
+    // logical tiles, including those affected by bombs and shuffling.
+    const frontTiles = new Map<string, TileData>();
+    for (const tile of this.levelData.tiles) {
+      if (tile.removed) {
+        continue;
+      }
+      const key = `${tile.x}:${tile.y}`;
+      const front = frontTiles.get(key);
+      if (!front || tile.layer > front.layer) {
+        frontTiles.set(key, tile);
+      }
+    }
     this.levelData.tiles.forEach(
       /**
        * 依次处理集合中的每个条目。
@@ -234,6 +263,10 @@ export abstract class HotPotBoardActions extends HotPotView {
         }
         const node = this.tileNodes.get(tile.id);
         if (!node) {
+          return;
+        }
+        node.active = frontTiles.get(`${tile.x}:${tile.y}`) === tile;
+        if (!node.active) {
           return;
         }
         const selectable = this.isTileSelectable(tile, tilesById);
@@ -331,6 +364,7 @@ export abstract class HotPotBoardActions extends HotPotView {
           if (this.levelData !== movingLevel) {
             return;
           }
+          this.tileNodes.delete(tile.id);
           this.refreshTileStates();
           this.resolveTray();
         },
