@@ -23,14 +23,26 @@ assert(await page.evaluate(()=>!!window.g.node.getChildByName('StyleOverlay')));
 await press(page,['StyleOverlay','PlayerPanel','PageStyle_'+(id===1?4:1)]);
 await press(page,['StyleOverlay','PlayerPanel','MenuClose']);
 assert(await page.evaluate(()=>!!window.g.node.getChildByName('PlayerOverlay')));
+assert.strictEqual(await page.evaluate(()=>window.g.node.getChildByName('WarmBackground')!==null),true);
+await press(page,['PlayerOverlay','PlayerPanel','Button_页面风格']);
+await press(page,['StyleOverlay','PlayerPanel','PageStyle_'+id]);
+await press(page,['StyleOverlay','PlayerPanel','Button_应用所选风格']);
+assert(await page.evaluate(()=>!!window.g.node.getChildByName('PlayerOverlay')));
 await clean(page);await page.evaluate(()=>window.g.showRegionPicker([],true));await shot(page,'rank-'+id);
 await clean(page);await page.evaluate(()=>window.g.showCollection());await shot(page,'collection-'+id);
 await clean(page);await page.evaluate(()=>window.g.showIngredientDetail('shrimp'));await shot(page,'detail-'+id);
 await clean(page);await page.evaluate(()=>window.g.showCollection('achievements'));await shot(page,'achievements-'+id);
 await clean(page);await page.evaluate(()=>window.g.showRegionPicker([]));await shot(page,'region-'+id);
 await clean(page);await page.evaluate(()=>window.g.showRestartConfirmation());await shot(page,'restart-'+id);
+await press(page,['RestartConfirmOverlay','PlayerPanel','Button_继续当前游戏']);
+assert(await page.evaluate(()=>!window.g.node.getChildByName('RestartConfirmOverlay')));
 await clean(page);await page.evaluate(()=>{const g=window.g;g.loadLevel(2);const types=new Set();g.tray=[];for(const tile of g.levelData.tiles){if(!types.has(tile.type)&&types.size<7){types.add(tile.type);tile.removed=true;g.tray.push(tile.type)}}g.reviveUsed=false;g.endGame(false)});await shot(page,'revive-'+id);
-for(const level of [0,1,2]){await clean(page);await page.evaluate(level=>{const g=window.g;g.loadLevel(level);g.levelData.tiles.forEach(t=>t.removed=true);g.tray=[];g.reserve=[];g.endGame(true)},level);await shot(page,'win'+(level+1)+'-'+id)}
+await press(page,['ResultOverlay','ResultPanel','Button_免费复活，继续捞']);
+assert(await page.evaluate(()=>window.g.reviveUsed&&!window.g.gameEnded&&window.g.reserve.length===3));
+await page.evaluate(()=>window.g.showRestartConfirmation());
+await press(page,['RestartConfirmOverlay','PlayerPanel','Button_确定重新开始']);
+assert(await page.evaluate(()=>!window.g.gameEnded&&window.g.tray.length===0&&!window.g.reviveUsed));
+for(const level of [0,1,2]){await clean(page);await page.evaluate(level=>{const g=window.g;g.loadLevel(level);g.levelData.tiles.forEach(t=>t.removed=true);g.tray=[];g.reserve=[];g.endGame(true)},level);await shot(page,'win'+(level+1)+'-'+id);await press(page,['ResultOverlay','ResultPanel',level===2?'Button_再来一轮':'Button_下一关']);assert.strictEqual(await page.evaluate(()=>window.g.levelIndex),(level+1)%3)}
 completed.push(id);console.log('Captured approved-art pages '+id);
 }
 await clean(page);await page.setViewportSize({width:320,height:568});await page.evaluate(()=>{window.g.loadLevel(0);window.g.showPlayerProfile()});await shot(page,'short-profile');

@@ -27,7 +27,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.progressLabel=text(this.node,'',[.20,.18,.60,.035],h,24);
     this.progressLabel.node.name='ReferenceProgress';
     this.refMeter=new Node('ReferenceProgressMeter');this.node.addChild(this.refMeter);
-    const profile=hit(this.node,'Button_我的',[.02,.035,.17,.12],h,()=>this.showPlayerProfile());
+    const profile=hit(this.node,'Button_我的',[.02,.035,.17,.12],h,()=>this.showCollection());
     hit(this.node,'Button_设置',[.81,.035,.17,.12],h,()=>this.showPlayerProfile());
     this.profileButtonLabel=text(profile,'',[0,0,0,0],h,1);
     this.board=new Node('Board');this.node.addChild(this.board);transform(this.board,680,830);

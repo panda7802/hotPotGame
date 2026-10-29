@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "source": "design/ui-expanded-1489-2026-10-29/style-01/A.png",
+  "result": "design/reference-replica-20261030/source/a-clean-01.png",
+  "prompt": "Edit this exact 1151x1367 six-panel game UI sheet in place. Preserve ALL pixel layout, frames, portraits, titles, buttons, backgrounds and entire bottom three victory screens. Only remove variable example text in the TOP LEFT ranking and TOP CENTER profile, seamlessly inpainting the original material underneath. In TOP CENTER remove player name 捞啥小高手 and city 成都市 (keep portrait and pin), remove only values 168 and 48/108 from the cream summary cards (keep 通关次数 and 图鉴收集). In TOP LEFT remove names, city names, numerical scores and rank 12 from rows and bottom self row; keep avatars, medal numbers 1 2 3, headings and all ornate frames. Remove names/counts in smaller rows 4-6, keep row rank numbers. These areas must become EMPTY clean matching green lacquer or cream parchment so live code can draw real values. No new text, no redesign, no shifting or resizing panels, no collage rearrangement. TOP RIGHT theme picker and bottom half unchanged. Output same aspect ratio as reference."
+}

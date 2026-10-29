@@ -29,6 +29,10 @@ class Node {
 class UITransform { setContentSize() {} }
 class Sprite {}
 Sprite.SizeMode = {CUSTOM: 1};
+class Color {
+  constructor(r=255,g=255,b=255,a=255) { Object.assign(this,{r,g,b,a}); }
+}
+Color.WHITE = new Color();
 class SpriteFrame { addRef() {} }
 class Texture2D {
   reset(info) { Object.assign(this, info); }
@@ -36,7 +40,7 @@ class Texture2D {
   uploadData(data) { uploads++; uploaded = data; }
 }
 const cc = {
-  Node, UITransform, Sprite, SpriteFrame, Texture2D,
+  Node, UITransform, Sprite, SpriteFrame, Texture2D, Color,
   Rect: class { constructor(x, y, width, height) {
     Object.assign(this, {x, y, width, height});
   } },
