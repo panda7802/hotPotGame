@@ -98,6 +98,8 @@ function freshSave(index, layoutSeed = 0, ingredientSeed = 0) {
     /**
      * 将当前条目转换为后续处理所需的值。
      */
+    ...(level.ingredientPoolVersion === undefined
+      ? {} : {ingredientPoolVersion: level.ingredientPoolVersion}),
     types: level.tiles.map((tile) => tile.type),
     removedIds: [],
     tray: [],
@@ -345,7 +347,7 @@ for (const ingredientSeed of [
 console.log(
   'Random ingredients: all levels, determ' +
     'inistic seed restore, shuffle preserva' +
-    'tion, 23-kind progress, invalid seeds ' +
+    'tion, 50-kind progress, invalid seeds ' +
     'and beef/lamb rejection: OK',
 );
 assert.strictEqual(collected.progress.discovered.length, 13);

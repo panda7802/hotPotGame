@@ -10,7 +10,7 @@ const GameData_1 = require("./GameData");
 exports.SAVE_VERSION = 1;
 exports.BOARD_VERSION = 'hotpot-20260929';
 exports.PROGRESS_VERSION = 1;
-exports.PLAY_SESSION_VERSION = 4;
+exports.PLAY_SESSION_VERSION = 5;
 /**
  * 断言数据条件成立，否则抛出校验错误。
  */

@@ -1,0 +1,11 @@
+{
+  "frames": 50,
+  "cards": 50,
+  "removedProfileElements": true,
+  "configuredSequence": [
+    2,
+    4
+  ],
+  "pageErrors": [],
+  "network": "blocked external requests; no live cloud verification"
+}

@@ -209,7 +209,7 @@ export abstract class HotPotBoard extends HotPotBoardActions {
       const slot = new Node(`TraySlot_${i}`);
       this.trayNode.addChild(slot);
       slot.setPosition(TRAY_START_X + i * TRAY_SPACING, 0);
-      drawTavernPanel(slot, 90, 100, 'slot');
+      drawTavernPanel(slot, 86, 94, 'slot');
     }
 
     // 第二层放真实食材节点；全部位于固定槽位之上，并可直接执行左移动画。

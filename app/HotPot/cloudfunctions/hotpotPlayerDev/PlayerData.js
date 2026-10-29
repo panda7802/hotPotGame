@@ -210,7 +210,7 @@ const randomTemplates = new Map();
 /**
  * 使用关卡种子创建可验证的棋盘模板。
  */
-function template(index, layoutSeed = 0, ingredientSeed = 0) {
+function template(index, layoutSeed = 0, ingredientSeed = 0, ingredientPoolVersion = 1) {
     if (layoutSeed === 0 && ingredientSeed === 0) {
         if (!templates.has(index)) {
             templates.set(index, (0, GameData_1.createLevel)(index, 0, undefined, 0));
@@ -219,9 +219,9 @@ function template(index, layoutSeed = 0, ingredientSeed = 0) {
     }
     // Inventory validation and geometry restoration use different seeds. They
     // must not evict each other and regenerate a full board on every restore.
-    const key = `${index}:${layoutSeed}:${ingredientSeed}`;
+    const key = `${index}:${layoutSeed}:${ingredientSeed}:${ingredientPoolVersion}`;
     if (!randomTemplates.has(key)) {
-        randomTemplates.set(key, (0, GameData_1.createLevel)(index, layoutSeed, undefined, ingredientSeed));
+        randomTemplates.set(key, (0, GameData_1.createLevel)(index, layoutSeed, undefined, ingredientSeed, ingredientPoolVersion));
         if (randomTemplates.size > 4) {
             randomTemplates.delete(randomTemplates.keys().next().value);
         }
@@ -243,7 +243,9 @@ function validateGameSave(value) {
             (0, PlayerTypes_1.integer)(value.layoutSeed, 1, GameData_1.RANDOM_LAYOUT_SEED_END)), '牌阵种子错误');
     (0, PlayerTypes_1.check)(value.ingredientSeed === undefined ||
         (0, PlayerTypes_1.integer)(value.ingredientSeed, 1, GameData_1.INGREDIENT_SEED_MAX), '食材种子错误');
-    const level = template(value.levelIndex, 0, value.ingredientSeed);
+    (0, PlayerTypes_1.check)(value.ingredientPoolVersion === undefined
+        || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2, '食材池版本错误');
+    const level = template(value.levelIndex, 0, value.ingredientSeed, value.ingredientPoolVersion);
     (0, PlayerTypes_1.check)(Array.isArray(value.types) && value.types.length === level.total, '食材牌数错误');
     const expected = new Map();
     /**
@@ -363,6 +365,8 @@ function validateGameSave(value) {
         ...(value.ingredientSeed === undefined
             ? {}
             : { ingredientSeed: value.ingredientSeed }),
+        ...(value.ingredientPoolVersion === undefined
+            ? {} : { ingredientPoolVersion: value.ingredientPoolVersion }),
         reviveUsed: value.reviveUsed,
         rewardedMilestones: value.rewardedMilestones,
         toolUses: {
@@ -379,7 +383,7 @@ function validateGameSave(value) {
  */
 function restoreLevel(save) {
     const valid = validateGameSave(save);
-    const level = (0, PlayerTypes_1.clone)(template(valid.levelIndex, valid.layoutSeed, valid.ingredientSeed));
+    const level = (0, PlayerTypes_1.clone)(template(valid.levelIndex, valid.layoutSeed, valid.ingredientSeed, valid.ingredientPoolVersion));
     const removed = new Set(valid.removedIds);
     /**
      * 依次处理集合中的每个条目。

@@ -1,0 +1,16 @@
+{
+  "style": 7,
+  "wins": [
+    1,
+    2,
+    3
+  ],
+  "generatedByActualThreeTileMatches": true,
+  "failureStates": [
+    "available",
+    "used"
+  ],
+  "previewOnly": true,
+  "pageErrors": [],
+  "externalRequestsBlocked": true
+}

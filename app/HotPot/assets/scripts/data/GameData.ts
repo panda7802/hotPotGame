@@ -255,6 +255,7 @@ export const INGREDIENT_SEED_MAX = 2147483646;
 export function selectLevelIngredients(
   levelIndex: number,
   seed: number,
+  poolVersion: 1 | 2 = 2,
 ): IngredientType[] {
   const config = LEVELS[levelIndex];
   /**
@@ -270,7 +271,8 @@ export function selectLevelIngredients(
    * 将当前条目转换为后续处理所需的值。
    */
   const shuffled = shuffle(
-    INGREDIENTS.map((item) => item.id),
+    (poolVersion === 1 ? INGREDIENTS.slice(0, 23) : INGREDIENTS)
+      .map((item) => item.id),
     seededRandom(seed),
   );
   const selected: IngredientType[] = [];
@@ -386,6 +388,7 @@ export function createLevel(
   layoutSeed?: number,
   previousLayoutSeed?: number,
   ingredientSeed?: number,
+  ingredientPoolVersion: 1 | 2 = 2,
 ): LevelData {
   // 显式传入牌阵种子但未传食材种子时，保持旧版本的食材配比与顺序。
   if (ingredientSeed === undefined) {
@@ -416,7 +419,7 @@ export function createLevel(
     newLayout ? layoutSeed : 20260923 + config.level * 97,
   );
   const pool = ingredientSeed
-    ? selectLevelIngredients(levelIndex, ingredientSeed)
+    ? selectLevelIngredients(levelIndex, ingredientSeed, ingredientPoolVersion)
     : undefined;
   const tiles: TileData[] = [];
   let id = 0;
@@ -488,6 +491,8 @@ export function createLevel(
     tiles,
     total: tiles.length,
     ...(ingredientSeed ? {ingredientSeed} : {}),
+    ...(ingredientSeed && ingredientPoolVersion === 2
+      ? {ingredientPoolVersion} : {}),
     ...(config.level === 3 && layoutSeed !== 0 ? {layoutSeed} : {}),
   };
 }

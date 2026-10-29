@@ -1,6 +1,7 @@
 import {
   _decorator,
   BlockInputEvents,
+  Label,
   Mask,
   Node,
   Rect,
@@ -13,24 +14,28 @@ import {
 } from 'cc';
 
 import {GameSave, regionPath} from '../data/PlayerData';
-import {CLIENT_BUILD} from './HotPotTileSkin';
+import {getPageTheme} from '../data/PageTheme';
 
 import {
   DESIGN_WIDTH,
+  drawCloseButton,
   drawLacquerPanel,
+  drawLacquerButton,
   drawRoundRect,
   makeButton,
+  makeBodyLabel,
   makeLabel,
   makePanelHeading,
   transform,
 } from './HotPotUi';
 
-import {HotPotTools} from './HotPotTools';
+import {HotPotAppearanceMenus} from './HotPotAppearanceMenus';
 
 /**
  * HotPotProfileMenus：拆分后的前段场景行为。
  */
-export abstract class HotPotProfileMenus extends HotPotTools {
+export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
+  protected menuReturnActions = new Map<string, () => void>();
   /**
    * 关闭指定的玩家菜单。
    */
@@ -38,6 +43,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
     const overlay = this.node.getChildByName(name);
     overlay?.removeFromParent();
     overlay?.destroy();
+    this.menuReturnActions.delete(name);
     this.playerStatusLabel = null;
     this.playerSaveLabel = null;
   }
@@ -61,13 +67,14 @@ export abstract class HotPotProfileMenus extends HotPotTools {
     overlay.addComponent(BlockInputEvents);
     const panel = new Node('PlayerPanel');
     overlay.addChild(panel);
-    drawLacquerPanel(panel, 650, height);
+    drawLacquerPanel(panel, 650, height, true);
     const close = makeButton(
       panel,
       '×',
-      new Vec3(272, height / 2 - 98),
-      44,
-      44,
+      new Vec3(name === 'PlayerOverlay' ? 239 : 244,
+        name === 'PlayerOverlay' ? 284 : height / 2 - 98),
+      64,
+      64,
       '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -76,10 +83,22 @@ export abstract class HotPotProfileMenus extends HotPotTools {
           && this.playerService?.status === 'connecting') {
           return;
         }
+        if (name === 'StyleOverlay') {
+          this.cancelPageStyle();
+          return;
+        }
+        const returnAction = this.menuReturnActions.get(name);
         this.dismissPlayerMenu(name);
+        if (returnAction) { returnAction(); return; }
+        if (name === 'CollectionDetailOverlay') {
+          this.showCollection();
+        } else if (name === 'CollectionOverlay' || name === 'RegionOverlay') {
+          this.showPlayerProfile();
+        }
       },
     );
     close.name = 'MenuClose';
+    drawCloseButton(close);
     return panel;
   }
 
@@ -155,187 +174,59 @@ export abstract class HotPotProfileMenus extends HotPotTools {
    * 展示玩家档案、地区和同步状态。
    */
   protected showPlayerProfile(): void {
-    const panel = this.makePlayerMenu('PlayerOverlay', 1040);
+    const panel = this.makePlayerMenu('PlayerOverlay', 760);
     if (!panel) {
       return;
     }
     const service = this.playerService!;
-    makePanelHeading(panel, '我的小馆档案', 420, 450);
-    makeLabel(
-      panel, '记录小馆身份，也为家乡添一份战绩', 22,
-      '#94735D', new Vec3(0, 355), 510, 36,
-    );
-    const card =
-      /**
-       * 处理 card 对应的游戏逻辑。
-       */ (name: string, y: number, height: number): void => {
-        const node = new Node(name);
-        panel.addChild(node);
-        node.setPosition(0, y);
-        drawRoundRect(node, 548, height, 16, '#FFF5E3', '#DEC498', 1);
-      };
-    card('IdentityCard', 270, 110);
-    card('RegionCard', 123, 150);
-    card('SaveCard', -55, 162);
-    for (const [text, y] of [
-      ['玩家身份', 298], ['小馆所在地', 174],
-      ['云端存档', -6],
-    ] as Array<[string, number]>) {
-      makeLabel(panel, text, 20, '#A3613B', new Vec3(-157, y), 180, 30);
-    }
-    makeLabel(
-      panel,
-      service.playerId
-        ? `玩家编号 ${service.playerId.slice(0, 8)} · 开发版`
-        : '本机玩家 · 开发版',
-      26,
-      '#775145',
-      new Vec3(0, 255),
-      520,
-      42,
-    );
+    void service.refreshRuntimeConfig();
+    // Shared 522px content width leaves 64px gutters inside the 650px panel.
+    // Keep 32px between body rows and separate the primary footer action.
+    const contentWidth = 522;
+    const theme = getPageTheme();
+    const outline = theme.id === 9 ? theme.edge : theme.accent;
+    makePanelHeading(panel, '我的小馆', 284, contentWidth - 48);
+    const headerDivider = new Node('ProfileHeaderDivider');
+    panel.addChild(headerDivider);
+    headerDivider.setPosition(0, 242);
+    drawRoundRect(headerDivider, contentWidth, theme.id === 7 ? 1.5 : 3, 0, outline);
+    const card = new Node('RegionCard');
+    panel.addChild(card);
+    card.setPosition(0, 140);
+    drawRoundRect(card, contentWidth, 152, 16, '#FFF5E3', outline, 3);
+    const locationHeading = makeLabel(panel, '小馆所在地', 24, '#A3613B',
+      new Vec3(-147, 180), 180, 34);
     const path = regionPath(service.regions, service.state.profile.regionCodes);
-    makeLabel(
-      panel,
-      path.length
-        ? path
-            .map(
-              /**
-               * 将当前条目转换为后续处理所需的值。
-               */ (item) => item.name,
-            )
-            .join(' / ')
-        : '地区尚未选择',
-      25,
-      '#775145',
-      new Vec3(-78, 113),
-      320,
-      76,
-      true,
-    );
-    this.playerStatusLabel = makeLabel(
-      panel,
-      service.statusText,
-      24,
-      '#547344',
-      new Vec3(0, -48),
-      520,
-      42,
-    );
-    this.playerSaveLabel = makeLabel(
-      panel,
-      this.playerSaveText(),
-      23,
-      '#94735D',
-      new Vec3(0, -100),
-      510,
-      48,
-      true,
-    );
-    makeButton(
-      panel,
-      '选择地区',
-      new Vec3(185, 110),
-      148,
-      62,
-      '#A3613B',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        if (service.status === 'connecting') {
-          return;
-        }
-        this.dismissPlayerMenu('PlayerOverlay');
-        this.showRegionPicker([]);
-      },
-    );
-    makeButton(
-      panel,
-      service.isConflict
-        ? '选择保留哪份存档'
-        : service.playerId
-          ? '同步存档'
-          : '连接云端',
-      new Vec3(0, -190),
-      510,
-      70,
-      '#D75542',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        if (service.isConflict) {
-          this.dismissPlayerMenu('PlayerOverlay');
-          this.showSaveConflict();
-          return;
-        }
-        if (service.playerId) {
-          service.claimGuestWins();
-          void service.flush();
-          return;
-        }
-        // 重新连接期间阻止重复点击。身份确认后再让玩家决定当前局与账号存档。
-        if (service.status === 'connecting') {
-          return;
-        }
-        void service.initialize().then(
-          /**
-           * 处理异步任务完成或失败后的状态。
-           */ () => {
-            if (!this.node.isValid || !service.playerId) {
-              return;
-            }
-            service.claimGuestWins();
-            this.dismissPlayerMenu('PlayerOverlay');
-            if (service.beginDailySession()) {
-              this.loadLevel(0);
-              this.showPlayerProfile();
-              return;
-            }
-            const saved = service.state.save;
-            if (saved) {
-              this.showConnectedSaveChoice(saved);
-            } else {
-              this.loadLevel(0);
-              this.showPlayerProfile();
-            }
-          },
-        );
-      },
-    );
-    makeLabel(
-      panel,
-      `每次操作后自动保存\n版本 ${CLIENT_BUILD}`,
-      22,
-      '#94735D',
-      new Vec3(0, -350),
-      550,
-      56,
-      true,
-    );
-    makeButton(
-      panel, '云端地域排行榜',
-      new Vec3(0, -274),
-      510, 66, '#A3613B', () => {
-        this.dismissPlayerMenu('PlayerOverlay');
-        this.showRegionPicker([], true);
-      },
-    );
-    makeButton(
-      panel,
-      '继续游戏',
-      new Vec3(0, -427),
-      510,
-      66,
-      '#B88261',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        if (service.status === 'connecting') {
-          return;
-        }
-        this.dismissPlayerMenu('PlayerOverlay');
-      },
-    );
+    const locationValue = makeLabel(panel, path.length ? path.map((item) => item.name).join(' / ')
+      : '地区尚未选择', 24, '#775145',
+      new Vec3(-94, 122), 286, 64, true);
+    if (theme.id === 7) {
+      locationHeading.horizontalAlign = Label.HorizontalAlign.LEFT;
+      locationValue.horizontalAlign = Label.HorizontalAlign.LEFT;
+    }
+    const open = (action: () => void): void => {
+      if (service.status === 'connecting') {
+        return;
+      }
+      this.dismissPlayerMenu('PlayerOverlay');
+      action();
+    };
+    const regionButton = makeButton(panel, '选择地区', new Vec3(163, 140),
+      148, 72, '#B88261', () => open(() => this.showRegionPicker([])));
+    drawLacquerButton(regionButton, 148, 72, 'cream', true);
+    makeButton(panel, '食材图鉴', new Vec3(-137, -12),
+      248, 88, '#A3613B', () => open(() => this.showCollection()));
+    makeButton(panel, '页面风格', new Vec3(137, -12),
+      248, 88, '#A3613B', () => open(() => this.showPageStyles()));
+    const rankingButton = makeButton(panel, '地域排行榜', new Vec3(0, -132),
+      contentWidth, 88, '#B88261', () => open(() => this.showRegionPicker([], true)));
+    drawLacquerButton(rankingButton, contentWidth, 88, 'cream', true);
+    const divider = new Node('ProfileFooterDivider');
+    panel.addChild(divider);
+    divider.setPosition(0, -212);
+    drawRoundRect(divider, contentWidth, theme.id === 7 ? 1.5 : 3, 0, outline);
+    makeButton(panel, '继续游戏', new Vec3(0, -284),
+      contentWidth, 88, '#A3613B', () => open(() => {}));
   }
 
   /**
@@ -347,7 +238,9 @@ export abstract class HotPotProfileMenus extends HotPotTools {
       return;
     }
     const service = this.playerService!;
-    makeLabel(panel, '账号已连接', 42, '#8D3426', new Vec3(0, 181), 570, 60);
+    const reviewLayout = getPageTheme().id === 7;
+    if (reviewLayout) makePanelHeading(panel, '账号已连接', 181, 420);
+    else makeLabel(panel, '账号已连接', 42, '#8D3426', new Vec3(0, 181), 570, 60);
     const savedSummary =
       `账号存档：第${saved.levelIndex + 1}关 · ` +
       `${saved.removedIds.length}张已拿取`;
@@ -358,23 +251,23 @@ export abstract class HotPotProfileMenus extends HotPotTools {
     ).length;
     const currentSummary =
       `当前这锅：第${this.levelIndex + 1}关 · ` + `${currentCount}张已拿取`;
-    makeLabel(
+    makeBodyLabel(
       panel,
       `${savedSummary}\n${currentSummary}`,
       26,
       '#775145',
       new Vec3(0, 81),
-      590,
+      reviewLayout ? 522 : 590,
       110,
       true,
     );
-    makeLabel(
+    makeBodyLabel(
       panel,
       '选择要继续的进度，当前本机记录仍单独保留',
       22,
       '#94735D',
       new Vec3(0, -13),
-      590,
+      reviewLayout ? 522 : 590,
       48,
       true,
     );
@@ -423,16 +316,16 @@ export abstract class HotPotProfileMenus extends HotPotTools {
   /**
    * 为图鉴创建可裁剪的滚动区域。
    */
-  protected makeCollectionScroll(panel: Node, height: number): Node {
+  protected makeCollectionScroll(panel: Node, height: number, offset = 0): Node {
     const viewport = new Node('CollectionViewport');
     panel.addChild(viewport);
-    viewport.setPosition(0, -28);
-    transform(viewport, 568, 576);
+    viewport.setPosition(0, -10);
+    transform(viewport, 568, 648);
     viewport.addComponent(Mask);
     const content = new Node('CollectionContent');
     viewport.addChild(content);
-    transform(content, 568, Math.max(576, height)).setAnchorPoint(0.5, 1);
-    content.setPosition(0, 288);
+    transform(content, 568, Math.max(648, height)).setAnchorPoint(0.5, 1);
+    content.setPosition(0, 324 + Math.min(offset, Math.max(0, height - 648)));
     const scroll = viewport.addComponent(ScrollView);
     scroll.content = content;
     scroll.horizontal = false;

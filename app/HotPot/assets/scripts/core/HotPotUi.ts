@@ -3,11 +3,6 @@ import {
   Graphics,
   Label,
   Node,
-  Rect,
-  resources,
-  Sprite,
-  SpriteFrame,
-  Texture2D,
   tween,
   UIOpacity,
   UITransform,
@@ -16,6 +11,7 @@ import {
 
 import {IngredientType} from '../data/GameData';
 import {drawSharedTile} from './HotPotTileSkin';
+import {getPageTheme} from '../data/PageTheme';
 
 export const DESIGN_WIDTH = 720;
 export const DESIGN_HEIGHT = 1520;
@@ -32,6 +28,55 @@ export type GameAudio = 'bgm' | 'match' | 'win' | 'lose';
 export const BGM_VOLUME = 0.45;
 export const EFFECT_VOLUME = 0.5;
 export type ToolType = 'undo' | 'bomb' | 'shuffle';
+interface PageSkin {
+  kind: 'button' | 'panel' | 'tavern' | 'heading' | 'close';
+  width: number;
+  height: number;
+  tone?: 'red' | 'cream' | 'muted';
+  style?: 'wood' | 'slot' | 'red' | 'cream';
+  emphasized?: boolean;
+}
+type PageSkinNode = Node & {pageSkin?: PageSkin; uiTextColor?: string; pageDisabled?: boolean};
+
+function rememberSkin(node: Node, skin: PageSkin): void {
+  (node as PageSkinNode).pageSkin = skin;
+}
+
+/** Repaint materials in place; board nodes and animations are retained. */
+export function refreshPageMaterials(root: Node): void {
+  const skin = (root as PageSkinNode).pageSkin;
+  const originalText = (root as PageSkinNode).uiTextColor;
+  if (originalText) {
+    const label = root.getComponent(Label);
+    if (label) label.color = hex(themedTextColor(originalText));
+  }
+  if (skin?.kind === 'heading') {
+    drawHeadingLine(root, skin.width);
+  } else if (skin?.kind === 'close') {
+    drawCloseButton(root);
+  } else if (skin?.kind === 'button') {
+    drawLacquerButton(root, skin.width, skin.height, skin.tone, skin.emphasized);
+    const label = root.getChildByName('Label')?.getComponent(Label);
+    if (label) {
+      label.color = hex(skin.tone === 'red'
+        ? getPageTheme().onAccent : getPageTheme().ink);
+    }
+    const toolName = root.getChildByName('ToolName')?.getComponent(Label);
+    if (toolName) {
+      toolName.color = hex(getPageTheme().onAccent);
+    }
+    const icon = root.getChildByName('ControlIcon');
+    if (icon) {
+      drawControlIcon(icon, skin.tone === 'red',
+        label?.string.indexOf('关') === -1);
+    }
+  } else if (skin?.kind === 'panel') {
+    drawLacquerPanel(root, skin.width, skin.height, skin.emphasized);
+  } else if (skin?.kind === 'tavern') {
+    drawTavernPanel(root, skin.width, skin.height, skin.style!);
+  }
+  root.children.slice().forEach((child) => refreshPageMaterials(child));
+}
 export const TOOL_NAMES: Record<ToolType, string> = {
   undo: '撤回',
   bomb: '炸',
@@ -109,6 +154,29 @@ export function opacity(node: Node, value = 255): UIOpacity {
   return component;
 }
 
+/** Legacy screen colors resolve to semantic theme roles, including dark mode. */
+export function themedTextColor(color: string): string {
+  const t = getPageTheme();
+  const c = color.toUpperCase();
+  if (['#FFF2CF', '#FFF8E1', '#FFF5DC', '#F1F6EF'].includes(c)) return t.onAccent;
+  if (['#775145', '#744329', '#773B2B', '#63351F', '#8D3426', '#A3613B',
+    '#713B2C', '#805B43', '#8B4B30', '#294C42', '#314E65', '#F5EDDA'].includes(c)) return t.ink;
+  if (['#94735D', '#806C57', '#9D8B77', '#AE5A3E', '#A88A6C', '#947158',
+    '#8A6557', '#957158', '#927059', '#B59C83', '#9A7560', '#6D8176', '#6D8394', '#A5B2CC',
+    '#496255', '#77543E', '#425F72', '#CCD7E8'].includes(c)) return t.muted;
+  if (['#477345', '#547344'].includes(c)) return t.success;
+  return color;
+}
+
+function themedFill(color: string): string {
+  const t = getPageTheme();
+  if (color === '#29150FAA') return t.id === 9 ? '#060D1CCC' : '#102A2A99';
+  if (['#FFF5E3', '#F8E8CD', '#F3E2CA', '#F6DFC0', '#FFF9EF', '#FFF5E3'].includes(color)) return t.card;
+  if (['#E9E0D0', '#EEE7DC', '#D8C5AD'].includes(color)) return t.disabled;
+  if (['#DEC498', '#D5B47D'].includes(color)) return t.line;
+  return color;
+}
+
 /**
  * 绘制可选描边的圆角矩形。
  */
@@ -124,11 +192,11 @@ export function drawRoundRect(
   transform(node, width, height);
   const graphics = node.getComponent(Graphics) || node.addComponent(Graphics);
   graphics.clear();
-  graphics.fillColor = hex(fill);
+  graphics.fillColor = hex(themedFill(fill));
   graphics.roundRect(-width / 2, -height / 2, width, height, radius);
   graphics.fill();
   if (stroke) {
-    graphics.strokeColor = hex(stroke);
+    graphics.strokeColor = hex(themedFill(stroke));
     graphics.lineWidth = lineWidth;
     graphics.roundRect(-width / 2, -height / 2, width, height, radius);
     graphics.stroke();
@@ -158,14 +226,17 @@ export function drawTavernPanel(
   height: number,
   style: 'wood' | 'slot' | 'red' | 'cream',
 ): void {
+  rememberSkin(node, {kind: 'tavern', width, height, style});
+  const theme = getPageTheme();
   const palettes = {
-    wood: ['#63331C', '#A86A35', '#E6B56C', '#B4773B'],
-    slot: ['#B17A43', '#4E2918', '#6A3D23', '#784727'],
-    red: ['#87321E', '#B43D23', '#F0AC68', '#CC4D2D'],
-    cream: ['#9B6F3E', '#D6AF71', '#FFF2CB', '#F2D7A3'],
+    wood: [theme.dark, theme.edge, theme.tray, theme.tray],
+    slot: [theme.edge, theme.dark, theme.slot, theme.slot],
+    red: [theme.dark, theme.edge, theme.accent, theme.accent],
+    cream: [theme.dark, theme.edge, theme.panel, theme.panel],
   };
   const colors = palettes[style];
-  const g = drawRoundRect(node, width, height, 18, colors[0]);
+  const radius = Math.min(theme.radius, height / 2);
+  const g = drawRoundRect(node, width, height, radius, colors[0]);
   const layer =
     /**
      * 处理 layer 对应的游戏逻辑。
@@ -176,7 +247,7 @@ export function drawTavernPanel(
         -height / 2 + inset + offsetY,
         width - inset * 2,
         height - inset * 2,
-        Math.max(7, 18 - inset),
+        Math.max(7, radius - inset),
       );
       g.fill();
     };
@@ -184,16 +255,14 @@ export function drawTavernPanel(
   layer(5, 3, colors[2]);
   layer(7, 1, colors[3]);
   if (style === 'wood' || style === 'slot') {
-    g.strokeColor = hex(style === 'wood' ? '#915927' : '#62351D');
+    g.strokeColor = hex(theme.light);
     g.lineWidth = 1;
-    for (let i = 0; i < 4; i += 1) {
-      const y = -height / 2 + 13 + (i * (height - 26)) / 3;
-      g.moveTo(-width / 2 + 12, y);
-      g.bezierCurveTo(-width / 4, y + 2, width / 4, y - 2, width / 2 - 12, y);
-    }
+    const y = -height / 2 + 10;
+    g.moveTo(-width / 2 + 16, y);
+    g.lineTo(width / 2 - 16, y);
     g.stroke();
   } else {
-    g.strokeColor = hex(style === 'red' ? '#F08758' : '#FFF6D9');
+    g.strokeColor = hex(theme.edge);
     g.lineWidth = 2;
     g.moveTo(-width / 2 + 23, height / 2 - 12);
     g.lineTo(width / 2 - 23, height / 2 - 12);
@@ -211,7 +280,8 @@ export function drawControlIcon(
 ): void {
   const g = icon.getComponent(Graphics) || icon.addComponent(Graphics);
   g.clear();
-  g.strokeColor = hex(restart ? '#FFF2D0' : '#6A3B20');
+  const theme = getPageTheme();
+  g.strokeColor = hex(restart ? theme.onAccent : theme.ink);
   g.fillColor = g.strokeColor;
   g.lineWidth = 5;
   if (restart) {
@@ -255,107 +325,38 @@ export function drawLacquerPanel(
   node: Node,
   width: number,
   height: number,
+  emphasized = false,
 ): void {
-  const g = drawRoundRect(node, width, height, 28, '#57291F');
-  const layer =
-    /**
-     * 处理 layer 对应的游戏逻辑。
-     */ (inset: number, fill: string): void => {
-      g.fillColor = hex(fill);
-      g.roundRect(
-        -width / 2 + inset,
-        -height / 2 + inset,
-        width - inset * 2,
-        height - inset * 2,
-        Math.max(12, 28 - inset),
-      );
-      g.fill();
-    };
-  layer(3, '#D7AA65');
-  layer(6, '#8D3325');
-  layer(13, '#ECC788');
-  layer(16, '#FFF3DC');
-  g.strokeColor = hex('#C49961');
-  g.lineWidth = 1.5;
-  const x = width / 2 - 24;
-  const y = height / 2 - 24;
-  for (const sx of [-1, 1])
-    for (const sy of [-1, 1]) {
-      g.moveTo(sx * (x - 19), sy * y);
-      g.lineTo(sx * x, sy * y);
-      g.lineTo(sx * x, sy * (y - 19));
-    }
+  rememberSkin(node, {kind: 'panel', width, height, emphasized});
+  const theme = getPageTheme();
+  const radius = theme.radius;
+  const g = drawRoundRect(node, width, height, radius, theme.dark);
+  g.fillColor = hex(theme.panel);
+  g.roundRect(-width / 2 + 3, -height / 2 + 7, width - 6, height - 10, radius - 2);
+  g.fill();
+  g.strokeColor = hex(emphasized
+    ? (theme.id === 9 ? theme.edge : theme.accent) : theme.edge);
+  g.lineWidth = emphasized ? 6 : 2;
+  const frameInset = emphasized ? 4 : 2;
+  g.roundRect(-width / 2 + frameInset, -height / 2 + 5,
+    width - frameInset * 2, height - (emphasized ? 10 : 8),
+    radius - (emphasized ? 2 : 1));
   g.stroke();
-  applyLacquerSkin(node, width, height);
-}
-
-/**
- * 异步加载按钮皮肤并应用到仍有效的节点。
- */
-export function applyLacquerSkin(
-  node: Node,
-  width: number,
-  height: number,
-  tone?: 'red' | 'cream' | 'muted',
-): void {
-  if (!resources?.load) {
-    return;
+  if (emphasized) {
+    g.strokeColor = hex(theme.edge);
+    g.lineWidth = 2;
+    g.roundRect(-width / 2 + 14, -height / 2 + 16,
+      width - 28, height - 30, Math.max(6, radius - 10));
+    g.stroke();
   }
-  const key = tone || 'panel';
-  (
-    node as Node & {
-      /**
-       * skinKey 对应的状态或配置。
-       */ skinKey?: string;
-    }
-  ).skinKey = key;
-  resources.load(
-    tone
-      ? 'backgrounds/button-skins-c/texture'
-      : 'backgrounds/panel-skin-c/texture',
-    Texture2D,
-    /**
-     * 在资源加载完成后更新有效节点或处理失败。
-     */ (error, texture) => {
-      if (!node.isValid
-        || error ||
-        !texture ||
-        (
-          node as Node & {
-            /**
-             * skinKey 对应的状态或配置。
-             */ skinKey?: string;
-          }
-        ).skinKey !== key) {
-        return;
-      }
-      const image =
-        node.getChildByName('LacquerSkin') || new Node('LacquerSkin');
-      if (!image.parent) {
-        node.addChild(image);
-        image.setSiblingIndex(0);
-      }
-      // 九宫格边角保留源像素尺寸；小按钮必须连同边角一起等比缩小。
-      const scale = tone
-        ? Math.min(1, height / 128, width / 256) : 0.65;
-      transform(image, width / scale, height / scale);
-      image.setScale(scale, scale, 1);
-      const frame = new SpriteFrame();
-      frame.texture = texture;
-      if (tone) {
-        const index = tone === 'red' ? 0 : tone === 'cream' ? 1 : 2;
-        const cell = Math.round(texture.width / 3);
-        frame.rect = new Rect(index * cell, 0, cell, texture.height);
-      }
-      frame.insetLeft = frame.insetRight = tone ? 24 : 96;
-      frame.insetTop = frame.insetBottom = tone ? 22 : 96;
-      const sprite = image.getComponent(Sprite) || image.addComponent(Sprite);
-      sprite.type = Sprite.Type.SLICED;
-      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-      sprite.spriteFrame = frame;
-      node.getComponent(Graphics)?.clear();
-    },
-  );
+  // Sparse diagonal texture is confined to the header and never crosses body text.
+  g.strokeColor = hex(theme.id === 9 ? '#59698430' : '#99AC8730');
+  g.lineWidth = 1;
+  for (let x = -width / 2 + 32; x < width / 2 - 32; x += 24) {
+    g.moveTo(x, height / 2 - 22);
+    g.lineTo(Math.min(x + 32, width / 2 - 24), height / 2 - 54);
+  }
+  g.stroke();
 }
 
 /**
@@ -366,37 +367,107 @@ export function drawLacquerButton(
   width: number,
   height: number,
   tone: 'red' | 'cream' | 'muted' = 'red',
+  emphasized = true,
 ): void {
-  const colors =
-    tone === 'red'
-      ? ['#652C20', '#D6AC6B', '#A83224', '#C34B32']
-      : tone === 'muted'
-        ? ['#554337', '#A18B6B', '#766151', '#806B59']
-        : ['#926440', '#CEA66B', '#FFF0CE', '#F2DCB5'];
-  const g = drawRoundRect(node, width, height, 16, colors[0]);
-  for (const [inset, fill] of [
-    [2, colors[1]],
-    [4, colors[2]],
-    [7, colors[3]],
-  ] as Array<[number, string]>) {
-    g.fillColor = hex(fill);
-    g.roundRect(
-      -width / 2 + inset,
-      -height / 2 + inset,
-      width - inset * 2,
-      height - inset * 2,
-      Math.max(6, 16 - inset),
-    );
-    g.fill();
+  rememberSkin(node, {kind: 'button', width, height, tone, emphasized});
+  const theme = getPageTheme();
+  const body = tone === 'red' ? theme.accent : tone === 'muted' ? theme.disabled : theme.card;
+  const radius = Math.min(theme.radius * .6, height / 2);
+  const g = drawRoundRect(node, width, height, radius, theme.dark);
+  g.fillColor = hex(body);
+  g.roundRect(-width / 2, -height / 2 + 5, width, height - 5, radius);
+  g.fill();
+  if (tone === 'red') {
+    const from = hex(theme.light), to = hex(theme.accent);
+    const innerHeight = height - 14;
+    const round = Math.max(4, radius - 4);
+    for (let i = 0; i < 32; i++) {
+      const t = i / 31;
+      const highlight = (1 - t) * .16;
+      g.fillColor = new Color(
+        Math.round(from.r * highlight + to.r * (1 - highlight)),
+        Math.round(from.g * highlight + to.g * (1 - highlight)),
+        Math.round(from.b * highlight + to.b * (1 - highlight)), 255);
+      const y = height / 2 - 5 - (i + 1) * innerHeight / 32;
+      const distance = Math.max(0, Math.abs((i + .5) * innerHeight / 32
+        - innerHeight / 2) - (innerHeight / 2 - round));
+      const inset = round - Math.sqrt(Math.max(0, round * round - distance * distance));
+      g.rect(-width / 2 + 5 + inset, y, width - 10 - inset * 2,
+        innerHeight / 32 + .4);
+      g.fill();
+    }
   }
-  g.strokeColor = hex(tone === 'red' ? '#F0CB85' : '#C49B64');
-  g.lineWidth = 1;
-  g.moveTo(-width / 2 + 18, height / 2 - 9);
-  g.lineTo(width / 2 - 18, height / 2 - 9);
+  g.strokeColor = hex(emphasized
+    ? (theme.id === 9 ? theme.edge : theme.accent) : theme.edge);
+  g.lineWidth = emphasized ? 3 : 1.5;
+  g.roundRect(-width / 2 + 1, -height / 2 + 5, width - 2, height - 7, radius);
   g.stroke();
-  if (width >= 80) {
-    applyLacquerSkin(node, width, height, tone);
+  g.strokeColor = hex(tone === 'red' ? theme.light : theme.line);
+  g.lineWidth = 1;
+  g.roundRect(-width / 2 + 5, -height / 2 + 9, width - 10, height - 15, Math.max(4, radius - 4));
+  g.stroke();
+  transform(node, Math.max(88, width), Math.max(88, height));
+}
+
+/** A solid, high-contrast close control with a font-independent cross. */
+export function drawCloseButton(node: Node): void {
+  rememberSkin(node, {kind: 'close', width: 64, height: 64});
+  const theme = getPageTheme();
+  const g = drawRoundRect(node, 64, 64, 14, theme.dark);
+  let glyph = node.getChildByName('CloseGlyph');
+  if (theme.id === 7) {
+    g.clear();
+    g.fillColor = hex(theme.dark);
+    g.roundRect(-32, -35, 64, 64, 32);
+    g.fill();
+    g.fillColor = hex(theme.accent);
+    g.roundRect(-31, -30, 62, 62, 31);
+    g.fill();
+    // Keep the cross on its own path: no pale rim or cardinal-point artifacts.
+    if (!glyph) {
+      glyph = new Node('CloseGlyph');
+      node.addChild(glyph);
+    }
+    glyph.active = true;
+    transform(glyph, 64, 64);
+    const cross = glyph.getComponent(Graphics) || glyph.addComponent(Graphics);
+    cross.clear();
+    cross.strokeColor = hex(theme.onAccent);
+    cross.lineWidth = 5;
+    cross.moveTo(-11, 12);
+    cross.lineTo(11, -10);
+    cross.moveTo(-11, -10);
+    cross.lineTo(11, 12);
+    cross.stroke();
+  } else {
+    if (glyph) glyph.active = false;
+    g.fillColor = hex(theme.accent);
+    g.roundRect(-32, -27, 64, 59, 14);
+    g.fill();
+    g.strokeColor = hex(theme.onAccent);
+    g.lineWidth = 2;
+    g.roundRect(-29, -24, 58, 53, 11);
+    g.stroke();
+    g.lineWidth = 5;
+    g.moveTo(-11, 14);
+    g.lineTo(11, -8);
+    g.moveTo(-11, -8);
+    g.lineTo(11, 14);
+    g.stroke();
   }
+  const label = node.getChildByName('Label');
+  if (label) label.active = false;
+  transform(node, 88, 88);
+}
+
+function drawHeadingLine(node: Node, width: number): void {
+  rememberSkin(node, {kind: 'heading', width, height: 66});
+  const g = drawRoundRect(node, width, 66, 0, '#00000000');
+  g.strokeColor = hex(getPageTheme().edge);
+  g.lineWidth = 1;
+  g.moveTo(-width / 2 - 24, -42);
+  g.lineTo(width / 2 + 24, -42);
+  g.stroke();
 }
 
 /**
@@ -411,12 +482,12 @@ export function makePanelHeading(
   const plaque = new Node('HeadingPlaque');
   panel.addChild(plaque);
   plaque.setPosition(0, y);
-  drawLacquerButton(plaque, width, 66);
+  drawHeadingLine(plaque, width);
   const heading = makeLabel(
     plaque,
     text,
-    32,
-    '#FFF0CA',
+    38,
+    getPageTheme().ink,
     Vec3.ZERO,
     width - 64,
     42,
@@ -433,7 +504,8 @@ export function styleTavernButton(button: Node, restart: boolean): void {
   const label = button.getChildByName('Label')!.getComponent(Label)!;
   label.node.setPosition(30, 1);
   transform(label.node, 164, 58);
-  label.color = hex(restart ? '#FFF2D0' : '#6A3B20');
+  const theme = getPageTheme();
+  label.color = hex(restart ? theme.onAccent : theme.ink);
   label.isBold = true;
   const icon = new Node('ControlIcon');
   button.addChild(icon);
@@ -469,7 +541,8 @@ export function makeLabel(
   label.horizontalAlign = Label.HorizontalAlign.CENTER;
   label.verticalAlign = Label.VerticalAlign.CENTER;
   label.enableWrapText = wrap;
-  label.color = hex(textColor);
+  (node as PageSkinNode).uiTextColor = textColor;
+  label.color = hex(themedTextColor(textColor));
   if (width > 0) {
     label.overflow = Label.Overflow.SHRINK;
   }
@@ -477,8 +550,15 @@ export function makeLabel(
 }
 
 /**
- * 创建带触摸反馈的按钮。
+ * 当前审阅风格的正文使用统一左对齐。
  */
+export function makeBodyLabel(...args: Parameters<typeof makeLabel>): Label {
+  const label = makeLabel(...args);
+  if (getPageTheme().id === 7) label.horizontalAlign = Label.HorizontalAlign.LEFT;
+  return label;
+}
+
+/** 创建带触摸反馈的按钮。 */
 export function makeButton(
   parent: Node,
   text: string,
@@ -498,25 +578,29 @@ export function makeButton(
   if (text) {
     drawLacquerButton(node, width, height, primary ? 'red' : 'cream');
   } else {
-    drawRoundRect(node, width, height, 16, fill, '#D5B47D', 1.5);
+    drawRoundRect(node, width, height, 16, fill, '#D5B47D', 3);
   }
-  makeLabel(
+  const label = makeLabel(
     node,
     text,
     width < 140 ? 24 : 26,
-    primary ? '#FFF2D0' : '#633C28',
+    primary ? getPageTheme().onAccent : getPageTheme().ink,
     new Vec3(0, 1),
     width - (width < 80 ? 16 : width < 140 ? 36 : 56),
     height - (width < 80 ? 14 : height <= 60 ? 20 : 28),
   );
+  label.isBold = true;
+  const homePosition = new Vec3(position.x, position.y, position.z);
   node.on(
     Node.EventType.TOUCH_START,
     /**
      * 响应节点触摸或游戏事件。
      */ () => {
+      if ((node as PageSkinNode).pageDisabled) return;
       tween(node).stop();
       tween(node)
-        .to(0.07, {scale: new Vec3(0.94, 0.94, 1)})
+        .to(0.07, {scale: new Vec3(0.99, 0.99, 1),
+          position: new Vec3(homePosition.x, homePosition.y - 4, homePosition.z)})
         .start();
     },
   );
@@ -525,8 +609,9 @@ export function makeButton(
     /**
      * 响应节点触摸或游戏事件。
      */ () => {
+      if ((node as PageSkinNode).pageDisabled) return;
       tween(node).stop();
-      tween(node).to(0.08, {scale: Vec3.ONE}).start();
+      tween(node).to(0.08, {scale: Vec3.ONE, position: homePosition}).start();
       callback();
     },
   );
@@ -536,8 +621,18 @@ export function makeButton(
      * 响应节点触摸或游戏事件。
      */ () => {
       tween(node).stop();
-      tween(node).to(0.08, {scale: Vec3.ONE}).start();
+      tween(node).to(0.08, {scale: Vec3.ONE, position: homePosition}).start();
     },
   );
   return node;
+}
+
+/** Disabled controls have no press or action handlers. */
+export function setButtonEnabled(node: Node, enabled: boolean): void {
+  (node as PageSkinNode).pageDisabled = !enabled;
+  const skin = (node as PageSkinNode).pageSkin;
+  if (skin?.kind === 'button' && !enabled) {
+    drawLacquerButton(node, skin.width, skin.height, 'muted');
+  }
+  opacity(node, enabled ? 255 : 165);
 }

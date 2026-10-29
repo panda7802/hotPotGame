@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "secondaryOnPanel": 5.912247980881772,
+    "secondaryOnCard": 6.440279146090103,
+    "buttonAtLightest": 4.853657324208992
+  },
+  {
+    "id": 2,
+    "secondaryOnPanel": 6.026557417116283,
+    "secondaryOnCard": 6.359739756931219,
+    "buttonAtLightest": 5.7274487085594705
+  },
+  {
+    "id": 7,
+    "secondaryOnPanel": 6.0259648223948545,
+    "secondaryOnCard": 6.431175742842258,
+    "buttonAtLightest": 4.6011306606233155
+  },
+  {
+    "id": 9,
+    "secondaryOnPanel": 9.823406687926207,
+    "secondaryOnCard": 8.019786799576156,
+    "buttonAtLightest": 5.74065131249978
+  }
+]

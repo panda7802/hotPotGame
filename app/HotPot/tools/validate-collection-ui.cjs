@@ -65,6 +65,7 @@ class Graphics {
    */
   clear() {}
   roundRect() {}
+  rect() {}
   fill() {}
   stroke() {}
   moveTo() {}
@@ -83,7 +84,10 @@ class Mask {}
 /**
  * 测试中模拟 ScrollView 的最小行为。
  */
-class ScrollView {}
+class ScrollView {
+  set content(node) {assert(node.getComponent(UITransform), 'Scroll content needs a UITransform before assignment'); this._content = node;}
+  get content() {return this._content;}
+}
 /**
  * 测试中模拟 Node 的最小行为。
  */
@@ -267,6 +271,7 @@ const cc = {
     return chain;
   },
 };
+cc.EditBox = class {static InputMode = {ANY: 0}; static KeyboardReturnType = {SEARCH: 1}; static EventType = {TEXT_CHANGED: 'text-changed'};};
 const warnings = [];
 const cache = new Map();
 /**
@@ -346,6 +351,7 @@ function createGame() {
         - this.regionCount(a.code));
     },
     refreshLeaderboard: () => Promise.resolve(),
+    refreshRuntimeConfig: () => Promise.resolve(),
     regions: JSON.parse(
       fs.readFileSync(
         path.join(root, 'assets/resources/data/regions.json'),
@@ -383,10 +389,10 @@ const game = createGame();
 game.playerService.regionWins.OVERSEAS = 12;
 game.showPlayerProfile();
 game.node.getChildByName('PlayerOverlay').getChildByName('PlayerPanel')
-  .getChildByName('Button_云端地域排行榜').emit(Node.EventType.TOUCH_END);
+  .getChildByName('Button_地域排行榜').emit(Node.EventType.TOUCH_END);
 const ranking = scrollOf(game, 'RegionOverlay', 'RegionViewport');
 const topRegion = ranking.scroll.content.children[0];
-assert(topRegion.getChildByName('Label').getComponent(Label)
+assert(topRegion.getChildByName('RankCount').getComponent(Label)
   .string.includes('12次'));
 topRegion.emit(Node.EventType.TOUCH_END);
 assert.strictEqual(game.playerService.state.profile.regionCodes.length, 0);
@@ -396,7 +402,7 @@ game.dismissPlayerMenu('RegionOverlay');
  */
 assert.doesNotThrow(() => game.showCollection());
 let collection = scrollOf(game, 'CollectionOverlay', 'CollectionViewport');
-assert.strictEqual(collection.scroll.content.children.length, 23);
+assert.strictEqual(collection.scroll.content.children.length, 50);
 collection.panel
   .getChildByName('Button_我的成就')
   .emit(Node.EventType.TOUCH_END);
@@ -417,8 +423,8 @@ game.showRegionPicker([]);
 scrollOf(game, 'RegionOverlay', 'RegionViewport');
 game.dismissPlayerMenu('RegionOverlay');
 console.log(
-  'Collection UI: preview Mask enabled, 2' +
-    '3 cards, 14 achievements, tab/detail n' +
+  'Collection UI: preview Mask enabled, 5' +
+    '0 cards, 14 achievements, tab/detail n' +
     'avigation and clipped vertical region ' +
     'scrolling: OK',
 );
@@ -486,8 +492,10 @@ hidden.showCollection();
 tapHeading(hidden, 6);
 tapIngredients(hidden, 2);
 panelOf(hidden)
-  .getChildByName('Button_返回游戏')
+  .getChildByName('Button_返回我的')
   .emit(Node.EventType.TOUCH_END);
+assert(panelOf(hidden, 'PlayerOverlay'));
+hidden.dismissPlayerMenu('PlayerOverlay');
 hidden.showCollection();
 tapIngredients(hidden, 1);
 assert(
@@ -654,14 +662,12 @@ for (const [width, height] of [[102, 48], [124, 58], [264, 64], [510, 70]]) {
   const button = ui.makeButton(
     new Node('Test'), '图鉴', Vec3.ZERO, width, height, '#A3613B', () => {},
   );
-  const skin = button.getChildByName('LacquerSkin');
-  const frame = skin.getComponent(cc.Sprite).spriteFrame;
   const label = button.getChildByName('Label').getComponent(UITransform);
-  assert(label.width <= width - 2 * frame.insetLeft * skin.scale.x);
-  assert(label.height <= height - 2 * frame.insetTop * skin.scale.y);
-  assert(Math.abs(skin.getComponent(UITransform).width * skin.scale.x
-    - width) < 0.001);
-  assert.strictEqual(button.children[0], skin);
+  assert(label.width <= width - 32);
+  assert(label.height <= height - 20);
+  assert.strictEqual(button.pageSkin.width, width);
+  assert.strictEqual(button.pageSkin.height, height);
+  assert(button.getComponent(Graphics));
 }
 console.log('Button skins: compact/large label bounds clear all borders: OK');
 const loaded = createGame();
@@ -675,7 +681,7 @@ assert.strictEqual(
   1,
   'initialization must wait for all atlases exactly once',
 );
-assert.strictEqual(loaded.ingredientFrames.size, 23);
+assert.strictEqual(loaded.ingredientFrames.size, 50);
 for (const frame of loaded.ingredientFrames.values()) {
   if (!frame.rect) {
     continue;
@@ -690,7 +696,162 @@ assert.strictEqual(loaded.ingredientFrames.get('lamb').rect.width, 256);
 assert.strictEqual(loaded.ingredientFrames.get('yam').rect.x, 512);
 assert.strictEqual(loaded.ingredientFrames.get('kelp').rect.y, 256);
 console.log(
-  'Production food art: all 23 frames loa' +
-    'd, new sheets crop to exact 256px cell' +
-    's and complete once: OK',
+  'Production food art: all 50 frames loa' +
+    'd, atlas crops stay within bounds and' +
+    ' complete once: OK',
 );
+
+// A search result must never save until confirmed; cancel keeps the query.
+const regionFlow = createGame();
+regionFlow.playerService.setRegion = (codes) => {
+  regionFlow.playerService.state.profile.regionCodes = codes.slice();
+};
+regionFlow.showRegionPicker([]);
+let searchNode = panelOf(regionFlow, 'RegionOverlay').getChildByName('RegionSearch');
+searchNode.getComponent(cc.EditBox).string = '秦淮';
+searchNode.emit(cc.EditBox.EventType.TEXT_CHANGED);
+let regionContent = panelOf(regionFlow, 'RegionOverlay').getChildByName('RegionViewport').getChildByName('RegionContent');
+assert.strictEqual(regionContent.children.length, 1);
+regionContent.children[0].emit(Node.EventType.TOUCH_END);
+assert(panelOf(regionFlow, 'RegionConfirmOverlay'));
+assert.strictEqual(regionFlow.playerService.state.profile.regionCodes.length, 0);
+panelOf(regionFlow, 'RegionConfirmOverlay').getChildByName('Button_再选一下').emit(Node.EventType.TOUCH_END);
+searchNode = panelOf(regionFlow, 'RegionOverlay').getChildByName('RegionSearch');
+assert.strictEqual(searchNode.getComponent(cc.EditBox).string, '秦淮');
+regionContent = panelOf(regionFlow, 'RegionOverlay').getChildByName('RegionViewport').getChildByName('RegionContent');
+regionContent.children[0].emit(Node.EventType.TOUCH_END);
+panelOf(regionFlow, 'RegionConfirmOverlay').getChildByName('Button_确认保存').emit(Node.EventType.TOUCH_END);
+assert.deepStrictEqual(Array.from(regionFlow.playerService.state.profile.regionCodes), ['320000', '320100', '320104']);
+console.log('Region UI: initialized scroll transform, full-tree search, cancel retains query, explicit save: OK');
+
+// Non-default remote thresholds must be captured for one open collection.
+const configured = createGame();
+configured.playerService.runtimeConfig = {
+  collectionHeadingTaps: 2, collectionIngredientTaps: 4,
+};
+configured.showCollection();
+tapHeading(configured, 2);
+tapIngredients(configured, 3);
+assert(!panelOf(configured, 'BackdoorOverlay'));
+tapIngredients(configured, 1);
+assert(panelOf(configured, 'BackdoorOverlay'));
+configured.dismissPlayerMenu('BackdoorOverlay');
+configured.showPlayerProfile();
+const cleanProfile = panelOf(configured, 'PlayerOverlay');
+for (const name of ['IdentityCard', 'SaveCard', 'Button_同步存档']) {
+  assert(!cleanProfile.getChildByName(name));
+}
+console.log('Configurable 2/4 sequence and simplified profile: OK');
+
+// My is the single collection/style entry. Style choices never reset a run.
+const themes = load(path.join(root, 'assets/scripts/data/PageTheme'));
+const preferences = new Map();
+cc.sys = {localStorage: {
+  getItem: (key) => preferences.get(key) || null,
+  setItem: (key, value) => preferences.set(key, value),
+}};
+assert.deepStrictEqual(Array.from(themes.PAGE_THEMES, (t) => t.id),
+  [1, 2, 7, 9]);
+for (const invalid of [null, '', '3', '10', 'NaN', '{}']) {
+  assert.strictEqual(themes.normalizePageStyle(invalid), 2);
+}
+assert.strictEqual(themes.readPageStyle({getItem() {throw Error();}}), 2);
+assert.strictEqual(themes.savePageStyle({setItem() {throw Error();}}, 7),
+  false);
+const oldLoader = cc.resources.load;
+cc.resources.load = (resource, type, done) => {
+  if (resource.startsWith('themes/')) {
+    done(new Error('Thumbnail pixels are checked in the real build'));
+    return;
+  }
+  oldLoader(resource, type, done);
+};
+const appearance = createGame();
+appearance.levelLabel = new Label();
+appearance.progressLabel = new Label();
+appearance.levelIndex = 1;
+appearance.tray = ['beef', 'corn'];
+appearance.reserve = ['egg'];
+appearance.runId = 'unchanged-run';
+appearance.lastMoveSnapshot = {tray: [], reserve: [], removedIds: ['t1']};
+const levelIdentity = appearance.levelData;
+const beforeAppearance = JSON.stringify({
+  tray: appearance.tray, reserve: appearance.reserve,
+  runId: appearance.runId, snapshot: appearance.lastMoveSnapshot,
+  tools: appearance.toolUses, level: appearance.levelIndex,
+});
+appearance.showPlayerProfile();
+panelOf(appearance, 'PlayerOverlay').getChildByName('Button_食材图鉴')
+  .emit(Node.EventType.TOUCH_END);
+assert(panelOf(appearance, 'CollectionOverlay'));
+panelOf(appearance).getChildByName('Button_返回我的')
+  .emit(Node.EventType.TOUCH_END);
+panelOf(appearance, 'PlayerOverlay').getChildByName('Button_页面风格')
+  .emit(Node.EventType.TOUCH_END);
+assert(appearance.hasPlayerMenu());
+for (const id of [1, 7, 9, 2]) {
+  panelOf(appearance, 'StyleOverlay').getChildByName(`PageStyle_${id}`)
+    .emit(Node.EventType.TOUCH_END);
+  assert.strictEqual(themes.getPageTheme().id, id);
+  panelOf(appearance, 'StyleOverlay').getChildByName('Button_应用所选风格')
+    .emit(Node.EventType.TOUCH_END);
+  assert.strictEqual(themes.readPageStyle(cc.sys.localStorage), id);
+  panelOf(appearance, 'PlayerOverlay').getChildByName('Button_页面风格')
+    .emit(Node.EventType.TOUCH_END);
+  assert.strictEqual(appearance.levelData, levelIdentity);
+}
+assert.strictEqual(JSON.stringify({
+  tray: appearance.tray, reserve: appearance.reserve,
+  runId: appearance.runId, snapshot: appearance.lastMoveSnapshot,
+  tools: appearance.toolUses, level: appearance.levelIndex,
+}), beforeAppearance);
+for (const card of panelOf(appearance, 'StyleOverlay').children
+  .filter((node) => node.name.startsWith('PageStyle_'))) {
+  assert(card.position.x + 125 <= 305);
+  assert(card.position.x - 125 >= -305);
+}
+panelOf(appearance, 'StyleOverlay').getChildByName('PageStyle_9').emit(Node.EventType.TOUCH_END);
+assert.strictEqual(themes.readPageStyle(cc.sys.localStorage), 2);
+panelOf(appearance, 'StyleOverlay').getChildByName('Button_返回我的')
+  .emit(Node.EventType.TOUCH_END);
+assert(panelOf(appearance, 'PlayerOverlay'));
+const transitions = [];
+appearance.loadLevel = (index) => transitions.push(index);
+for (const index of [0, 1, 2]) {
+  appearance.levelIndex = index;
+  appearance.nextLevel();
+}
+assert.deepStrictEqual(transitions, [1, 2, 0]);
+console.log('My/style menu: four choices, persistence/fallback, margins,' +
+  ' unchanged game state, collection returns and 1→2→3→1: OK');
+
+// Out-of-order background loads must not repaint a later selection or leak.
+const pendingBackdrops = [];
+const releasedBackdrops = [];
+cc.resources.load = (resource, type, done) => {
+  pendingBackdrops.push({resource, done});
+};
+cc.resources.release = (resource) => releasedBackdrops.push(resource);
+cc.SpriteFrame.prototype.destroy = function () {this.destroyed = true;};
+const race = createGame();
+const parent = new Node('BackdropTest');
+themes.setPageTheme(2);
+race.loadIllustratedBackdrop(parent);
+themes.setPageTheme(7);
+race.loadIllustratedBackdrop(parent);
+const snowTexture = {name: 'snow'};
+pendingBackdrops[1].done(null, snowTexture);
+pendingBackdrops[0].done(null, {name: 'outdated-palace'});
+const active = parent.getChildByName('IllustratedBackdrop')
+  .getComponent(cc.Sprite).spriteFrame;
+assert.strictEqual(active.texture, snowTexture);
+assert(releasedBackdrops.includes('themes/style-02/texture'));
+themes.setPageTheme(9);
+race.loadIllustratedBackdrop(parent);
+parent.isValid = false;
+race.releasePageBackdrop();
+pendingBackdrops[2].done(null, {name: 'after-destroy'});
+assert(active.destroyed);
+assert(releasedBackdrops.includes('themes/style-09/texture'));
+themes.setPageTheme(2);
+console.log('Theme resources: stale loads ignored and teardown releases: OK');

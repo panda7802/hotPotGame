@@ -1,0 +1,15 @@
+{
+  "styles": [
+    1,
+    2,
+    7,
+    9
+  ],
+  "panelHeight": 760,
+  "contentWidth": 522,
+  "sidePadding": 64,
+  "rowGap": 32,
+  "shortScreen": "320x568",
+  "continueAndCollectionNavigation": true,
+  "pageErrors": []
+}

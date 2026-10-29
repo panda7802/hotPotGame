@@ -1,5 +1,7 @@
 /.idea/
 /.codex-work/wechat-export/
+/.codex-work/current-update/
+/.codex-work/ingredients50-export/
 /.codex-work/wechat-build.*.log
 /.codex-work/wechat-package-check.json
 /.codex-work/regions-source/

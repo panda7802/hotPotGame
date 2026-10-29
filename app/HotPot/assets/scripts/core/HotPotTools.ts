@@ -3,13 +3,16 @@ import {BlockInputEvents, Node, tween, Vec3} from 'cc';
 import {LEVELS} from '../data/GameData';
 
 import {achievementEntries} from '../data/CollectionData';
+import {getPageTheme} from '../data/PageTheme';
 
 import {
   DESIGN_WIDTH,
+  drawCloseButton,
   drawLacquerPanel,
   drawRoundRect,
   hex,
   makeButton,
+  makeBodyLabel,
   makeLabel,
   makePanelHeading,
   opacity,
@@ -207,48 +210,33 @@ export abstract class HotPotTools extends HotPotToolActions {
     }
     const overlay = new Node('RestartConfirmOverlay');
     this.node.addChild(overlay);
-    drawRoundRect(overlay, DESIGN_WIDTH, this.viewportHeight, 0, '#421B17');
+    const reviewLayout = getPageTheme().id === 7;
+    if (reviewLayout) {
+      transform(overlay, DESIGN_WIDTH, this.viewportHeight);
+      const scrim = new Node('ModalScrim');
+      overlay.addChild(scrim);
+      drawRoundRect(scrim, DESIGN_WIDTH, this.viewportHeight, 0, '#29150FAA');
+    } else {
+      drawRoundRect(overlay, DESIGN_WIDTH, this.viewportHeight, 0, '#421B17');
+      opacity(overlay, 220);
+    }
     overlay.addComponent(BlockInputEvents);
-    opacity(overlay, 220);
 
     const panel = new Node('RestartConfirmPanel');
     overlay.addChild(panel);
-    drawRoundRect(panel, 560, 310, 32, '#FFF9EF');
-    makeLabel(panel, '确认重新开始？', 42, '#8D3426', new Vec3(0, 82), 470, 62);
-    makeLabel(
-      panel,
-      '本关当前进度将会清空',
-      24,
-      '#8A6557',
-      new Vec3(0, 25),
-      450,
-      42,
-    );
-    makeButton(
-      panel,
-      '取消',
-      new Vec3(-130, -80),
-      210,
-      66,
-      '#B88A6B',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => this.dismissRestartConfirmation(),
-    );
-    makeButton(
-      panel,
-      '重新开始',
-      new Vec3(130, -80),
-      230,
-      66,
-      '#ED4A32',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
+    drawLacquerPanel(panel, 600, 560, reviewLayout);
+    makePanelHeading(panel, '重新开一锅？', 175);
+    makeBodyLabel(panel, '本关进度和道具次数将重新开始', 25,
+      '#775145', new Vec3(0, 69), 520, 58, true);
+    makeBodyLabel(panel, '图鉴、成就和地区会继续保留', 23,
+      '#94735D', new Vec3(0, 0), 520, 46);
+    makeButton(panel, '继续当前游戏', new Vec3(0, -100),
+      520, 78, '#A3613B', () => this.dismissRestartConfirmation());
+    makeButton(panel, '确定重新开始', new Vec3(0, -203),
+      520, 74, '#B88261', () => {
         this.dismissRestartConfirmation();
         this.restartLevel();
-      },
-    );
+      });
     panel.setScale(0.82, 0.82, 1);
     tween(panel).to(0.18, {scale: Vec3.ONE}, {easing: 'backOut'}).start();
   }
@@ -290,7 +278,7 @@ export abstract class HotPotTools extends HotPotToolActions {
       return;
     }
     drawLacquerPanel(panel, 600, 860);
-    makePanelHeading(panel, '锅底见啦！', 314);
+    makePanelHeading(panel, this.levelIndex === LEVELS.length - 1 ? '三锅圆满！' : '锅底见啦！', 314);
     makeLabel(
       panel,
       `第${this.levelIndex + 1}关 · ${this.levelData.config.title}`,
@@ -323,13 +311,13 @@ export abstract class HotPotTools extends HotPotToolActions {
     if (earned.length) {
       makeLabel(
         panel,
-        `新成就：${earned
+        `新成就：${earned.slice(0, 2)
           .map(
             /**
              * 将当前条目转换为后续处理所需的值。
              */ (item) => item.title,
           )
-          .join(' · ')}`,
+          .join(' · ')}${earned.length > 2 ? ` 等${earned.length}项` : ''}`,
         21,
         '#A3613B',
         new Vec3(0, -164),
@@ -371,9 +359,9 @@ export abstract class HotPotTools extends HotPotToolActions {
       '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
-       */ () => this.dismissOverlay(),
+       */ () => this.nextLevel(),
     );
-    makeButton(
+    const resultClose = makeButton(
       panel,
       '×',
       new Vec3(250, 376),
@@ -382,8 +370,9 @@ export abstract class HotPotTools extends HotPotToolActions {
       '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
-       */ () => this.dismissOverlay(),
+       */ () => this.nextLevel(),
     );
+    if (getPageTheme().id === 7) drawCloseButton(resultClose);
     tween(panel).to(0.2, {scale: Vec3.ONE}, {easing: 'backOut'}).start();
   }
 

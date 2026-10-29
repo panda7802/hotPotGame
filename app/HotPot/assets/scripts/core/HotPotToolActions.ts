@@ -10,12 +10,14 @@ import {
   makeButton,
   makeLabel,
   opacity,
+  setButtonEnabled,
   TOOL_NAMES,
   ToolType,
   transform,
 } from './HotPotUi';
 
 import {HotPotBoard} from './HotPotBoard';
+import {getPageTheme} from '../data/PageTheme';
 
 /**
  * HotPotToolActions：拆分后的前段场景行为。
@@ -119,7 +121,9 @@ export abstract class HotPotToolActions extends HotPotBoard {
     button.addChild(icon);
     icon.setPosition(-50, 0);
     icon.setScale(0.7, 0.7, 1);
-    makeLabel(button, TOOL_NAMES[type], 25, '#FFF8E7', new Vec3(6, 0), 60, 40);
+    const toolName = makeLabel(button, TOOL_NAMES[type], 25,
+      getPageTheme().onAccent, new Vec3(6, 0), 60, 40);
+    toolName.node.name = 'ToolName';
     transform(icon, 64, 44);
     const g = icon.addComponent(Graphics);
     g.strokeColor = hex('#FFF8E7');
@@ -218,6 +222,7 @@ export abstract class HotPotToolActions extends HotPotBoard {
         }
         const available = unlimited || this.toolUses[type] > 0;
         drawLacquerButton(button, 208, 84, available ? 'red' : 'muted');
+        setButtonEnabled(button, available);
         opacity(button, available ? 255 : 175);
       },
     );

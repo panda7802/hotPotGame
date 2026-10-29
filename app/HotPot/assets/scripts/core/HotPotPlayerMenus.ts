@@ -1,4 +1,4 @@
-import {_decorator, Graphics, Node, Vec3} from 'cc';
+import {_decorator, Graphics, Label, Node, Vec3} from 'cc';
 
 import {INGREDIENTS, IngredientType} from '../data/GameData';
 
@@ -13,26 +13,33 @@ import {
 } from './HotPotUi';
 
 import {HotPotProfileMenus} from './HotPotProfileMenus';
+import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
+import {getPageTheme} from '../data/PageTheme';
 
 /**
  * 玩家档案、云存档选择和图鉴菜单。
  */
 export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
+  private collectionOffsets = {ingredients: 0, achievements: 0};
   /**
    * 显示食材图鉴或成就列表。
    */
   protected showCollection(
     tab: 'ingredients' | 'achievements' = 'ingredients',
-    entry = {headingTaps: 0, ingredientTaps: 0},
+    entry = {
+      headingTaps: 0, ingredientTaps: 0,
+      ...normalizeRuntimeConfig(this.playerService?.runtimeConfig),
+    },
   ): void {
     if (!this.scrollComponentsReady()) {
       return;
     }
-    const panel = this.makePlayerMenu('CollectionOverlay', 1120);
+    const panel = this.makePlayerMenu('CollectionOverlay', 1240);
     if (!panel) {
       return;
     }
     const state = this.playerService!.state;
+    const reviewAligned = getPageTheme().id === 7;
     const achievements = achievementEntries(state);
     const unlocked = achievements.filter(
       /**
@@ -40,14 +47,16 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
        */ (item) => item.unlocked,
     ).length;
     const discovered = state.progress.discovered;
-    const heading = makePanelHeading(panel, '小馆珍藏', 455, 420);
+    const heading = makePanelHeading(panel, '小馆珍藏', 515, 420);
     heading.isBold = true;
     heading.node.on(
       Node.EventType.TOUCH_END,
       /**
        * 响应节点触摸或游戏事件。
        */ () => {
-        entry.headingTaps = Math.min(6, entry.headingTaps + 1);
+        entry.headingTaps = Math.min(
+          entry.collectionHeadingTaps, entry.headingTaps + 1,
+        );
         entry.ingredientTaps = 0;
       },
     );
@@ -62,19 +71,25 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
         ' / ' +
         String(achievements.length) +
         '',
-      25,
-      '#94735D',
-      new Vec3(0, 395),
+      27,
+      '#775145',
+      new Vec3(0, 455),
       570,
       42,
     );
+    const captureScroll = (): void => {
+      const content = panel.getChildByName('CollectionViewport')
+        ?.getChildByName('CollectionContent');
+      if (content) this.collectionOffsets[tab] = Math.max(0, content.position.y - 324);
+    };
     const switchTab =
       /**
        * 处理 switchTab 对应的游戏逻辑。
        */ (next: 'ingredients' | 'achievements'): void => {
-        if (next === 'ingredients' && entry.headingTaps === 6) {
+        if (next === 'ingredients'
+          && entry.headingTaps === entry.collectionHeadingTaps) {
           entry.ingredientTaps += 1;
-          if (entry.ingredientTaps === 3) {
+          if (entry.ingredientTaps === entry.collectionIngredientTaps) {
             this.dismissPlayerMenu('CollectionOverlay');
             this.showBackdoor();
             return;
@@ -86,13 +101,14 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
         if (next === tab) {
           return;
         }
+        captureScroll();
         this.dismissPlayerMenu('CollectionOverlay');
         this.showCollection(next, entry);
       };
     makeButton(
       panel,
       '食材图鉴',
-      new Vec3(-144, 326),
+      new Vec3(-144, 386),
       264,
       64,
       tab === 'ingredients' ? '#D75542' : '#B88261',
@@ -103,7 +119,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
     makeButton(
       panel,
       '我的成就',
-      new Vec3(144, 326),
+      new Vec3(144, 386),
       264,
       64,
       tab === 'achievements' ? '#D75542' : '#B88261',
@@ -115,7 +131,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
     if (tab === 'ingredients') {
       const content = this.makeCollectionScroll(
         panel,
-        Math.ceil(INGREDIENTS.length / 2) * 204 + 12,
+        Math.ceil(INGREDIENTS.length / 3) * 216 + 12,
+        this.collectionOffsets.ingredients,
       );
       INGREDIENTS.forEach(
         /**
@@ -126,14 +143,15 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             content,
             '',
             new Vec3(
-              index % 2 ? 140 : -140, -102 - Math.floor(index / 2) * 204,
+              (index % 3 - 1) * 184, -108 - Math.floor(index / 3) * 216,
             ),
-            264,
-            184,
+            172,
+            204,
             known ? '#F8E8CD' : '#E9E0D0',
             /**
              * 在当前操作完成后更新相关游戏状态。
              */ () => {
+              captureScroll();
               this.dismissPlayerMenu('CollectionOverlay');
               this.showIngredientDetail(ingredient.id);
             },
@@ -157,28 +175,33 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           const name = makeLabel(
             card,
             known ? ingredient.name : '神秘食材',
-            26,
+            28,
             known ? '#744329' : '#9D8B77',
             new Vec3(0, -40),
-            228,
-            34,
+            154,
+            38,
           );
           name.isBold = known;
-          makeLabel(
+          const tag = makeLabel(
             card,
-            known ? INGREDIENT_STORIES[ingredient.id].tag : '拿取一次即可点亮',
-            18,
+            known ? INGREDIENT_STORIES[ingredient.id].tag : '拿取点亮',
+            22,
             '#94735D',
-            new Vec3(0, -73),
-            228,
-            26,
+            new Vec3(0, -79),
+            154,
+            30,
           );
+          if (reviewAligned) {
+            name.horizontalAlign = Label.HorizontalAlign.LEFT;
+            tag.horizontalAlign = Label.HorizontalAlign.LEFT;
+          }
         },
       );
     } else {
       const content = this.makeCollectionScroll(
         panel,
         achievements.length * 156 + 8,
+        this.collectionOffsets.achievements,
       );
       achievements.forEach(
         /**
@@ -204,16 +227,16 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             42,
           );
           title.isBold = true;
-          makeLabel(
+          const achievementStatus = makeLabel(
             card,
             item.unlocked ? '已达成' : '进行中',
             21,
             item.unlocked ? '#477345' : '#A88A6C',
-            new Vec3(211, 40),
+            new Vec3(reviewAligned ? 210 : 211, 40),
             88,
             32,
           );
-          makeLabel(
+          const description = makeLabel(
             card,
             item.description,
             22,
@@ -225,16 +248,18 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           );
           const bar = new Node('AchievementProgress');
           card.addChild(bar);
-          bar.setPosition(-45, -46);
-          drawRoundRect(bar, 390, 10, 5, '#D8C5AD');
+          bar.setPosition(reviewAligned ? -55 : -45, -46);
+          const progressHeight = reviewAligned ? 4 : 10;
+          drawRoundRect(bar, 390, progressHeight, progressHeight / 2, '#D8C5AD');
           const g = bar.getComponent(Graphics)!;
           const filled = (390 * item.current) / item.target;
           if (filled > 0) {
             g.fillColor = hex(item.unlocked ? '#80A16A' : '#D39457');
-            g.roundRect(-195, -5, filled, 10, Math.min(5, filled / 2));
+            g.roundRect(-195, -progressHeight / 2, filled, progressHeight,
+              Math.min(progressHeight / 2, filled / 2));
             g.fill();
           }
-          makeLabel(
+          const count = makeLabel(
             card,
             `${item.current} / ${item.target}`,
             21,
@@ -243,40 +268,53 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
             104,
             32,
           );
+          if (reviewAligned) {
+            for (const label of [title, achievementStatus, description, count]) {
+              label.horizontalAlign = Label.HorizontalAlign.LEFT;
+            }
+          }
         },
       );
     }
-    makeLabel(
+    const alignFooter = reviewAligned;
+    const footerHint = makeLabel(
       panel,
       tab === 'ingredients'
         ? '上下滑动浏览，点选食材查看小档案'
         : '上下滑动浏览，达成后永久记录',
-      22,
+      25,
       '#94735D',
       new Vec3(0, -356),
-      580,
+      alignFooter ? 500 : 580,
       40,
     );
     this.playerStatusLabel = makeLabel(
       panel,
       this.playerService!.statusText,
-      21,
+      24,
       '#94735D',
-      new Vec3(0, -407),
-      580,
-      42,
+      new Vec3(0, -426),
+      alignFooter ? 500 : 580,
+      76,
       true,
     );
+    if (alignFooter) {
+      footerHint.horizontalAlign = Label.HorizontalAlign.LEFT;
+      this.playerStatusLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
+    }
     makeButton(
       panel,
-      '返回游戏',
-      new Vec3(0, -485),
+      '返回我的',
+      new Vec3(0, -535),
       330,
       66,
       '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
-       */ () => this.dismissPlayerMenu('CollectionOverlay'),
+       */ () => {
+        this.dismissPlayerMenu('CollectionOverlay');
+        this.showPlayerProfile();
+      },
     );
   }
 

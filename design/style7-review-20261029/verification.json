@@ -1,0 +1,40 @@
+{
+  "pages": 24,
+  "locationLeftAligned": [
+    {
+      "text": "小馆所在地",
+      "left": -237,
+      "align": 0
+    },
+    {
+      "text": "江苏省 / 南京市 / 秦淮区",
+      "left": -237,
+      "align": 0
+    }
+  ],
+  "circularClosePaths": [
+    [
+      -32,
+      -35,
+      64,
+      64,
+      32
+    ],
+    [
+      -31,
+      -30,
+      62,
+      62,
+      31
+    ]
+  ],
+  "removedRegionSearchAndHints": true,
+  "regionHierarchyAndConfirmationCancel": true,
+  "otherThemesRetainSearch": [
+    1,
+    2,
+    9
+  ],
+  "shortScreenClose": true,
+  "pageErrors": []
+}

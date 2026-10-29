@@ -11,7 +11,10 @@ import {INGREDIENT_STORIES} from '../data/CollectionData';
 
 import {
   drawRoundRect,
+  drawLacquerButton,
+  hex,
   makeButton,
+  makeBodyLabel,
   makeLabel,
   makePanelHeading,
   TOOL_NAMES,
@@ -19,6 +22,7 @@ import {
 } from './HotPotUi';
 
 import {HotPotPlayerMenus} from './HotPotPlayerMenus';
+import {getPageTheme} from '../data/PageTheme';
 
 /**
  * HotPotDialogs：拆分后的前段场景行为。
@@ -32,35 +36,20 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
     if (!panel) {
       return;
     }
-    makeLabel(
-      panel,
-      '后门设置',
-      42,
-      '#8D3426',
-      new Vec3(0, 438),
-      570,
-      62,
-    ).isBold = true;
-    makeLabel(
-      panel,
-      '选关 · 点击后开始新的一局',
-      25,
-      '#94735D',
-      new Vec3(0, 372),
-      570,
-      44,
-    );
+    makePanelHeading(panel, '调试面板', 410, 440);
+    makeBodyLabel(panel, '仅本机即时生效 · 选关会开始新的一局', 24,
+      '#94735D', new Vec3(0, 335), 560, 46);
     LEVELS.forEach(
       /**
        * 依次处理集合中的每个条目。
        */ (level, index) => {
         const current = index === this.levelIndex;
-        makeButton(
+        const choice = makeButton(
           panel,
-          `${current ? '重开' : '进入'}第${index + 1}关 · ${level.title}`,
-          new Vec3(0, 286 - index * 90),
-          540,
-          70,
+          `第${index + 1}关`,
+          new Vec3((index - 1) * 184, 233),
+          164,
+          78,
           current ? '#D75542' : '#B88261',
           /**
            * 在当前操作完成后更新相关游戏状态。
@@ -70,14 +59,15 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
             this.showBackdoor();
           },
         );
+        choice.name = `Button_${current ? '重开' : '进入'}第${index + 1}关 · ${level.title}`;
       },
     );
-    makeLabel(
+    makeBodyLabel(
       panel,
       `当前第${this.levelIndex + 1}关 · 无限道具`,
       28,
       '#744329',
-      new Vec3(0, 16),
+      new Vec3(0, 110),
       570,
       44,
     );
@@ -98,9 +88,9 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
           const button = makeButton(
             panel,
             text(),
-            new Vec3(0, -62 - index * 84),
-            480,
-            64,
+            new Vec3(0, 8 - index * 100),
+            540,
+            76,
             this.unlimitedTools[type] ? '#477345' : '#B88261',
             /**
              * 在当前操作完成后更新相关游戏状态。
@@ -108,21 +98,22 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
               this.unlimitedTools[type] = !this.unlimitedTools[type];
               button.getChildByName('Label')!.getComponent(Label)!.string =
                 text();
-              drawRoundRect(
-                button,
-                480,
-                64,
-                20,
-                this.unlimitedTools[type] ? '#477345' : '#B88261',
-              );
+              drawLacquerButton(button, 540, 76,
+                this.unlimitedTools[type] ? 'red' : 'cream');
+              button.getChildByName('Label')!.getComponent(Label)!.color = hex(
+                this.unlimitedTools[type] ? getPageTheme().onAccent : getPageTheme().ink);
               this.updateToolButtons();
             },
           );
           button.name = `Unlimited_${type}`;
+          if (getPageTheme().id === 7) {
+            button.getChildByName('Label')!.getComponent(Label)!.horizontalAlign
+              = Label.HorizontalAlign.LEFT;
+          }
         },
       );
     } else {
-      makeLabel(
+      makeBodyLabel(
         panel,
         '第一关不使用道具',
         28,
@@ -135,10 +126,10 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
     makeButton(
       panel,
       '本关只留3个相同食材',
-      new Vec3(0, -316),
+      new Vec3(0, -310),
       540,
-      64,
-      '#D75542',
+      76,
+      '#B88261',
       /**
        * 在当前操作完成后更新相关游戏状态。
        */ () => {
@@ -146,7 +137,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
         this.leaveThreeMatchingTiles();
       },
     );
-    makeLabel(
+    makeBodyLabel(
       panel,
       '无限开关仅本局有效，重开或切关后重置',
       21,
@@ -159,9 +150,9 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       panel,
       '返回游戏',
       new Vec3(0, -444),
-      330,
-      66,
-      '#B88261',
+      540,
+      78,
+      '#A3613B',
       /**
        * 在当前操作完成后更新相关游戏状态。
        */ () => this.dismissPlayerMenu('BackdoorOverlay'),
@@ -243,6 +234,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       return;
     }
     const ingredient = getIngredient(type);
+    const reviewLayout = getPageTheme().id === 7;
     const known =
       this.playerService!.state.progress.discovered.indexOf(type) >= 0;
     const title = makePanelHeading(
@@ -257,16 +249,16 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
     } else {
       makeLabel(icon, '?', 100, '#B59C83', Vec3.ZERO, 190, 180);
     }
-    makeLabel(
+    makeBodyLabel(
       panel,
       known ? INGREDIENT_STORIES[type].tag : '食材还藏在锅里',
       27,
       '#A3613B',
       new Vec3(0, 29),
-      500,
+      reviewLayout ? 476 : 500,
       45,
     );
-    makeLabel(
+    makeBodyLabel(
       panel,
       known
         ? INGREDIENT_STORIES[type].story
@@ -278,14 +270,15 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       152,
       true,
     );
-    makeLabel(
+    makeBodyLabel(
       panel,
       known ? '已收录 · 重开和撤回不会熄灭图鉴' : '发现方式：在棋盘上拿取一次',
       22,
       '#94735D',
-      new Vec3(0, -216),
-      496,
-      40,
+      new Vec3(0, reviewLayout ? -210 : -216),
+      reviewLayout ? 476 : 496,
+      reviewLayout ? 64 : 40,
+      reviewLayout,
     );
     makeButton(
       panel,

@@ -281,6 +281,7 @@ function template(
   index: number,
   layoutSeed = 0,
   ingredientSeed = 0,
+  ingredientPoolVersion: 1 | 2 = 1,
 ): LevelData {
   if (layoutSeed === 0 && ingredientSeed === 0) {
     if (!templates.has(index)) {
@@ -290,10 +291,11 @@ function template(
   }
   // Inventory validation and geometry restoration use different seeds. They
   // must not evict each other and regenerate a full board on every restore.
-  const key = `${index}:${layoutSeed}:${ingredientSeed}`;
+  const key = `${index}:${layoutSeed}:${ingredientSeed}:${ingredientPoolVersion}`;
   if (!randomTemplates.has(key)) {
     randomTemplates.set(key,
-      createLevel(index, layoutSeed, undefined, ingredientSeed));
+      createLevel(index, layoutSeed, undefined, ingredientSeed,
+        ingredientPoolVersion));
     if (randomTemplates.size > 4) {
       randomTemplates.delete(randomTemplates.keys().next().value);
     }
@@ -327,7 +329,11 @@ export function validateGameSave(value: any): GameSave {
       integer(value.ingredientSeed, 1, INGREDIENT_SEED_MAX),
     '食材种子错误',
   );
-  const level = template(value.levelIndex, 0, value.ingredientSeed);
+  check(value.ingredientPoolVersion === undefined
+    || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2,
+  '食材池版本错误');
+  const level = template(value.levelIndex, 0, value.ingredientSeed,
+    value.ingredientPoolVersion);
   check(
     Array.isArray(value.types) && value.types.length === level.total,
     '食材牌数错误',
@@ -490,6 +496,8 @@ export function validateGameSave(value: any): GameSave {
     ...(value.ingredientSeed === undefined
       ? {}
       : {ingredientSeed: value.ingredientSeed}),
+    ...(value.ingredientPoolVersion === undefined
+      ? {} : {ingredientPoolVersion: value.ingredientPoolVersion}),
     reviveUsed: value.reviveUsed,
     rewardedMilestones: value.rewardedMilestones,
     toolUses: {
@@ -507,7 +515,8 @@ export function validateGameSave(value: any): GameSave {
 export function restoreLevel(save: GameSave): LevelData {
   const valid = validateGameSave(save);
   const level = clone(
-    template(valid.levelIndex, valid.layoutSeed, valid.ingredientSeed),
+    template(valid.levelIndex, valid.layoutSeed, valid.ingredientSeed,
+      valid.ingredientPoolVersion),
   );
   const removed = new Set(valid.removedIds);
   /**

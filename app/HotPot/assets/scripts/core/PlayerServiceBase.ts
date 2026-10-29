@@ -1,4 +1,5 @@
 import {CLOUD_CONFIG} from '../data/CloudConfig';
+import {DEFAULT_RUNTIME_CONFIG, RuntimeConfig} from '../data/RuntimeConfig';
 import {
   clone,
   CloudPlayer,
@@ -58,6 +59,7 @@ export type SyncStatus =
  * 不依赖 Cocos，便于使用真实存档、模拟网络和独立用户做回归检查。
  */
 export abstract class PlayerServiceBase {
+  runtimeConfig: RuntimeConfig = {...DEFAULT_RUNTIME_CONFIG};
   /**
    * 可供选择的地区树。
    */

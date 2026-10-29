@@ -29,6 +29,7 @@ import {
 } from '../data/CollectionData';
 
 import {DESIGN_HEIGHT, DESIGN_WIDTH, ToolType} from './HotPotUi';
+import {readPageStyle, setPageTheme} from '../data/PageTheme';
 
 /**
  * HotPotState：场景状态、生命周期和资源加载。
@@ -38,6 +39,7 @@ export abstract class HotPotState extends HotPotFields {
    * 初始化画布、游戏界面、资源和玩家档案。
    */
   onLoad(): void {
+    setPageTheme(readPageStyle(sys.localStorage));
     const frameSize = view.getFrameSize();
     // 较短的屏幕完整显示加高后的界面，避免八行图片或底部按钮被裁掉。
     const policy =
@@ -93,6 +95,7 @@ export abstract class HotPotState extends HotPotFields {
    * 释放事件监听与音频，并提交待同步存档。
    */
   onDestroy(): void {
+    this.releasePageBackdrop();
     this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
     this.bgmSource?.stop();
     this.effectSource?.stop();
@@ -158,9 +161,7 @@ export abstract class HotPotState extends HotPotFields {
         if (!this.node.isValid) {
           return;
         }
-        this.profileButtonLabel.string = this.playerService!.isConflict
-          ? '存档'
-          : '档案';
+        this.profileButtonLabel.string = '我的';
         if (this.playerStatusLabel?.node.isValid) {
           this.playerStatusLabel.string = this.playerService!.statusText;
         }
@@ -245,9 +246,12 @@ export abstract class HotPotState extends HotPotFields {
       return;
     }
     if (this.playerService.beginDailySession()) {
+      this.discardPageStylePreview();
       for (const name of [
         'PlayerOverlay',
         'RegionOverlay',
+        'RegionConfirmOverlay',
+        'StyleOverlay',
         'CloudConflictOverlay',
         'ConnectedSaveOverlay',
         'CollectionOverlay',
@@ -285,6 +289,8 @@ export abstract class HotPotState extends HotPotFields {
       ...(this.levelData.ingredientSeed === undefined
         ? {}
         : {ingredientSeed: this.levelData.ingredientSeed}),
+      ...(this.levelData.ingredientPoolVersion === undefined
+        ? {} : {ingredientPoolVersion: this.levelData.ingredientPoolVersion}),
       types: this.levelData.tiles.map(
         /**
          * 将当前条目转换为后续处理所需的值。
@@ -356,12 +362,16 @@ export abstract class HotPotState extends HotPotFields {
       'CollectionOverlay',
       'CollectionDetailOverlay',
       'BackdoorOverlay',
+      'StyleOverlay',
     ].some(
       /**
        * 按条件筛选或判断条目：!!this.node?.getChildByName?.(name)。
        */ (name) => !!this.node?.getChildByName?.(name),
     );
   }
+  /** Subclasses release the currently loaded background on teardown. */
+  protected discardPageStylePreview(): void {}
+  protected releasePageBackdrop(): void {}
   /**
    * 配置背景音乐和音效播放源。
    */
@@ -501,7 +511,10 @@ export abstract class HotPotState extends HotPotFields {
    */
   protected abstract showCollection(
     tab?: 'ingredients' | 'achievements',
-    entry?: {headingTaps: number; ingredientTaps: number},
+    entry?: {
+      headingTaps: number; ingredientTaps: number;
+      collectionHeadingTaps: number; collectionIngredientTaps: number;
+    },
   ): void;
 
   /**

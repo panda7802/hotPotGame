@@ -2,7 +2,7 @@ import {IngredientType, LEVELS} from './GameData';
 export const SAVE_VERSION = 1;
 export const BOARD_VERSION = 'hotpot-20260929';
 export const PROGRESS_VERSION = 1;
-export const PLAY_SESSION_VERSION = 4;
+export const PLAY_SESSION_VERSION = 5;
 export type SaveStatus = 'playing' | 'lost' | 'won';
 /**
  * SavedMove 的数据结构；字段说明见各成员。
@@ -47,6 +47,8 @@ export interface GameSave extends SavedMove {
    * 重现食材分布的随机种子。
    */
   ingredientSeed?: number;
+  /** Missing means the original 23-kind pool; 2 means the expanded pool. */
+  ingredientPoolVersion?: 1 | 2;
   /**
    * types 对应的状态或配置。
    */

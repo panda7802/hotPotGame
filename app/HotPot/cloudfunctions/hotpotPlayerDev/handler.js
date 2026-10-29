@@ -2,6 +2,7 @@
 
 const crypto = require('crypto');
 const {handleLeaderboard} = require('./leaderboard');
+const {readRuntimeConfig} = require('./runtime-config');
 const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
 
 /**
@@ -38,9 +39,12 @@ exports.createHandler = function createHandler(
     if (!web && (!context.OPENID || context.APPID !== settings.appId)) {
       return {ok: false, code: 'IDENTITY_REQUIRED'};
     }
-    if (!['load', 'save', 'regions', 'leaderboard', 'regionWin']
+    if (!['load', 'save', 'regions', 'leaderboard', 'regionWin', 'config']
       .includes(event.action)) {
       return {ok: false, code: 'INVALID_ACTION'};
+    }
+    if (event.action === 'config') {
+      return readRuntimeConfig(cloud.database({env: settings.environmentId}));
     }
     if (event.action === 'regions') {
       if (!settings.regionsFileId) {

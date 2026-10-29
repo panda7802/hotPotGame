@@ -1,7 +1,7 @@
 import {Node, Rect, Size, Sprite, SpriteFrame,
   Texture2D, UITransform} from 'cc';
 
-export const CLIENT_BUILD = '20261029-memory2';
+export const CLIENT_BUILD = '20261029-style7-pages';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 let frames: SpriteFrame[] | null = null;

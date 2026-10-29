@@ -1,0 +1,13 @@
+{
+  "levelTransitions": [
+    1,
+    2,
+    0
+  ],
+  "styles": 5,
+  "pagesPerStyle": 11,
+  "ingredients": 50,
+  "prototypeInteractions": "passed",
+  "runtimeEngineTest": false,
+  "consoleErrors": []
+}

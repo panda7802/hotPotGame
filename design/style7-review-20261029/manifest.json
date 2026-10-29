@@ -1,0 +1,176 @@
+{
+  "style": 7,
+  "name": "冰雪铜锅",
+  "pages": [
+    {
+      "number": "01",
+      "title": "我的小馆",
+      "group": "常用页面",
+      "note": "所在地标题与地址左对齐；圆形关闭按钮",
+      "file": "screens/01.png"
+    },
+    {
+      "number": "02",
+      "title": "食材图鉴",
+      "group": "常用页面",
+      "note": "50种食材，三列滚动",
+      "file": "screens/02.png"
+    },
+    {
+      "number": "03",
+      "title": "我的成就",
+      "group": "常用页面",
+      "note": "文字左对齐；细进度线；无白点圆形关闭",
+      "file": "screens/03.png"
+    },
+    {
+      "number": "04",
+      "title": "食材详情·已发现",
+      "group": "常用页面",
+      "note": "",
+      "file": "screens/04.png"
+    },
+    {
+      "number": "05",
+      "title": "食材详情·未发现",
+      "group": "状态页面",
+      "note": "",
+      "file": "screens/05.png"
+    },
+    {
+      "number": "06",
+      "title": "页面风格",
+      "group": "常用页面",
+      "note": "只展示现有选项，本轮未扩展其它主题",
+      "file": "screens/06.png"
+    },
+    {
+      "number": "07",
+      "title": "地址选择·省份",
+      "group": "地区与排行",
+      "note": "已移除红框内容；列表扩大",
+      "file": "screens/07.png"
+    },
+    {
+      "number": "08",
+      "title": "地址选择·城市",
+      "group": "地区与排行",
+      "note": "",
+      "file": "screens/08.png"
+    },
+    {
+      "number": "09",
+      "title": "地址选择·区县",
+      "group": "地区与排行",
+      "note": "",
+      "file": "screens/09.png"
+    },
+    {
+      "number": "10",
+      "title": "地址保存确认",
+      "group": "地区与排行",
+      "note": "",
+      "file": "screens/10.png"
+    },
+    {
+      "number": "11",
+      "title": "地域排行榜·全国",
+      "group": "地区与排行",
+      "note": "榜单次数为预览数据",
+      "file": "screens/11.png"
+    },
+    {
+      "number": "12",
+      "title": "地域排行榜·省内",
+      "group": "地区与排行",
+      "note": "",
+      "file": "screens/12.png"
+    },
+    {
+      "number": "13",
+      "title": "地域排行榜·市内",
+      "group": "地区与排行",
+      "note": "",
+      "file": "screens/13.png"
+    },
+    {
+      "number": "14",
+      "title": "重新开始确认",
+      "group": "对局弹框",
+      "note": "",
+      "file": "screens/14.png"
+    },
+    {
+      "number": "15",
+      "title": "失败·可免费复活",
+      "group": "对局弹框",
+      "note": "失败状态预览",
+      "file": "screens/15.png"
+    },
+    {
+      "number": "16",
+      "title": "失败·复活已用完",
+      "group": "对局弹框",
+      "note": "失败状态预览",
+      "file": "screens/16.png"
+    },
+    {
+      "number": "17",
+      "title": "普通通关",
+      "group": "对局弹框",
+      "note": "",
+      "file": "screens/17.png"
+    },
+    {
+      "number": "18",
+      "title": "最终通关",
+      "group": "对局弹框",
+      "note": "",
+      "file": "screens/18.png"
+    },
+    {
+      "number": "19",
+      "title": "账号连接·进度选择",
+      "group": "账号与调试",
+      "note": "使用预览存档摘要，未连接云端",
+      "file": "screens/19.png"
+    },
+    {
+      "number": "20",
+      "title": "云端进度冲突",
+      "group": "账号与调试",
+      "note": "冲突状态为预览数据",
+      "file": "screens/20.png"
+    },
+    {
+      "number": "21",
+      "title": "隐藏调试菜单",
+      "group": "账号与调试",
+      "note": "",
+      "file": "screens/21.png"
+    },
+    {
+      "number": "22",
+      "title": "图鉴·未点亮状态",
+      "group": "状态页面",
+      "note": "",
+      "file": "screens/22.png"
+    },
+    {
+      "number": "23",
+      "title": "成就·初始状态",
+      "group": "状态页面",
+      "note": "",
+      "file": "screens/23.png"
+    },
+    {
+      "number": "24",
+      "title": "主游戏",
+      "group": "常用页面",
+      "note": "用于核对返回入口与整体风格",
+      "file": "screens/24.png"
+    }
+  ],
+  "fixture": true,
+  "network": "External requests blocked; no cloud deployment"
+}

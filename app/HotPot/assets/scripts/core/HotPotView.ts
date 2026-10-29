@@ -5,6 +5,7 @@ import {
   resources,
   Sprite,
   SpriteFrame,
+  sys,
   Texture2D,
   Vec3,
 } from 'cc';
@@ -17,22 +18,31 @@ import {
   makeButton,
   makeLabel,
   opacity,
+  refreshPageMaterials,
   styleTavernButton,
   transform,
 } from './HotPotUi';
 
 import {HotPotResources} from './HotPotResources';
+import {
+  getPageTheme, PageStyle, savePageStyle, setPageTheme,
+} from '../data/PageTheme';
 
 /**
  * HotPotView：主界面绘制。
  */
 export abstract class HotPotView extends HotPotResources {
+  private backdropRoot: Node | null = null;
+  private backdropFrame: SpriteFrame | null = null;
+  private backdropPath = '';
+  private backdropSerial = 0;
   /**
    * 创建主界面、棋盘、托盘和工具栏。
    */
   protected buildShell(): void {
     const background = new Node('WarmBackground');
     this.node.addChild(background);
+    this.backdropRoot = background;
     drawRoundRect(
       background,
       DESIGN_WIDTH + 40,
@@ -55,34 +65,23 @@ export abstract class HotPotView extends HotPotResources {
     this.loadTitleArtwork(title);
     const levelBar = new Node('LevelBar');
     this.node.addChild(levelBar);
-    levelBar.setPosition(0, 480 + this.topSpread);
-    drawRoundRect(levelBar, 664, 72, 18, '#F5DEB2');
+    levelBar.setPosition(0, 486 + this.topSpread);
+    drawRoundRect(levelBar, 648, 80, 18, '#F5DEB2');
     this.levelLabel = makeLabel(
       levelBar,
       '',
-      25,
+      27,
       '#63351F',
-      Vec3.ZERO,
-      342,
-      44,
-    );
-    makeButton(
-      levelBar,
-      '图鉴',
-      new Vec3(-255, 0),
-      124,
-      58,
-      '#A3613B',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => this.showCollection(),
+      new Vec3(-76, 0),
+      420,
+      40,
     );
     const profile = makeButton(
       levelBar,
-      '档案',
-      new Vec3(255, 0),
-      124,
-      58,
+      '我的',
+      new Vec3(238, 0),
+      120,
+      56,
       '#A3613B',
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -91,25 +90,27 @@ export abstract class HotPotView extends HotPotResources {
     this.profileButtonLabel = profile
       .getChildByName('Label')!
       .getComponent(Label)!;
+    this.levelLabel.isBold = true;
 
     const rulePill = new Node('RulePill');
     this.node.addChild(rulePill);
-    rulePill.setPosition(0, 422 + this.topSpread);
-    transform(rulePill, 640, 64);
+    rulePill.setPosition(0, 400 + this.topSpread);
+    transform(rulePill, 560, 60);
     this.progressLabel = makeLabel(
       rulePill,
       '',
-      26,
+      27,
       '#713B2C',
       Vec3.ZERO,
-      600,
-      44,
+      500,
+      36,
     );
+    this.progressLabel.isBold = true;
 
     this.board = new Node('Board');
     this.node.addChild(this.board);
-    // 棋盘向下扩展，同时保持顶部与关卡信息条约 30px 的视觉间隔。
-    this.board.setPosition(0, -36 + this.topSpread);
+    // Give the padded header room while retaining clearance above the tray.
+    this.board.setPosition(0, -62 + this.topSpread);
     transform(this.board, 680, 830);
 
     // 背景图本身已有纸纹棋盘，不再叠加浅色面板。
@@ -117,7 +118,7 @@ export abstract class HotPotView extends HotPotResources {
     this.trayNode = new Node('Tray');
     this.node.addChild(this.trayNode);
     this.trayNode.setPosition(0, -440);
-    drawTavernPanel(this.trayNode, 688, 124, 'wood');
+    drawTavernPanel(this.trayNode, 688, 132, 'wood');
 
     this.reserveNode = new Node('ReviveReserve');
     this.node.addChild(this.reserveNode);
@@ -209,6 +210,40 @@ export abstract class HotPotView extends HotPotResources {
     this.foodTransitionLayer = new Node('FoodTransitionLayer');
     this.node.addChild(this.foodTransitionLayer);
     transform(this.foodTransitionLayer, DESIGN_WIDTH, this.viewportHeight);
+    this.repaintPageShell();
+  }
+
+  /** Switch appearance without replacing the board or touching a save. */
+  protected selectPageStyle(style: PageStyle): void {
+    this.previewPageStyle(style);
+    const saved = savePageStyle(sys.localStorage, style);
+    this.showToast(saved ? `已切换：${getPageTheme().name}`
+      : '风格已应用，本机空间不足，暂时无法记住选择', '#477345');
+  }
+
+  /** Preview changes appearance only; persistence happens on Apply. */
+  protected previewPageStyle(style: PageStyle): void {
+    setPageTheme(style);
+    refreshPageMaterials(this.node);
+    this.repaintPageShell();
+    this.updateToolButtons();
+    if (this.backdropRoot) this.loadIllustratedBackdrop(this.backdropRoot);
+  }
+
+  /** Retain generous padding inside bars on both bright and dark scenery. */
+  private repaintPageShell(): void {
+    const theme = getPageTheme();
+    const bar = this.node.getChildByName('LevelBar');
+    const progress = this.node.getChildByName('RulePill');
+    if (bar) {
+      drawRoundRect(bar, 648, 80, 18, theme.panel, theme.edge, 2);
+    }
+    if (progress) {
+      drawRoundRect(progress, 560, 60, 24,
+        theme.progress, theme.edge + '66', 1);
+    }
+    this.levelLabel.color = hex(theme.ink);
+    this.progressLabel.color = hex(theme.progressInk);
   }
 
   /**
@@ -244,68 +279,57 @@ export abstract class HotPotView extends HotPotResources {
     );
   }
 
-  /**
-   * 烟火小馆整页背景：红布顶棚、纸感棋盘与木桌。
-   */
+    /** Load only the chosen background; stale async loads never win. */
   protected loadIllustratedBackdrop(parent: Node): void {
-    resources.load(
-      'backgrounds/tavern-bg/texture',
-      Texture2D,
-      /**
-       * 在资源加载完成后更新有效节点或处理失败。
-       */ (error, texture) => {
-        if (error || !texture || !parent.isValid) {
-          console.error('[HotPotGame] 无法加载火锅背景', error);
-          return;
+    const resourcePath = getPageTheme().background + '/texture';
+    const serial = ++this.backdropSerial;
+    resources.load(resourcePath, Texture2D, (error, texture) => {
+      if (!parent.isValid) {
+        resources.release(resourcePath, Texture2D);
+        return;
+      }
+      if (serial !== this.backdropSerial) {
+        if (resourcePath !== getPageTheme().background + '/texture') {
+          resources.release(resourcePath, Texture2D);
         }
-        const frame = new SpriteFrame();
-        frame.texture = texture;
-        const image = new Node('IllustratedBackdrop');
+        return;
+      }
+      if (error || !texture) {
+        console.warn('[HotPot UI] Background unavailable', resourcePath);
+        return;
+      }
+      let image = parent.getChildByName('IllustratedBackdrop');
+      if (!image) {
+        image = new Node('IllustratedBackdrop');
         parent.addChild(image);
         image.setSiblingIndex(0);
-        transform(image, DESIGN_WIDTH, this.viewportHeight);
-        const sprite = image.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.spriteFrame = frame;
-      },
-    );
+      }
+      transform(image, DESIGN_WIDTH, this.viewportHeight);
+      const sprite = image.getComponent(Sprite) || image.addComponent(Sprite);
+      const frame = new SpriteFrame();
+      frame.texture = texture;
+      const oldPath = this.backdropPath;
+      const oldFrame = this.backdropFrame;
+      sprite.sizeMode = Sprite.SizeMode.CUSTOM;
+      sprite.spriteFrame = frame;
+      this.backdropFrame = frame;
+      this.backdropPath = resourcePath;
+      oldFrame?.destroy();
+      if (oldPath && oldPath !== resourcePath) {
+        resources.release(oldPath, Texture2D);
+      }
+    });
   }
 
-  /**
-   * 加载最终模板对应的棋盘插画，失败时仍保留代码绘制的备用火锅。
-   */
-  protected loadBoardIllustration(parent: Node, fallbackHotpot: Node): void {
-    resources.load(
-      'backgrounds/hotpot-board/texture',
-      Texture2D,
-      /**
-       * 在资源加载完成后更新有效节点或处理失败。
-       */ (error, texture) => {
-        if (error || !texture || !parent.isValid) {
-          console.error('[HotPotGame] 无法加载棋盘火锅插画', error);
-          return;
-        }
-        const frame = new SpriteFrame();
-        frame.texture = texture;
-        const image = new Node('IllustratedBoard');
-        parent.addChild(image);
-        image.setSiblingIndex(0);
-        // 保持插画原始比例，新增的纵向空间由棋盘底色承接，避免火锅被拉成长椭圆。
-        transform(image, 660, 550);
-        const sprite = image.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.spriteFrame = frame;
-
-        fallbackHotpot.active = false;
-        const fallbackPattern = parent.getChildByName('HotpotPattern');
-        if (fallbackPattern) {
-          fallbackPattern.active = false;
-        }
-      },
-    );
+  protected releasePageBackdrop(): void {
+    this.backdropSerial++;
+    this.backdropFrame?.destroy();
+    if (this.backdropPath) {
+      resources.release(this.backdropPath, Texture2D);
+    }
   }
 
-  /**
+/**
    * 页面底部的桌面曲线、花椒和闪光，都保持很低的对比度。
    */
   protected drawPageDecorations(parent: Node): void {

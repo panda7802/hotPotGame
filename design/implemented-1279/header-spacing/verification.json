@@ -1,0 +1,56 @@
+{
+  "layouts": [
+    {
+      "id": 1,
+      "barWidth": 648,
+      "barHeight": 80,
+      "pillHeight": 60,
+      "gap": 16,
+      "textTopPadding": 20
+    },
+    {
+      "id": 2,
+      "barWidth": 648,
+      "barHeight": 80,
+      "pillHeight": 60,
+      "gap": 16,
+      "textTopPadding": 20
+    },
+    {
+      "id": 7,
+      "barWidth": 648,
+      "barHeight": 80,
+      "pillHeight": 60,
+      "gap": 16,
+      "textTopPadding": 20
+    },
+    {
+      "id": 9,
+      "barWidth": 648,
+      "barHeight": 80,
+      "pillHeight": 60,
+      "gap": 16,
+      "textTopPadding": 20
+    }
+  ],
+  "clearances": [
+    {
+      "level": 1,
+      "headerGap": 261.4,
+      "trayGap": 261.4769230769231
+    },
+    {
+      "level": 2,
+      "headerGap": 261.4,
+      "trayGap": 261.4769230769231
+    },
+    {
+      "level": 3,
+      "headerGap": 26.36288000000002,
+      "trayGap": 27.439803076923113
+    }
+  ],
+  "shortScreen": "320x568",
+  "profileButton": true,
+  "pageErrors": []
+}

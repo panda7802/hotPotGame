@@ -49,7 +49,7 @@ const cc = {
 };
 
 /** Load real TypeScript with only the rendering boundary replaced. */
-function load(file, source) {
+function load(file, source, overrides = {}) {
   file = path.resolve(file);
   if (!source && modules.has(file)) {
     return modules.get(file);
@@ -62,8 +62,8 @@ function load(file, source) {
   const exports = {};
   vm.runInNewContext(result.outputText, {
     exports, Math, Uint8Array,
-    require: (name) => name === 'cc' ? cc
-      : load(path.resolve(path.dirname(file), `${name}.ts`)),
+    require: (name) => overrides[name] || (name === 'cc' ? cc
+      : load(path.resolve(path.dirname(file), `${name}.ts`))),
   });
   if (!source) {
     modules.set(file, exports);
@@ -95,12 +95,16 @@ const current = load(dataFile);
 const previousSource = execFileSync('git', [
   'show', 'HEAD:app/HotPot/assets/scripts/data/GameData.ts',
 ], {cwd: project, encoding: 'utf8'});
-const previous = load(dataFile, previousSource);
+const configFile = path.join(project, 'assets/scripts/data/GameConfig.ts');
+const oldConfig = load(configFile, execFileSync('git', [
+  'show', 'HEAD:app/HotPot/assets/scripts/data/GameConfig.ts',
+], {cwd: project, encoding: 'utf8'}));
+const previous = load(dataFile, previousSource, {'./GameConfig': oldConfig});
 for (const seed of [0, 1, 42, 1073741823,
   2147483647, 2147483648, 4294967292]) {
   for (const index of [0, 1, 2]) {
-    const before = previous.createLevel(index, seed, undefined, 12345);
-    const after = current.createLevel(index, seed, undefined, 12345);
+    const before = previous.createLevel(index, seed, undefined, 12345, 1);
+    const after = current.createLevel(index, seed, undefined, 12345, 1);
     assert.strictEqual(JSON.stringify(after), JSON.stringify(before),
       `geometry/ordered blockers/ingredients changed: ${index}/${seed}`);
   }
@@ -114,7 +118,7 @@ current.createLevel = (...args) => {
   return originalCreate(...args);
 };
 const domain = load(path.join(project, 'assets/scripts/data/PlayerData.ts'));
-const level = originalCreate(2, 2147483647, undefined, 12345);
+const level = originalCreate(2, 2147483647, undefined, 12345, 1);
 const save = {
   version: 1, boardVersion: domain.BOARD_VERSION, levelIndex: 2,
   layoutSeed: level.layoutSeed, ingredientSeed: level.ingredientSeed,

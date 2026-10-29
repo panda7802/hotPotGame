@@ -1,4 +1,5 @@
 import {validateDevelopmentConfig} from '../data/CloudConfig';
+import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
 import {
   clone,
   CloudPlayer,
@@ -19,6 +20,18 @@ export type {PlayerStorage, SyncStatus} from './PlayerServiceBase';
  * 云端连接、同步队列与本地存储实现。
  */
 export class PlayerService extends RegionLeaderboardService {
+  /** Refresh on entry; failure leaves the last valid settings in memory. */
+  async refreshRuntimeConfig(): Promise<void> {
+    if (!this.cloud) {
+      return;
+    }
+    try {
+      const result = await this.request({action: 'config'});
+      this.runtimeConfig = normalizeRuntimeConfig(result.config);
+    } catch (error) {
+      console.warn('[HotPot] Runtime configuration unavailable', error);
+    }
+  }
   /**
    * 验证环境、加载云档案并合并本机待同步记录。
    */
@@ -40,7 +53,10 @@ export class PlayerService extends RegionLeaderboardService {
       this.cloud = this.wxHost?.cloud || await createWebCloud(this.config);
       this.cloud.init({env: this.config.environmentId});
       void this.loadRegions();
-      const remote = this.parseRemote(await this.request({action: 'load'}));
+      const [loaded] = await Promise.all([
+        this.request({action: 'load'}), this.refreshRuntimeConfig(),
+      ]);
+      const remote = this.parseRemote(loaded);
       // 确认服务器身份之后才读取该账号的本地缓存，不展示上一账号的私有进度。
       this.playerId = remote.playerId;
       const cached = this.readLocal(remote.playerId);
@@ -302,11 +318,11 @@ export class PlayerService extends RegionLeaderboardService {
     if (!response.result?.ok) {
       throw new Error(response.result?.code || '云端请求失败');
     }
-    if (data.action !== 'regions'
+    if (!['regions', 'config'].includes(data.action)
       && response.result.progressVersion !== PROGRESS_VERSION) {
       throw new Error('CLOUD_UPGRADE_REQUIRED');
     }
-    if (data.action !== 'regions'
+    if (!['regions', 'config'].includes(data.action)
       && response.result.playSessionVersion !== PLAY_SESSION_VERSION) {
       throw new Error('DAILY_UPGRADE_REQUIRED');
     }

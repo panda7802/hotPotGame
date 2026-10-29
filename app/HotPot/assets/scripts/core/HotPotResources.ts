@@ -234,6 +234,12 @@ export abstract class HotPotResources extends HotPotState {
         rows: 1,
         types: ['lamb', 'blackchicken', 'yam'],
       },
+      {
+        path: 'ingredients/new-27-atlas/texture',
+        columns: 6,
+        rows: 5,
+        types: ["okra","tendon","kidney","aorta","duckintestine","chickenfeet","mussel","scallop","abalone","squid","fishball","roebag","fishtofu","tofuskin","bellroll","woodear","oystermushroom","kingoyster","radish","carrot","pumpkin","bambooshoot","celtuce","broccoli","cauliflower","taro","vermicelli"],
+      },
     ];
     let pending = sheets.length;
     sheets.forEach(

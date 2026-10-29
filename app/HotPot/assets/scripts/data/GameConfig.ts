@@ -21,7 +21,34 @@ export type IngredientType =
   | 'kelp'
   | 'lamb'
   | 'blackchicken'
-  | 'yam';
+  | 'yam'
+  | 'okra'
+  | 'tendon'
+  | 'kidney'
+  | 'aorta'
+  | 'duckintestine'
+  | 'chickenfeet'
+  | 'mussel'
+  | 'scallop'
+  | 'abalone'
+  | 'squid'
+  | 'fishball'
+  | 'roebag'
+  | 'fishtofu'
+  | 'tofuskin'
+  | 'bellroll'
+  | 'woodear'
+  | 'oystermushroom'
+  | 'kingoyster'
+  | 'radish'
+  | 'carrot'
+  | 'pumpkin'
+  | 'bambooshoot'
+  | 'celtuce'
+  | 'broccoli'
+  | 'cauliflower'
+  | 'taro'
+  | 'vermicelli';
 
 /**
  * IngredientConfig 的数据结构；字段说明见各成员。
@@ -141,6 +168,7 @@ export interface LevelData {
    * 重现食材分布的随机种子。
    */
   ingredientSeed?: number;
+  ingredientPoolVersion?: 1 | 2;
 }
 
 export const INGREDIENTS: IngredientConfig[] = [
@@ -167,6 +195,33 @@ export const INGREDIENTS: IngredientConfig[] = [
   {id: 'lamb', name: '羊肉', color: '#EFA3A5', dark: '#B66A76'},
   {id: 'blackchicken', name: '乌鸡卷', color: '#8E8987', dark: '#48454A'},
   {id: 'yam', name: '山药', color: '#F5EEDA', dark: '#A99B82'},
+  {id: 'okra', name: '秋葵', color: '#83A644', dark: '#43672B'},
+  {id: 'tendon', name: '牛蹄筋', color: '#D49A56', dark: '#936434'},
+  {id: 'kidney', name: '腰花', color: '#B87568', dark: '#77453C'},
+  {id: 'aorta', name: '黄喉', color: '#DCBE80', dark: '#987947'},
+  {id: 'duckintestine', name: '鸭肠', color: '#DBBE94', dark: '#967552'},
+  {id: 'chickenfeet', name: '鸡爪', color: '#DEA575', dark: '#9D6844'},
+  {id: 'mussel', name: '青口贝', color: '#526E70', dark: '#273B3D'},
+  {id: 'scallop', name: '扇贝', color: '#DEC5A5', dark: '#94735C'},
+  {id: 'abalone', name: '鲍鱼', color: '#C7904B', dark: '#78522F'},
+  {id: 'squid', name: '鱿鱼', color: '#DDC3B9', dark: '#936E7A'},
+  {id: 'fishball', name: '鱼丸', color: '#E5DECD', dark: '#A49C87'},
+  {id: 'roebag', name: '鱼籽包', color: '#EAB05A', dark: '#A87428'},
+  {id: 'fishtofu', name: '鱼豆腐', color: '#EAB046', dark: '#A66B23'},
+  {id: 'tofuskin', name: '豆皮', color: '#E8CD8F', dark: '#A48B4D'},
+  {id: 'bellroll', name: '响铃卷', color: '#E6B967', dark: '#A47736'},
+  {id: 'woodear', name: '木耳', color: '#70503C', dark: '#35261E'},
+  {id: 'oystermushroom', name: '平菇', color: '#B3A184', dark: '#766751'},
+  {id: 'kingoyster', name: '杏鲍菇', color: '#DBC7A0', dark: '#9A8261'},
+  {id: 'radish', name: '白萝卜', color: '#EEE8D5', dark: '#B9B09A'},
+  {id: 'carrot', name: '胡萝卜', color: '#E78731', dark: '#A4531E'},
+  {id: 'pumpkin', name: '南瓜', color: '#E8A12B', dark: '#9B6520'},
+  {id: 'bambooshoot', name: '竹笋', color: '#D1C47C', dark: '#899348'},
+  {id: 'celtuce', name: '莴笋', color: '#B8D960', dark: '#73953B'},
+  {id: 'broccoli', name: '西兰花', color: '#538644', dark: '#294E2A'},
+  {id: 'cauliflower', name: '花菜', color: '#E8DDB6', dark: '#AA9C74'},
+  {id: 'taro', name: '芋头', color: '#D9C4C0', dark: '#A68A8A'},
+  {id: 'vermicelli', name: '红薯粉', color: '#D6C4AA', dark: '#A18D6B'},
 ];
 
 // Each layer is made from complete triples. A top-to-bottom solution always

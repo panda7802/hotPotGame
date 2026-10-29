@@ -75,6 +75,7 @@ function prepareCloud({
   // Validate before writing either copy; never distribute a half-updated region
   // tree.
   const domainNames = [
+    'RuntimeConfig',
     'GameConfig',
     'GameData',
     'PlayerTypes',

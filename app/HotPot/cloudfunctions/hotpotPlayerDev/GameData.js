@@ -193,7 +193,7 @@ exports.INGREDIENT_SEED_MAX = 2147483646;
 /**
  * 新局抽取整个食材组合；牛羊肉互斥，翻锅只重排该组合已有的牌。
  */
-function selectLevelIngredients(levelIndex, seed) {
+function selectLevelIngredients(levelIndex, seed, poolVersion = 2) {
     const config = GameConfig_1.LEVELS[levelIndex];
     /**
      * 在当前操作完成后更新相关游戏状态。
@@ -204,7 +204,8 @@ function selectLevelIngredients(levelIndex, seed) {
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const shuffled = shuffle(GameConfig_1.INGREDIENTS.map((item) => item.id), seededRandom(seed));
+    const shuffled = shuffle((poolVersion === 1 ? GameConfig_1.INGREDIENTS.slice(0, 23) : GameConfig_1.INGREDIENTS)
+        .map((item) => item.id), seededRandom(seed));
     const selected = [];
     for (const type of shuffled) {
         if ((type === 'beef' && selected.indexOf('lamb') >= 0)
@@ -294,7 +295,7 @@ function buildNewLevelThreePositions(config, seed) {
 /**
  * 根据关卡配置和种子生成完整棋盘。
  */
-function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed) {
+function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed, ingredientPoolVersion = 2) {
     // 显式传入牌阵种子但未传食材种子时，保持旧版本的食材配比与顺序。
     if (ingredientSeed === undefined) {
         ingredientSeed =
@@ -321,7 +322,7 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
     const newLayout = config.level === 3 && layoutSeed >= exports.RANDOM_LAYOUT_SEED_START;
     const random = seededRandom(newLayout ? layoutSeed : 20260923 + config.level * 97);
     const pool = ingredientSeed
-        ? selectLevelIngredients(levelIndex, ingredientSeed)
+        ? selectLevelIngredients(levelIndex, ingredientSeed, ingredientPoolVersion)
         : undefined;
     const tiles = [];
     let id = 0;
@@ -384,6 +385,8 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
         tiles,
         total: tiles.length,
         ...(ingredientSeed ? { ingredientSeed } : {}),
+        ...(ingredientSeed && ingredientPoolVersion === 2
+            ? { ingredientPoolVersion } : {}),
         ...(config.level === 3 && layoutSeed !== 0 ? { layoutSeed } : {}),
     };
 }
