@@ -1,0 +1,15 @@
+{
+  "status": "failed",
+  "attempts": 2,
+  "error": "image generation failed: network error: error sending request",
+  "imageProduced": false,
+  "promptFile": "a-clean-01-prompt.json",
+  "originalUnmodified": true,
+  "originalGrid": {
+    "width": 1151,
+    "height": 1367,
+    "columns": [[0,383],[388,378],[771,380]],
+    "rows": [[0,638],[643,724]],
+    "coordinateFormat": "start,size"
+  }
+}

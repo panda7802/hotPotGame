@@ -1,0 +1,33 @@
+{
+  "file": "shell-04.png",
+  "reference": "../../../tmp/ui-redesign-2026-10-29/04.png",
+  "width": 941,
+  "height": 1672,
+  "opaque": true,
+  "tool": "built-in image_gen",
+  "attempts": 1,
+  "visualCheck": {
+    "centralBoardEmpty": true,
+    "trayEmptySlots": 7,
+    "levelPlaqueBlank": true,
+    "countdownTextRemoved": true,
+    "usageBadgesBlank": true,
+    "originalTitleAndLabelsPreserved": true,
+    "originalSoftClayButtonArtPreserved": true,
+    "borderFoodAndClothPreserved": true
+  },
+  "pixelLayoutApprox": {
+    "levelPlaque": [233, 225, 475, 73],
+    "countdownTextArea": [270, 300, 425, 34],
+    "progressBar": [108, 339, 660, 45],
+    "boardClearArea": [35, 405, 870, 785],
+    "tray": [16, 1196, 910, 185],
+    "traySlotCentersX": [107, 229, 349, 469, 590, 710, 830],
+    "trayCenterY": 1280,
+    "toolCenters": [[200, 1470], [479, 1470], [738, 1470]],
+    "badgeCenters": [[302, 1418], [564, 1418], [827, 1418]],
+    "restartCenter": [374, 1590],
+    "soundCenter": [623, 1590]
+  },
+  "note": "Progress bar existing fill remains at original artwork amount; runtime should cover or animate fill to match actual progress. These coordinates are visual estimates for integration, not gameplay hitboxes."
+}

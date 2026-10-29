@@ -1,0 +1,54 @@
+[
+  {
+    "file": "a-01.jpg",
+    "bytes": 266738
+  },
+  {
+    "file": "a-04.jpg",
+    "bytes": 182214
+  },
+  {
+    "file": "a-08.jpg",
+    "bytes": 188960
+  },
+  {
+    "file": "a-09.jpg",
+    "bytes": 214197
+  },
+  {
+    "file": "b-01.jpg",
+    "bytes": 155913
+  },
+  {
+    "file": "b-04.jpg",
+    "bytes": 82139
+  },
+  {
+    "file": "b-08.jpg",
+    "bytes": 115223
+  },
+  {
+    "file": "b-09.jpg",
+    "bytes": 141550
+  },
+  {
+    "file": "shell-01.jpg",
+    "bytes": 72451
+  },
+  {
+    "file": "shell-04.jpg",
+    "bytes": 36617
+  },
+  {
+    "file": "shell-08.jpg",
+    "bytes": 55945
+  },
+  {
+    "file": "shell-09.jpg",
+    "bytes": 61899
+  },
+  {
+    "file": "tiles.png",
+    "bytes": 21376
+  }
+]

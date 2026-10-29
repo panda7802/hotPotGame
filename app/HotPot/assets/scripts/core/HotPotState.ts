@@ -35,6 +35,7 @@ import {readPageStyle, setPageTheme} from '../data/PageTheme';
  * HotPotState：场景状态、生命周期和资源加载。
  */
 export abstract class HotPotState extends HotPotFields {
+  protected referenceLayout=false;
   /**
    * 初始化画布、游戏界面、资源和玩家档案。
    */
@@ -42,14 +43,15 @@ export abstract class HotPotState extends HotPotFields {
     setPageTheme(readPageStyle(sys.localStorage));
     const frameSize = view.getFrameSize();
     // 较短的屏幕完整显示加高后的界面，避免八行图片或底部按钮被裁掉。
-    const policy =
+    const policy = this.referenceLayout ? ResolutionPolicy.FIXED_WIDTH :
       frameSize.width > 0 &&
       frameSize.height / frameSize.width < DESIGN_HEIGHT / DESIGN_WIDTH
         ? ResolutionPolicy.SHOW_ALL
         : ResolutionPolicy.FIXED_WIDTH;
-    view.setDesignResolutionSize(DESIGN_WIDTH, DESIGN_HEIGHT, policy);
+    const referenceHeight=frameSize.width>0?DESIGN_WIDTH*frameSize.height/frameSize.width:DESIGN_HEIGHT;
+    view.setDesignResolutionSize(DESIGN_WIDTH,this.referenceLayout?referenceHeight:DESIGN_HEIGHT,policy);
     if (frameSize.width > 0 && frameSize.height > 0) {
-      this.viewportHeight = Math.max(
+      this.viewportHeight = this.referenceLayout ? referenceHeight : Math.max(
         DESIGN_HEIGHT,
         (DESIGN_WIDTH * frameSize.height) / frameSize.width,
       );

@@ -1,12 +1,27 @@
-import {Node, Rect, Size, Sprite, SpriteFrame,
+import {Color,Node, Rect, resources,Size, Sprite, SpriteFrame,
   Texture2D, UITransform} from 'cc';
 
 import {getPageTheme, PageStyle} from '../data/PageTheme';
 
-export const CLIENT_BUILD = '20261029-ui1489-food50';
+export const CLIENT_BUILD = '20261030-reference-replica';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 const frameCache = new Map<PageStyle, SpriteFrame[]>();
+const paintedFrames=new Map<PageStyle,SpriteFrame>();
+
+/** One 448×104 atlas contains the four original-style illustrated tile faces. */
+export function loadReferenceTileSkins(done:()=>void):void{
+  resources.load('reference/tiles/texture',Texture2D,(error,texture)=>{
+    if(!error&&texture){
+      ([1,4,8,9] as PageStyle[]).forEach((id,index)=>{
+        const frame=new SpriteFrame();frame.texture=texture;
+        frame.rect=new Rect(index*texture.width/4,0,texture.width/4,texture.height);
+        frame.originalSize=new Size(CELL_WIDTH,CELL_HEIGHT);frame.addRef();paintedFrames.set(id,frame);
+      });
+    }
+    done();
+  });
+}
 
 function rgb(value: string): number[] {
   return [1, 3, 5].map((offset) => parseInt(value.slice(offset, offset + 2), 16));
@@ -97,5 +112,6 @@ export function drawSharedTile(
   ui.setContentSize(width, height * 101.2 / 91.2);
   const sprite = face.getComponent(Sprite) || face.addComponent(Sprite);
   sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-  sprite.spriteFrame = frames[blocked ? 1 : 0];
+  sprite.spriteFrame = paintedFrames.get(style)||frames[blocked ? 1 : 0];
+  sprite.color=paintedFrames.has(style)&&blocked?new Color(130,126,116,255):Color.WHITE;
 }

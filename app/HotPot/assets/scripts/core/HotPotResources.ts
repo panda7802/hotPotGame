@@ -9,6 +9,7 @@ import {
 } from 'cc';
 
 import {INGREDIENT_ART} from '../data/IngredientArt';
+import {loadReferenceTileSkins} from './HotPotTileSkin';
 
 import {HotPotState} from './HotPotState';
 
@@ -148,7 +149,7 @@ export abstract class HotPotResources extends HotPotState {
           console.error('[HotPot] 食材资源不可用，保留文字牌面', path, error);
         }
         pending--;
-        if (!pending) done();
+        if (!pending) loadReferenceTileSkins(done);
       });
     });
   }

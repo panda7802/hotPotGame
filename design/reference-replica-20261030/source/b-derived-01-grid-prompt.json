@@ -1,0 +1,6 @@
+{
+  "tool": "built-in image_gen",
+  "mode": "edit-layout-only",
+  "reference": "b-derived-01-layout-v1.png",
+  "prompt": "Use case: precise-object-edit. Correct ONLY the grid layout of this attached six-screen game UI sheet, keeping the exact same imagery, art, Chinese text, materials, characters, decorations and all six page contents. Currently the first column is too wide and first row is too short. REQUIRED GEOMETRY: output 941×1672 pixels portrait sheet; 3 IDENTICAL equal-width columns and 2 IDENTICAL equal-height rows; vertical gutters MUST be exactly at x=314 and x=627, horizontal gutter MUST be exactly at y=836. Therefore each individual complete portrait screen must be approximately 313×836 pixels. Rearrange and scale EACH existing screen contents to fit its own exact equal cell, without cutting off any text or buttons. No new design, no new scene, no new text, preserve all original six screens. Screen order unchanged: top-left食材图鉴, top-center鲜虾详情, top-right我的成就; bottom-left选择所在地 with three columns, bottom-center免费复活, bottom-right重新开始确认. Keep every panel's exact 01市井朱红 dark green/bronze/red lantern art and ivory paper surfaces. Keep one very thin ivory gutter at each exact division. Do not make one screen wider or taller, no uneven columns, no uneven rows. All six complete screens must align in a mathematically exact 3×2 rectangular grid."
+}

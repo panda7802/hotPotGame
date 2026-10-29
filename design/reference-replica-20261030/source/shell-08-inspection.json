@@ -1,0 +1,26 @@
+{
+  "width": 941,
+  "height": 1672,
+  "opaque": true,
+  "attempts": 1,
+  "tool": "built-in image_gen",
+  "centralBoardEmpty": true,
+  "emptyTraySlots": 7,
+  "originalTitlePreserved": true,
+  "originalToolArtworkPreserved": true,
+  "clearedLevelText": true,
+  "clearedCountdownText": true,
+  "clearedToolCounts": true,
+  "approximateInputGeometryPixels": {
+    "levelText": [470, 254],
+    "countdownText": [470, 313],
+    "traySlotCentersX": [143, 251, 361, 471, 580, 688, 798],
+    "traySlotCenterY": 1220,
+    "traySlotSize": [101, 118],
+    "toolButtonCenters": [[213, 1410], [470, 1410], [728, 1410]],
+    "toolCountCenters": [[283, 1358], [540, 1358], [803, 1358]],
+    "bottomRestartCenter": [407, 1600],
+    "bottomSoundCenter": [609, 1600]
+  },
+  "notes": "Original 08 art composition is closely preserved. Geometry is visually estimated for integration and should be checked in runtime. Main center, level/countdown and counters are intentionally blank."
+}

@@ -1,0 +1,26 @@
+{
+  "file": "a-clean-04.png",
+  "tool": "built-in image_gen",
+  "reference": "E:/codex/hotpot/hotPotGame/hotPotGame/design/ui-expanded-1489-2026-10-29/style-04/A.png",
+  "width": 941,
+  "height": 1672,
+  "attempts": 1,
+  "visualChecks": {
+    "sixScreenLayoutPreserved": true,
+    "threeRankingNamesAndCountsCleared": true,
+    "selfRankingNameRankAndCountCleared": true,
+    "rankingAvatarsMedalsCardsAndLabelsPreserved": true,
+    "profileLevelAndDailyCountDigitsCleared": true,
+    "profileLabelsAndAvatarPreserved": true,
+    "skinSelectorPreserved": true,
+    "threeVictoryScreensPreserved": true,
+    "seamlessTextureInClearedFields": true
+  },
+  "approxSourcePixelTextAreas": {
+    "rankingNames": [[145,284,98,28],[145,397,98,28],[145,512,98,28]],
+    "rankingCounts": [[203,311,24,18],[203,426,24,18],[203,539,24,18]],
+    "selfRanking": [[32,686,32,36],[145,680,100,27],[206,707,24,18]],
+    "profileLevelDigit": [394,374,27,29],
+    "profileDailyCountDigit": [519,374,22,29]
+  }
+}
