@@ -1,0 +1,338 @@
+[
+  {
+    "src": "runtime/gameplay-level3-1.png",
+    "href": "runtime/gameplay-level3-1.png",
+    "title": "1 市井朱红 · 第三关实际牌阵",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/profile-1.png",
+    "href": "runtime/profile-1.png",
+    "title": "1 市井朱红 · 我的小馆",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/picker-1.png",
+    "href": "runtime/picker-1.png",
+    "title": "1 市井朱红 · 页面换肤",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/ranking-1.png",
+    "href": "runtime/ranking-1.png",
+    "title": "1 市井朱红 · 地域排行榜",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/collection-1.png",
+    "href": "runtime/collection-1.png",
+    "title": "1 市井朱红 · 50种食材图鉴",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/detail-1.png",
+    "href": "runtime/detail-1.png",
+    "title": "1 市井朱红 · 食材详情",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/achievements-1.png",
+    "href": "runtime/achievements-1.png",
+    "title": "1 市井朱红 · 我的成就",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/restart-1.png",
+    "href": "runtime/restart-1.png",
+    "title": "1 市井朱红 · 重开确认",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/revive-1.png",
+    "href": "runtime/revive-1.png",
+    "title": "1 市井朱红 · 免费复活",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level1-1.png",
+    "href": "runtime/win-level1-1.png",
+    "title": "1 市井朱红 · 第一关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level2-1.png",
+    "href": "runtime/win-level2-1.png",
+    "title": "1 市井朱红 · 第二关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level3-1.png",
+    "href": "runtime/win-level3-1.png",
+    "title": "1 市井朱红 · 第三关全部完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/gameplay-level3-4.png",
+    "href": "runtime/gameplay-level3-4.png",
+    "title": "4 奶油黏土 · 第三关实际牌阵",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/profile-4.png",
+    "href": "runtime/profile-4.png",
+    "title": "4 奶油黏土 · 我的小馆",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/picker-4.png",
+    "href": "runtime/picker-4.png",
+    "title": "4 奶油黏土 · 页面换肤",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/ranking-4.png",
+    "href": "runtime/ranking-4.png",
+    "title": "4 奶油黏土 · 地域排行榜",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/collection-4.png",
+    "href": "runtime/collection-4.png",
+    "title": "4 奶油黏土 · 50种食材图鉴",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/detail-4.png",
+    "href": "runtime/detail-4.png",
+    "title": "4 奶油黏土 · 食材详情",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/achievements-4.png",
+    "href": "runtime/achievements-4.png",
+    "title": "4 奶油黏土 · 我的成就",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/restart-4.png",
+    "href": "runtime/restart-4.png",
+    "title": "4 奶油黏土 · 重开确认",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/revive-4.png",
+    "href": "runtime/revive-4.png",
+    "title": "4 奶油黏土 · 免费复活",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level1-4.png",
+    "href": "runtime/win-level1-4.png",
+    "title": "4 奶油黏土 · 第一关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level2-4.png",
+    "href": "runtime/win-level2-4.png",
+    "title": "4 奶油黏土 · 第二关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level3-4.png",
+    "href": "runtime/win-level3-4.png",
+    "title": "4 奶油黏土 · 第三关全部完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/gameplay-level3-8.png",
+    "href": "runtime/gameplay-level3-8.png",
+    "title": "8 青瓷雅韵 · 第三关实际牌阵",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/profile-8.png",
+    "href": "runtime/profile-8.png",
+    "title": "8 青瓷雅韵 · 我的小馆",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/picker-8.png",
+    "href": "runtime/picker-8.png",
+    "title": "8 青瓷雅韵 · 页面换肤",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/ranking-8.png",
+    "href": "runtime/ranking-8.png",
+    "title": "8 青瓷雅韵 · 地域排行榜",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/collection-8.png",
+    "href": "runtime/collection-8.png",
+    "title": "8 青瓷雅韵 · 50种食材图鉴",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/detail-8.png",
+    "href": "runtime/detail-8.png",
+    "title": "8 青瓷雅韵 · 食材详情",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/achievements-8.png",
+    "href": "runtime/achievements-8.png",
+    "title": "8 青瓷雅韵 · 我的成就",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/restart-8.png",
+    "href": "runtime/restart-8.png",
+    "title": "8 青瓷雅韵 · 重开确认",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/revive-8.png",
+    "href": "runtime/revive-8.png",
+    "title": "8 青瓷雅韵 · 免费复活",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level1-8.png",
+    "href": "runtime/win-level1-8.png",
+    "title": "8 青瓷雅韵 · 第一关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level2-8.png",
+    "href": "runtime/win-level2-8.png",
+    "title": "8 青瓷雅韵 · 第二关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level3-8.png",
+    "href": "runtime/win-level3-8.png",
+    "title": "8 青瓷雅韵 · 第三关全部完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/gameplay-level3-9.png",
+    "href": "runtime/gameplay-level3-9.png",
+    "title": "9 宣纸朱印 · 第三关实际牌阵",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/profile-9.png",
+    "href": "runtime/profile-9.png",
+    "title": "9 宣纸朱印 · 我的小馆",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/picker-9.png",
+    "href": "runtime/picker-9.png",
+    "title": "9 宣纸朱印 · 页面换肤",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/ranking-9.png",
+    "href": "runtime/ranking-9.png",
+    "title": "9 宣纸朱印 · 地域排行榜",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/collection-9.png",
+    "href": "runtime/collection-9.png",
+    "title": "9 宣纸朱印 · 50种食材图鉴",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/detail-9.png",
+    "href": "runtime/detail-9.png",
+    "title": "9 宣纸朱印 · 食材详情",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/achievements-9.png",
+    "href": "runtime/achievements-9.png",
+    "title": "9 宣纸朱印 · 我的成就",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/restart-9.png",
+    "href": "runtime/restart-9.png",
+    "title": "9 宣纸朱印 · 重开确认",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/revive-9.png",
+    "href": "runtime/revive-9.png",
+    "title": "9 宣纸朱印 · 免费复活",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level1-9.png",
+    "href": "runtime/win-level1-9.png",
+    "title": "9 宣纸朱印 · 第一关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level2-9.png",
+    "href": "runtime/win-level2-9.png",
+    "title": "9 宣纸朱印 · 第二关完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  },
+  {
+    "src": "runtime/win-level3-9.png",
+    "href": "runtime/win-level3-9.png",
+    "title": "9 宣纸朱印 · 第三关全部完成",
+    "route": "Cocos 3.8.8 local web build",
+    "caption": "实际运行截图；离线示例数据"
+  }
+]

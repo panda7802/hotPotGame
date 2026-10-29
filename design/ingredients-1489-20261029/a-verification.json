@@ -1,0 +1,14 @@
+{
+  "tool": "built-in image_gen",
+  "attempts": 1,
+  "source": "atlas-a-source.png",
+  "width": 1254,
+  "height": 1254,
+  "channels": 4,
+  "hasAlpha": true,
+  "grid": {"columns": 5, "rows": 5},
+  "types": ["beef", "shrimp", "vegetable", "mushroom", "corn", "fish", "egg", "jzg", "meetball", "ou", "tomato", "toufu", "ydf", "tripe", "duckblood", "potato", "crabstick", "noodle", "luncheon", "kelp", "lamb", "blackchicken", "yam", "okra", "tendon"],
+  "visualCheck": "All 25 requested food identities appear in correct row-major order. Natural colors and coherent semi-realistic 3D rendering suit all four themes. Background is alpha, with no plates, labels or tile backing.",
+  "limitation": "Food fills cells more than requested and row 1 extends beyond the exact 1/5 boundary. Do not crop on uniform row boundaries without adjustment.",
+  "recommendedTechnicalSlicing": {"columnBoundaries": [0, 251, 502, 752, 1003, 1254], "rowBoundaries": [0, 280, 510, 746, 975, 1254], "pack": "Fit each cell within the runtime square cell with transparent margins; no image repaint is needed."}
+}

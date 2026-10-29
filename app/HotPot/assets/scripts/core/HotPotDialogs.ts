@@ -106,7 +106,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
             },
           );
           button.name = `Unlimited_${type}`;
-          if (getPageTheme().id === 7) {
+          if (getPageTheme().id === 8) {
             button.getChildByName('Label')!.getComponent(Label)!.horizontalAlign
               = Label.HorizontalAlign.LEFT;
           }
@@ -234,7 +234,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       return;
     }
     const ingredient = getIngredient(type);
-    const reviewLayout = getPageTheme().id === 7;
+    const reviewLayout = getPageTheme().id === 8;
     const known =
       this.playerService!.state.progress.discovered.indexOf(type) >= 0;
     const title = makePanelHeading(

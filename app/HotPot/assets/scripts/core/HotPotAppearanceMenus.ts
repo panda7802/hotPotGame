@@ -28,7 +28,7 @@ export abstract class HotPotAppearanceMenus extends HotPotTools {
     makePanelHeading(panel, '页面风格', 420, 420);
     if (this.styleOriginal === null) this.styleOriginal = getPageTheme().id;
     makeBodyLabel(panel, '点选预览 · 确认后应用 · 保留当前这锅',
-      21, '#94735D', new Vec3(0, 353), getPageTheme().id === 7 ? 526 : 540, 38);
+      21, '#94735D', new Vec3(0, 353), getPageTheme().id === 8 ? 526 : 540, 38);
     const current = getPageTheme();
     PAGE_THEMES.forEach((theme, index) => {
       const selected = theme.id === current.id;
@@ -56,8 +56,8 @@ export abstract class HotPotAppearanceMenus extends HotPotTools {
     });
     makeBodyLabel(panel, `预览：${current.name}`,
       25, current.ink, new Vec3(0, -276), 510, 42);
-    makeBodyLabel(panel, '仅改变界面外观，菜品图片与对局进度保持一致',
-      21, '#94735D', new Vec3(0, -318), current.id === 7 ? 510 : 530, 32, true);
+    makeBodyLabel(panel, '食材共享，牌框与界面随风格切换',
+      21, '#94735D', new Vec3(0, -318), current.id === 8 ? 510 : 530, 32, true);
     makeButton(panel, '应用所选风格', new Vec3(0, -382),
       510, 70, '#A3613B', () => {
         this.selectPageStyle(getPageTheme().id);

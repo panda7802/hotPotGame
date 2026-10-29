@@ -692,9 +692,9 @@ for (const frame of loaded.ingredientFrames.values()) {
     x + width <= frame.texture.width && y + height <= frame.texture.height,
   );
 }
-assert.strictEqual(loaded.ingredientFrames.get('lamb').rect.width, 256);
-assert.strictEqual(loaded.ingredientFrames.get('yam').rect.x, 512);
-assert.strictEqual(loaded.ingredientFrames.get('kelp').rect.y, 256);
+assert.strictEqual(loaded.ingredientFrames.get('lamb').rect.width, 160);
+assert.strictEqual(loaded.ingredientFrames.get('yam').rect.x, 320);
+assert.strictEqual(loaded.ingredientFrames.get('kelp').rect.y, 480);
 console.log(
   'Production food art: all 50 frames loa' +
     'd, atlas crops stay within bounds and' +
@@ -751,12 +751,12 @@ cc.sys = {localStorage: {
   setItem: (key, value) => preferences.set(key, value),
 }};
 assert.deepStrictEqual(Array.from(themes.PAGE_THEMES, (t) => t.id),
-  [1, 2, 7, 9]);
-for (const invalid of [null, '', '3', '10', 'NaN', '{}']) {
-  assert.strictEqual(themes.normalizePageStyle(invalid), 2);
+  [1, 4, 8, 9]);
+for (const invalid of [null, '', '2', '3', '7', '10', 'NaN', '{}']) {
+  assert.strictEqual(themes.normalizePageStyle(invalid), 1);
 }
-assert.strictEqual(themes.readPageStyle({getItem() {throw Error();}}), 2);
-assert.strictEqual(themes.savePageStyle({setItem() {throw Error();}}, 7),
+assert.strictEqual(themes.readPageStyle({getItem() {throw Error();}}), 1);
+assert.strictEqual(themes.savePageStyle({setItem() {throw Error();}}, 8),
   false);
 const oldLoader = cc.resources.load;
 cc.resources.load = (resource, type, done) => {
@@ -789,7 +789,7 @@ panelOf(appearance).getChildByName('Button_返回我的')
 panelOf(appearance, 'PlayerOverlay').getChildByName('Button_页面风格')
   .emit(Node.EventType.TOUCH_END);
 assert(appearance.hasPlayerMenu());
-for (const id of [1, 7, 9, 2]) {
+for (const id of [1, 8, 9, 4]) {
   panelOf(appearance, 'StyleOverlay').getChildByName(`PageStyle_${id}`)
     .emit(Node.EventType.TOUCH_END);
   assert.strictEqual(themes.getPageTheme().id, id);
@@ -811,7 +811,7 @@ for (const card of panelOf(appearance, 'StyleOverlay').children
   assert(card.position.x - 125 >= -305);
 }
 panelOf(appearance, 'StyleOverlay').getChildByName('PageStyle_9').emit(Node.EventType.TOUCH_END);
-assert.strictEqual(themes.readPageStyle(cc.sys.localStorage), 2);
+assert.strictEqual(themes.readPageStyle(cc.sys.localStorage), 4);
 panelOf(appearance, 'StyleOverlay').getChildByName('Button_返回我的')
   .emit(Node.EventType.TOUCH_END);
 assert(panelOf(appearance, 'PlayerOverlay'));
@@ -835,9 +835,9 @@ cc.resources.release = (resource) => releasedBackdrops.push(resource);
 cc.SpriteFrame.prototype.destroy = function () {this.destroyed = true;};
 const race = createGame();
 const parent = new Node('BackdropTest');
-themes.setPageTheme(2);
+themes.setPageTheme(1);
 race.loadIllustratedBackdrop(parent);
-themes.setPageTheme(7);
+themes.setPageTheme(8);
 race.loadIllustratedBackdrop(parent);
 const snowTexture = {name: 'snow'};
 pendingBackdrops[1].done(null, snowTexture);
@@ -845,7 +845,7 @@ pendingBackdrops[0].done(null, {name: 'outdated-palace'});
 const active = parent.getChildByName('IllustratedBackdrop')
   .getComponent(cc.Sprite).spriteFrame;
 assert.strictEqual(active.texture, snowTexture);
-assert(releasedBackdrops.includes('themes/style-02/texture'));
+assert(releasedBackdrops.includes('themes/style-01/texture'));
 themes.setPageTheme(9);
 race.loadIllustratedBackdrop(parent);
 parent.isValid = false;
@@ -853,5 +853,9 @@ race.releasePageBackdrop();
 pendingBackdrops[2].done(null, {name: 'after-destroy'});
 assert(active.destroyed);
 assert(releasedBackdrops.includes('themes/style-09/texture'));
-themes.setPageTheme(2);
+themes.setPageTheme(1);
 console.log('Theme resources: stale loads ignored and teardown releases: OK');
+
+for(const [oldId,id] of [[1,8],[2,1],[7,8],[9,9],[10,4]]) {
+  assert.strictEqual(themes.readPageStyle({getItem(key) {return key.endsWith('v1') ? String(oldId) : null;}}),id);
+}

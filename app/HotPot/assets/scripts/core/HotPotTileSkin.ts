@@ -1,20 +1,27 @@
 import {Node, Rect, Size, Sprite, SpriteFrame,
   Texture2D, UITransform} from 'cc';
 
-export const CLIENT_BUILD = '20261029-style7-pages';
+import {getPageTheme, PageStyle} from '../data/PageTheme';
+
+export const CLIENT_BUILD = '20261029-ui1489-food50';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
-let frames: SpriteFrame[] | null = null;
+const frameCache = new Map<PageStyle, SpriteFrame[]>();
+
+function rgb(value: string): number[] {
+  return [1, 3, 5].map((offset) => parseInt(value.slice(offset, offset + 2), 16));
+}
 
 /** Build both tile faces once; no canvas or per-tile Graphics buffers. */
 export function createTilePixels(): Uint8Array {
+  const theme = getPageTheme();
+  const radius = theme.id === 4 ? 16 : theme.id === 9 ? 8 : 12;
   const pixels = new Uint8Array(CELL_WIDTH * 2 * CELL_HEIGHT * 4);
   for (let state = 0; state < 2; state++) {
-    const colors = state
-      ? [[75, 43, 23, 28], [102, 87, 70, 255],
-        [117, 105, 84, 255], [140, 135, 123, 255]]
-      : [[75, 43, 23, 28], [185, 154, 114, 255],
-        [213, 190, 153, 255], [255, 245, 223, 255]];
+    const colors = [[75, 43, 23, 28],
+      [...rgb(theme.tileSide), 255], [...rgb(theme.tileEdge), 255],
+      [...rgb(theme.tileFace), 255]].map((color, layer) =>
+        state && layer ? color.map((v, i) => i === 3 ? v : Math.round(v * .52)) : color);
     for (let y = 0; y < CELL_HEIGHT; y++) {
       for (let x = 0; x < CELL_WIDTH; x++) {
         const result = [0, 0, 0, 0];
@@ -26,10 +33,10 @@ export function createTilePixels(): Uint8Array {
             for (let layer = 0; layer < 4; layer++) {
               const inset = [1, 0, 0, 1.5][layer];
               const offset = [-7, -4, 0, 1][layer];
-              const dx = Math.max(0, Math.abs(px) - (43.2 - inset));
+              const dx = Math.max(0, Math.abs(px) - (55.2 - radius - inset));
               const dy = Math.max(0,
-                Math.abs(py - offset) - (33.6 - inset));
-              if (dx * dx + dy * dy > 144) {
+                Math.abs(py - offset) - (45.6 - radius - inset));
+              if (dx * dx + dy * dy > radius * radius) {
                 continue;
               }
               const color = colors[layer];
@@ -63,6 +70,8 @@ export function createTilePixels(): Uint8Array {
 export function drawSharedTile(
   node: Node, width: number, height: number, blocked: boolean,
 ): void {
+  const style = getPageTheme().id;
+  let frames = frameCache.get(style);
   if (!frames) {
     const texture = new Texture2D();
     texture.reset({width: CELL_WIDTH * 2, height: CELL_HEIGHT});
@@ -76,6 +85,7 @@ export function drawSharedTile(
       frame.addRef();
       return frame;
     });
+    frameCache.set(style, frames);
   }
   const face = node.getChildByName('FoodTileSkin') || new Node('FoodTileSkin');
   if (!face.parent) {

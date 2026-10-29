@@ -108,6 +108,7 @@ try {
   assert.throws(() => assertDestination(root, undefined), /拒绝/);
   for (const name of [
     'CloudConfig',
+    'RuntimeConfig',
     'GameConfig',
     'GameData',
     'PlayerTypes',

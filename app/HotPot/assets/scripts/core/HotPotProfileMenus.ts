@@ -115,42 +115,29 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
     panel.addChild(emblem);
     emblem.setPosition(position);
     transform(emblem, size, size);
-    const fallback = makeLabel(
-      emblem,
-      won ? '开席' : '满锅',
-      46,
-      '#A3613B',
-      Vec3.ZERO,
-      size,
-      80,
-    );
-    if (!resources?.load) {
-      return;
+    const theme = getPageTheme();
+    const rim = new Node('PotRim');
+    emblem.addChild(rim);
+    rim.setPosition(0, -size * .04);
+    drawRoundRect(rim, size * .94, size * .22, size * .11,
+      theme.tileFace, theme.edge, 3);
+    const types: Array<'shrimp' | 'corn' | 'beef' | 'vegetable' | 'mushroom'> =
+      ['shrimp', 'corn', 'beef', 'vegetable', 'mushroom'];
+    const count = won ? Math.min(5, this.levelIndex + 3) : 3;
+    for (let i = 0; i < count; i++) {
+      const food = new Node('CelebrationFood_' + i);
+      emblem.addChild(food);
+      food.setPosition((i - (count - 1) / 2) * size * .16,
+        size * (.12 + (i % 2) * .12));
+      this.addIngredientImage(food, types[i], false, size * .44, size * .44);
     }
-    resources.load(
-      'backgrounds/modal-emblems-c/texture',
-      Texture2D,
-      /**
-       * 在资源加载完成后更新有效节点或处理失败。
-       */ (error, texture) => {
-        if (!emblem.isValid || error || !texture) {
-          return;
-        }
-        const cell = Math.round(texture.width / 2);
-        const frame = new SpriteFrame();
-        frame.texture = texture;
-        frame.rect = new Rect(
-          won ? 0 : cell,
-          0,
-          won ? cell : texture.width - cell,
-          texture.height,
-        );
-        const sprite = emblem.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.spriteFrame = frame;
-        fallback.node.active = false;
-      },
-    );
+    const bowl = new Node('PotBowl');
+    emblem.addChild(bowl);
+    bowl.setPosition(0, -size * .19);
+    drawRoundRect(bowl, size * .86, size * .27, size * .1,
+      theme.accent, theme.edge, 3);
+    makeLabel(bowl, won ? '开席' : '再试一次', 27,
+      theme.onAccent, Vec3.ZERO, size * .7, 42);
   }
 
   /**
@@ -189,7 +176,7 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
     const headerDivider = new Node('ProfileHeaderDivider');
     panel.addChild(headerDivider);
     headerDivider.setPosition(0, 242);
-    drawRoundRect(headerDivider, contentWidth, theme.id === 7 ? 1.5 : 3, 0, outline);
+    drawRoundRect(headerDivider, contentWidth, theme.id === 8 ? 1.5 : 3, 0, outline);
     const card = new Node('RegionCard');
     panel.addChild(card);
     card.setPosition(0, 140);
@@ -200,7 +187,7 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
     const locationValue = makeLabel(panel, path.length ? path.map((item) => item.name).join(' / ')
       : '地区尚未选择', 24, '#775145',
       new Vec3(-94, 122), 286, 64, true);
-    if (theme.id === 7) {
+    if (theme.id === 8) {
       locationHeading.horizontalAlign = Label.HorizontalAlign.LEFT;
       locationValue.horizontalAlign = Label.HorizontalAlign.LEFT;
     }
@@ -218,13 +205,15 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
       248, 88, '#A3613B', () => open(() => this.showCollection()));
     makeButton(panel, '页面风格', new Vec3(137, -12),
       248, 88, '#A3613B', () => open(() => this.showPageStyles()));
-    const rankingButton = makeButton(panel, '地域排行榜', new Vec3(0, -132),
-      contentWidth, 88, '#B88261', () => open(() => this.showRegionPicker([], true)));
-    drawLacquerButton(rankingButton, contentWidth, 88, 'cream', true);
+    makeButton(panel, '我的成就', new Vec3(-137, -132),
+      248, 88, '#A3613B', () => open(() => this.showCollection('achievements')));
+    const rankingButton = makeButton(panel, '地域排行榜', new Vec3(137, -132),
+      248, 88, '#B88261', () => open(() => this.showRegionPicker([], true)));
+    drawLacquerButton(rankingButton, 248, 88, 'cream', true);
     const divider = new Node('ProfileFooterDivider');
     panel.addChild(divider);
     divider.setPosition(0, -212);
-    drawRoundRect(divider, contentWidth, theme.id === 7 ? 1.5 : 3, 0, outline);
+    drawRoundRect(divider, contentWidth, theme.id === 8 ? 1.5 : 3, 0, outline);
     makeButton(panel, '继续游戏', new Vec3(0, -284),
       contentWidth, 88, '#A3613B', () => open(() => {}));
   }
@@ -238,7 +227,7 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
       return;
     }
     const service = this.playerService!;
-    const reviewLayout = getPageTheme().id === 7;
+    const reviewLayout = getPageTheme().id === 8;
     if (reviewLayout) makePanelHeading(panel, '账号已连接', 181, 420);
     else makeLabel(panel, '账号已连接', 42, '#8D3426', new Vec3(0, 181), 570, 60);
     const savedSummary =

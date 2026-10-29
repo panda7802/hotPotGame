@@ -84,6 +84,16 @@ for (let i = 0; i < 888; i++) {
 }
 assert.strictEqual(uploads, 1);
 assert.strictEqual(uploaded.byteLength, 93184);
+const themes=load(path.join(project,'assets/scripts/data/PageTheme.ts'));
+for(const id of [4,8,9]) {
+  themes.setPageTheme(id);
+  ui.drawFoodTile(new Node(),110.4,91.2,false);
+}
+assert.strictEqual(uploads,4,'one tiny shared texture per theme, never per food');
+themes.setPageTheme(1);
+const reused=new Node();ui.drawFoodTile(reused,110.4,91.2,false);
+assert.strictEqual(reused.children[0].getComponent(Sprite).spriteFrame.texture,texture);
+assert.strictEqual(uploads,4,'switching back must reuse the previous theme cache');
 const artifact = path.join(project, 'temp/mobile-performance');
 fs.mkdirSync(artifact, {recursive: true});
 fs.writeFileSync(path.join(artifact, 'tile-faces.rgba'), uploaded);

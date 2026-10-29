@@ -39,7 +39,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
       return;
     }
     const state = this.playerService!.state;
-    const reviewAligned = getPageTheme().id === 7;
+    const reviewAligned = getPageTheme().id === 8;
     const achievements = achievementEntries(state);
     const unlocked = achievements.filter(
       /**

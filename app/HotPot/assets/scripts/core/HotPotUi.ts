@@ -29,12 +29,13 @@ export const BGM_VOLUME = 0.45;
 export const EFFECT_VOLUME = 0.5;
 export type ToolType = 'undo' | 'bomb' | 'shuffle';
 interface PageSkin {
-  kind: 'button' | 'panel' | 'tavern' | 'heading' | 'close';
+  kind: 'button' | 'panel' | 'tavern' | 'heading' | 'close' | 'tile';
   width: number;
   height: number;
   tone?: 'red' | 'cream' | 'muted';
-  style?: 'wood' | 'slot' | 'red' | 'cream';
+  style?: 'wood' | 'slot' | 'red' | 'cream' | 'title';
   emphasized?: boolean;
+  blocked?: boolean;
 }
 type PageSkinNode = Node & {pageSkin?: PageSkin; uiTextColor?: string; pageDisabled?: boolean};
 
@@ -50,7 +51,9 @@ export function refreshPageMaterials(root: Node): void {
     const label = root.getComponent(Label);
     if (label) label.color = hex(themedTextColor(originalText));
   }
-  if (skin?.kind === 'heading') {
+  if (skin?.kind === 'tile') {
+    drawSharedTile(root, skin.width, skin.height, !!skin.blocked);
+  } else if (skin?.kind === 'heading') {
     drawHeadingLine(root, skin.width);
   } else if (skin?.kind === 'close') {
     drawCloseButton(root);
@@ -170,7 +173,7 @@ export function themedTextColor(color: string): string {
 
 function themedFill(color: string): string {
   const t = getPageTheme();
-  if (color === '#29150FAA') return t.id === 9 ? '#060D1CCC' : '#102A2A99';
+  if (color === '#29150FAA') return t.id === 1 ? '#10231DC4' : '#30251EA6';
   if (['#FFF5E3', '#F8E8CD', '#F3E2CA', '#F6DFC0', '#FFF9EF', '#FFF5E3'].includes(color)) return t.card;
   if (['#E9E0D0', '#EEE7DC', '#D8C5AD'].includes(color)) return t.disabled;
   if (['#DEC498', '#D5B47D'].includes(color)) return t.line;
@@ -214,6 +217,7 @@ export function drawFoodTile(
   blocked = false,
 ): void {
   transform(node, width, height);
+  rememberSkin(node, {kind: 'tile', width, height, blocked});
   drawSharedTile(node, width, height, blocked);
 }
 
@@ -224,11 +228,12 @@ export function drawTavernPanel(
   node: Node,
   width: number,
   height: number,
-  style: 'wood' | 'slot' | 'red' | 'cream',
+  style: 'wood' | 'slot' | 'red' | 'cream' | 'title',
 ): void {
   rememberSkin(node, {kind: 'tavern', width, height, style});
   const theme = getPageTheme();
   const palettes = {
+    title: [theme.dark, theme.edge, theme.titleFill, theme.titleFill],
     wood: [theme.dark, theme.edge, theme.tray, theme.tray],
     slot: [theme.edge, theme.dark, theme.slot, theme.slot],
     red: [theme.dark, theme.edge, theme.accent, theme.accent],
@@ -350,7 +355,7 @@ export function drawLacquerPanel(
     g.stroke();
   }
   // Sparse diagonal texture is confined to the header and never crosses body text.
-  g.strokeColor = hex(theme.id === 9 ? '#59698430' : '#99AC8730');
+  g.strokeColor = hex(theme.id === 9 ? '#BFA27A20' : '#99AC8720');
   g.lineWidth = 1;
   for (let x = -width / 2 + 32; x < width / 2 - 32; x += 24) {
     g.moveTo(x, height / 2 - 22);
@@ -415,7 +420,7 @@ export function drawCloseButton(node: Node): void {
   const theme = getPageTheme();
   const g = drawRoundRect(node, 64, 64, 14, theme.dark);
   let glyph = node.getChildByName('CloseGlyph');
-  if (theme.id === 7) {
+  if (theme.id === 8) {
     g.clear();
     g.fillColor = hex(theme.dark);
     g.roundRect(-32, -35, 64, 64, 32);
@@ -554,7 +559,7 @@ export function makeLabel(
  */
 export function makeBodyLabel(...args: Parameters<typeof makeLabel>): Label {
   const label = makeLabel(...args);
-  if (getPageTheme().id === 7) label.horizontalAlign = Label.HorizontalAlign.LEFT;
+  if (getPageTheme().id === 8) label.horizontalAlign = Label.HorizontalAlign.LEFT;
   return label;
 }
 

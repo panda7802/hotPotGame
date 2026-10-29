@@ -37,7 +37,7 @@ export class HotPotGame extends HotPotDialogs {
     const service = this.playerService!;
     const theme = getPageTheme();
     // Review this simplified layout in style 7 before extending other themes.
-    const compact = theme.id === 7;
+    const compact = theme.id === 8;
     let options = service.regions;
     const names: string[] = [];
     for (const code of codes) {
@@ -235,7 +235,7 @@ export class HotPotGame extends HotPotDialogs {
     if (!panel) {
       return;
     }
-    const reviewLayout = getPageTheme().id === 7;
+    const reviewLayout = getPageTheme().id === 8;
     const describe =
       /**
        * 处理 describe 对应的游戏逻辑。
@@ -352,7 +352,7 @@ export class HotPotGame extends HotPotDialogs {
     makePanelHeading(panel, '托盘满啦', 330);
     const failureClose = makeButton(panel, '×', new Vec3(250, 352), 48, 48, '#B88261',
       () => this.dismissOverlay());
-    if (getPageTheme().id === 7) drawCloseButton(failureClose);
+    drawCloseButton(failureClose);
     makeLabel(panel, this.reviveUsed ? '本局免费复活已使用' : '别急，这锅还有机会',
       27, '#94735D', new Vec3(0, 249), 500, 44);
     const types = this.tray.slice(0, 3);

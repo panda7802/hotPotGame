@@ -62,6 +62,7 @@ export abstract class HotPotView extends HotPotResources {
       82,
     );
     title.isBold = true;
+    title.node.name = 'GameTitle';
     this.loadTitleArtwork(title);
     const levelBar = new Node('LevelBar');
     this.node.addChild(levelBar);
@@ -242,6 +243,8 @@ export abstract class HotPotView extends HotPotResources {
       drawRoundRect(progress, 560, 60, 24,
         theme.progress, theme.edge + '66', 1);
     }
+    const title = this.node.getChildByName('GameTitle')?.getComponent(Label);
+    if (title) title.color = hex(theme.titleInk);
     this.levelLabel.color = hex(theme.ink);
     this.progressLabel.color = hex(theme.progressInk);
   }
@@ -250,33 +253,14 @@ export abstract class HotPotView extends HotPotResources {
    * D 方案透明字标；资源未就绪时保留可读的文字标题。
    */
   protected loadTitleArtwork(fallback: Label): void {
-    resources.load(
-      'backgrounds/title-d/texture',
-      Texture2D,
-      /**
-       * 在资源加载完成后更新有效节点或处理失败。
-       */ (error, texture) => {
-        if (!fallback.node.isValid) {
-          return;
-        }
-        if (error || !texture || texture.width <= 0 || texture.height <= 0) {
-          console.warn('[HotPotGame] 标题图加载失败，保留文字标题', error);
-          return;
-        }
-        const frame = new SpriteFrame();
-        frame.texture = texture;
-        const artwork = new Node('TitleArtwork');
-        this.node.addChild(artwork);
-        artwork.setSiblingIndex(fallback.node.getSiblingIndex());
-        artwork.setPosition(fallback.node.position);
-        const scale = Math.min(500 / texture.width, 132 / texture.height);
-        transform(artwork, texture.width * scale, texture.height * scale);
-        const sprite = artwork.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        sprite.spriteFrame = frame;
-        fallback.node.active = false;
-      },
-    );
+    // Render the approved title with exact Chinese and theme materials;
+    // avoid a duplicate 380 KB title bitmap and stale colors after switching.
+    const plate = new Node('TitlePlate');
+    this.node.addChild(plate);
+    plate.setSiblingIndex(fallback.node.getSiblingIndex());
+    plate.setPosition(fallback.node.position);
+    drawTavernPanel(plate, 540, 108, 'title');
+    fallback.color = hex(getPageTheme().titleInk);
   }
 
     /** Load only the chosen background; stale async loads never win. */

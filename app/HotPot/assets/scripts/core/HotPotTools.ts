@@ -210,7 +210,7 @@ export abstract class HotPotTools extends HotPotToolActions {
     }
     const overlay = new Node('RestartConfirmOverlay');
     this.node.addChild(overlay);
-    const reviewLayout = getPageTheme().id === 7;
+    const reviewLayout = true;
     if (reviewLayout) {
       transform(overlay, DESIGN_WIDTH, this.viewportHeight);
       const scrim = new Node('ModalScrim');
@@ -278,7 +278,8 @@ export abstract class HotPotTools extends HotPotToolActions {
       return;
     }
     drawLacquerPanel(panel, 600, 860);
-    makePanelHeading(panel, this.levelIndex === LEVELS.length - 1 ? '三锅圆满！' : '锅底见啦！', 314);
+    makePanelHeading(panel, this.levelIndex === LEVELS.length - 1
+      ? '三关全部完成' : '第' + (this.levelIndex + 1) + '关完成', 314);
     makeLabel(
       panel,
       `第${this.levelIndex + 1}关 · ${this.levelData.config.title}`,
@@ -340,7 +341,7 @@ export abstract class HotPotTools extends HotPotToolActions {
     } else {
       makeButton(
         panel,
-        '再玩一遍',
+        '再来一轮',
         new Vec3(0, -240),
         460,
         74,
@@ -372,7 +373,7 @@ export abstract class HotPotTools extends HotPotToolActions {
        * 在当前操作完成后更新相关游戏状态。
        */ () => this.nextLevel(),
     );
-    if (getPageTheme().id === 7) drawCloseButton(resultClose);
+    drawCloseButton(resultClose);
     tween(panel).to(0.2, {scale: Vec3.ONE}, {easing: 'backOut'}).start();
   }
 

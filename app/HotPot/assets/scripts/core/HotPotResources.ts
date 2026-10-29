@@ -8,7 +8,7 @@ import {
   Texture2D,
 } from 'cc';
 
-import {IngredientType} from '../data/GameData';
+import {INGREDIENT_ART} from '../data/IngredientArt';
 
 import {HotPotState} from './HotPotState';
 
@@ -17,7 +17,6 @@ import {
   drawControlIcon,
   EFFECT_VOLUME,
   GameAudio,
-  HANDPAINTED_TYPES,
 } from './HotPotUi';
 
 /**
@@ -126,173 +125,31 @@ export abstract class HotPotResources extends HotPotState {
   }
 
   /**
-   * 加载基础食材图集和单独的茶树菇图片。
+   * Both transparent sheets are shared by every theme. Run completion once,
+   * after all 50 frame rectangles have been created.
    */
   protected loadIngredientImages(done: () => void): void {
-    resources.load(
-      'ingredients/handpainted-atlas/texture',
-      Texture2D,
-      /**
-       * 在资源加载完成后更新有效节点或处理失败。
-       */ (error, texture) => {
-        if (!this.node.isValid) {
-          return;
-        }
-        if (error
-          || !texture ||
-          texture.width !== texture.height ||
-          texture.width < 4) {
-          console.warn(
-            '[HotPotGame] 手绘图集不可用，保留食材名称备用牌面',
-            error,
-          );
-          this.loadSupplementalImages(done);
-          return;
-        }
-        const cell = texture.width / 4;
-        HANDPAINTED_TYPES.forEach(
-          /**
-           * 依次处理集合中的每个条目。
-           */ (type, index) => {
-            // 原图集的金针菇格不再使用，茶树菇由独立资源覆盖。
-            if (type === 'jzg') {
-              return;
-            }
+    let pending = INGREDIENT_ART.length;
+    INGREDIENT_ART.forEach((types, sheet) => {
+      const path = 'ingredients/food-' + (sheet ? 'b' : 'a') + '/texture';
+      resources.load(path, Texture2D, (error, texture) => {
+        if (!this.node.isValid) return;
+        if (!error && texture && texture.width >= 5 && texture.height >= 5
+          && texture.width % 5 === 0 && texture.height % 5 === 0) {
+          types.forEach((type, index) => {
             const frame = new SpriteFrame();
             frame.texture = texture;
-            const column = index % 4;
-            const row = Math.floor(index / 4);
-            const left = Math.round(column * cell);
-            const top = Math.round(row * cell);
-            frame.rect = new Rect(
-              left,
-              top,
-              Math.round((column + 1) * cell) - left,
-              Math.round((row + 1) * cell) - top,
-            );
+            frame.rect = new Rect(index % 5 * texture.width / 5,
+              Math.floor(index / 5) * texture.height / 5,
+              texture.width / 5, texture.height / 5);
             this.ingredientFrames.set(type, frame);
-          },
-        );
-        resources.load(
-          'ingredients/jzg/texture',
-          Texture2D,
-          /**
-           * 在资源加载完成后更新有效节点或处理失败。
-           */ (mushroomError, mushroomTexture) => {
-            if (!this.node.isValid) {
-              return;
-            }
-            if (!mushroomError && mushroomTexture) {
-              const frame = new SpriteFrame();
-              frame.texture = mushroomTexture;
-              this.ingredientFrames.set('jzg', frame);
-            } else {
-              console.error('[HotPotGame] 无法加载茶树菇图片', mushroomError);
-            }
-            this.loadSupplementalImages(done);
-          },
-        );
-      },
-    );
-  }
-
-  /**
-   * 加载扩展食材图集。
-   */
-  protected loadSupplementalImages(done: () => void): void {
-    const sheets: Array<{
-      /**
-       * path 对应的状态或配置。
-       */ path: string;
-      /**
-       * columns 对应的状态或配置。
-       */ columns: number;
-      /**
-       * 棋盘目标行数。
-       */ rows: number;
-      /**
-       * types 对应的状态或配置。
-       */ types: IngredientType[];
-    }> = [
-      {
-        path: 'ingredients/expanded-atlas/texture',
-        columns: 4,
-        rows: 2,
-        types: [
-          'tripe',
-          'duckblood',
-          'potato',
-          'crabstick',
-          'noodle',
-          'luncheon',
-          'kelp',
-        ],
-      },
-      {
-        path: 'ingredients/extra-meat-yam-atlas/texture',
-        columns: 3,
-        rows: 1,
-        types: ['lamb', 'blackchicken', 'yam'],
-      },
-      {
-        path: 'ingredients/new-27-atlas/texture',
-        columns: 6,
-        rows: 5,
-        types: ["okra","tendon","kidney","aorta","duckintestine","chickenfeet","mussel","scallop","abalone","squid","fishball","roebag","fishtofu","tofuskin","bellroll","woodear","oystermushroom","kingoyster","radish","carrot","pumpkin","bambooshoot","celtuce","broccoli","cauliflower","taro","vermicelli"],
-      },
-    ];
-    let pending = sheets.length;
-    sheets.forEach(
-      /**
-       * 依次处理集合中的每个条目。
-       */ (sheet) =>
-        resources.load(
-          sheet.path,
-          Texture2D,
-          /**
-           * 在资源加载完成后更新有效节点或处理失败。
-           */ (error, texture) => {
-            if (!this.node.isValid) {
-              return;
-            }
-            if (!error && texture) {
-              sheet.types.forEach(
-                /**
-                 * 依次处理集合中的每个条目。
-                 */ (type, index) => {
-                  const left = Math.round(
-                    ((index % sheet.columns) * texture.width) / sheet.columns,
-                  );
-                  const top = Math.round(
-                    (Math.floor(index / sheet.columns) * texture.height) /
-                      sheet.rows,
-                  );
-                  const right = Math.round(
-                    (((index % sheet.columns) + 1) * texture.width) /
-                      sheet.columns,
-                  );
-                  const bottom = Math.round(
-                    ((Math.floor(index / sheet.columns) + 1) * texture.height) /
-                      sheet.rows,
-                  );
-                  const frame = new SpriteFrame();
-                  frame.texture = texture;
-                  frame.rect = new Rect(left, top, right - left, bottom - top);
-                  this.ingredientFrames.set(type, frame);
-                },
-              );
-            } else {
-              console.error(
-                `[HotPotGame] 新食材图集加载失败：${sheet.path}`,
-                error,
-              );
-            }
-            pending -= 1;
-            if (pending === 0) {
-              done();
-            }
-          },
-        ),
-    );
+          });
+        } else {
+          console.error('[HotPot] 食材资源不可用，保留文字牌面', path, error);
+        }
+        pending--;
+        if (!pending) done();
+      });
+    });
   }
 }
