@@ -13,6 +13,7 @@ import {
 } from 'cc';
 
 import {GameSave, regionPath} from '../data/PlayerData';
+import {CLIENT_BUILD} from './HotPotTileSkin';
 
 import {
   DESIGN_WIDTH,
@@ -303,7 +304,7 @@ export abstract class HotPotProfileMenus extends HotPotTools {
     );
     makeLabel(
       panel,
-      '每次操作后自动保存\n断网时先保留在本机',
+      `每次操作后自动保存\n版本 ${CLIENT_BUILD}`,
       22,
       '#94735D',
       new Vec3(0, -350),

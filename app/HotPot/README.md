@@ -114,6 +114,15 @@
 
 ## 验证
 
+2026-10-29 移动端性能修复，档案页版本 `20261029-memory2`：
+牌底改为共用一张 224×104 纹理（RGBA 数据 93,184 字节），不再为牌底
+创建 Graphics。第三关仅为同坐标最上方的牌创建节点，新牌阵初始为 48 张；
+下层数据和全部 888 张食材仍保留，逐步露出时创建，按层级保持显示顺序。
+遮挡计算改为邻近网格查询，保持旧牌阵、遮挡列表顺序与存档协议；
+存档食材模板和布局模板按完整种子分别缓存，避免恢复时反复重建。
+控制台记录版本、关卡、实际牌节点数和本次加载耗时，不含玩家身份。
+此包仍需用 iPhone 12 验证首次进第三关、恢复存档、翻锅和重开。
+
 在本目录运行：
 
 ```powershell
@@ -121,6 +130,7 @@ node .\tools\validate-levels.cjs
 node .\tools\validate-tray-animation.cjs
 node .\tools\validate-player-save.cjs
 node .\tools\validate-collection-ui.cjs
+node .\tools\validate-mobile-performance.cjs
 ```
 
 脚本使用 Cocos Creator 自带的 TypeScript，默认安装目录为 `C:\ProgramData\cocos\editors\Creator\3.8.8`。如果安装在其他位置，先设置 `$env:COCOS_CREATOR_388 = '你的 Creator 3.8.8 安装目录'`。

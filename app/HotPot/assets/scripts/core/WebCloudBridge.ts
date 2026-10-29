@@ -44,16 +44,12 @@ export async function createWebCloud(config: {
   environmentId: string;
 }): Promise<any> {
   const sdk = await loadSdk();
-  console.warn('[HotPot Web Login]', 'sdk-loaded');
   const app = sdk.init({env: config.environmentId});
-  console.warn('[HotPot Web Login]', 'app-initialized');
   const auth = app.auth({persistence: 'local'});
-  console.warn('[HotPot Web Login]', 'auth-initialized');
   let session = await auth.getSession();
-  if (session.error) {
-    const kind = session.error.category || session.error.error || '';
-    console.warn('[HotPot Web Login]', 'session-error',
-      /^[a-zA-Z_]{1,60}$/.test(kind) ? kind : 'unknown');
+  // 无效/过期凭据需要重新访客登录；网络故障则保留身份等待重试。
+  // 只更新 SDK 会话，不清理游戏存档或待上传通关记录。
+  if (session.error && session.error.category !== 'INVALID_CREDENTIALS') {
     throw session.error;
   }
   if (!session.data?.session) {

@@ -176,15 +176,6 @@ export abstract class HotPotTools extends HotPotToolActions {
       },
     );
     this.tileNodes.clear();
-    this.levelData.tiles.forEach(
-      /**
-       * 依次处理集合中的每个条目。
-       */ (tile) => {
-        if (!tile.removed) {
-          this.createTileNode(tile);
-        }
-      },
-    );
     this.refreshTileStates();
   }
 

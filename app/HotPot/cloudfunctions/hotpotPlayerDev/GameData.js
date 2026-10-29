@@ -353,14 +353,29 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
     const tileScale = config.tileScale || (config.rows === 8 ? 0.82 : 1);
     const tileWidth = 92 * 1.2 * tileScale;
     const tileHeight = 76 * 1.2 * tileScale;
-    for (const lower of tiles) {
-        for (const upper of tiles) {
-            if (upper.layer <= lower.layer) {
-                continue;
-            }
-            if (Math.abs(lower.x - upper.x) < tileWidth
-                && Math.abs(lower.y - upper.y) < tileHeight) {
-                lower.blockedBy.push(upper.id);
+    // Only neighbouring spatial cells can overlap. Iterate uppers in original
+    // order so saved layouts retain exactly the same ordered blocker lists.
+    const cells = new Map();
+    for (const tile of tiles) {
+        const key = `${Math.floor(tile.x / tileWidth)}:`
+            + `${Math.floor(tile.y / tileHeight)}`;
+        if (!cells.has(key)) {
+            cells.set(key, []);
+        }
+        cells.get(key).push(tile);
+    }
+    for (const upper of tiles) {
+        const cx = Math.floor(upper.x / tileWidth);
+        const cy = Math.floor(upper.y / tileHeight);
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                for (const lower of cells.get(`${cx + dx}:${cy + dy}`) || []) {
+                    if (upper.layer > lower.layer
+                        && Math.abs(lower.x - upper.x) < tileWidth
+                        && Math.abs(lower.y - upper.y) < tileHeight) {
+                        lower.blockedBy.push(upper.id);
+                    }
+                }
             }
         }
     }

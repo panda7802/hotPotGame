@@ -15,6 +15,7 @@ import {
 } from 'cc';
 
 import {IngredientType} from '../data/GameData';
+import {drawSharedTile} from './HotPotTileSkin';
 
 export const DESIGN_WIDTH = 720;
 export const DESIGN_HEIGHT = 1520;
@@ -145,34 +146,7 @@ export function drawFoodTile(
   blocked = false,
 ): void {
   transform(node, width, height);
-  const graphics = node.getComponent(Graphics) || node.addComponent(Graphics);
-  graphics.clear();
-  const layer =
-    /**
-     * 处理 layer 对应的游戏逻辑。
-     */ (offsetY: number, inset: number, fill: string, alpha = 255): void => {
-      const color = hex(fill);
-      color.a = alpha;
-      graphics.fillColor = color;
-      graphics.roundRect(
-        -width / 2 + inset,
-        -height / 2 + offsetY + inset,
-        width - inset * 2,
-        height - inset * 2,
-        12,
-      );
-      graphics.fill();
-    };
-  layer(-7, 1, '#4B2B17', 28);
-  layer(-4, 0, blocked ? '#665746' : '#B99A72');
-  layer(0, 0, blocked ? '#756954' : '#D5BE99');
-  layer(1, 1.5, blocked ? '#8C877B' : '#FFF5DF');
-  // 顶边轻微提亮，不使用粗描边或整张白色背景。
-  graphics.strokeColor = hex(blocked ? '#8C8B85' : '#FFFCF2');
-  graphics.lineWidth = 1;
-  graphics.moveTo(-width / 2 + 13, height / 2 - 2);
-  graphics.lineTo(width / 2 - 13, height / 2 - 2);
-  graphics.stroke();
+  drawSharedTile(node, width, height, blocked);
 }
 
 /**

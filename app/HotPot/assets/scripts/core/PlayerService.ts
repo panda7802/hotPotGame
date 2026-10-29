@@ -35,18 +35,12 @@ export class PlayerService extends RegionLeaderboardService {
     }
     this.status = 'connecting';
     this.changed();
-    let connectionStage = 'config';
     try {
       validateDevelopmentConfig(this.config);
-      connectionStage = 'web-login';
       this.cloud = this.wxHost?.cloud || await createWebCloud(this.config);
       this.cloud.init({env: this.config.environmentId});
       void this.loadRegions();
-      connectionStage = 'load';
-      const response = await this.request({action: 'load'});
-      connectionStage = 'validate-player';
-      const remote = this.parseRemote(response);
-      connectionStage = 'restore-local';
+      const remote = this.parseRemote(await this.request({action: 'load'}));
       // 确认服务器身份之后才读取该账号的本地缓存，不展示上一账号的私有进度。
       this.playerId = remote.playerId;
       const cached = this.readLocal(remote.playerId);
@@ -88,8 +82,6 @@ export class PlayerService extends RegionLeaderboardService {
         this.schedule();
       }
     } catch (error) {
-      console.warn('[HotPot Connection Stage]', connectionStage,
-        error instanceof TypeError ? 'TypeError' : 'Error');
       this.describeFailure(error);
       this.cloud = null;
       this.status = 'error';

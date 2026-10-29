@@ -25,6 +25,7 @@ import {
 } from './HotPotUi';
 
 import {HotPotView} from './HotPotView';
+import {CLIENT_BUILD} from './HotPotTileSkin';
 
 /**
  * HotPotBoardActions：拆分后的前段场景行为。
@@ -38,6 +39,7 @@ export abstract class HotPotBoardActions extends HotPotView {
     persist = true,
     restored?: LevelData,
   ): void {
+    const loadStartedAt = Date.now();
     this.runId = `${Date.now().toString(36)}-`
       + Math.random().toString(36).slice(2, 14);
     this.clearMatchEffects();
@@ -92,21 +94,14 @@ export abstract class HotPotBoardActions extends HotPotView {
       ' 关  ·  ' +
       String(this.levelData.config.title) +
       '';
-    this.levelData.tiles.forEach(
-      /**
-       * 依次处理集合中的每个条目。
-       */ (tile) => {
-        if (!tile.removed) {
-          this.createTileNode(tile);
-        }
-      },
-    );
     this.refreshTileStates();
     this.renderTray();
     this.updateProgress();
     if (persist) {
       this.checkpointGame();
     }
+    console.info(`[HotPot ${CLIENT_BUILD}] level=${this.levelIndex + 1}`
+      + ` nodes=${this.tileNodes.size} loadMs=${Date.now() - loadStartedAt}`);
     // this.showToast('看清叠层，别让托盘塞满！', '#8A4B34');
   }
 
@@ -241,7 +236,7 @@ export abstract class HotPotBoardActions extends HotPotView {
       ),
     );
     // Repeated layers share exact positions. Only the highest remaining tile
-    // at each position needs Graphics and an ingredient sprite. Keep all
+    // at each position needs a node and sprites. Keep all
     // logical tiles, including those affected by bombs and shuffling.
     const frontTiles = new Map<string, TileData>();
     for (const tile of this.levelData.tiles) {
@@ -254,6 +249,7 @@ export abstract class HotPotBoardActions extends HotPotView {
         frontTiles.set(key, tile);
       }
     }
+    let sibling = 0;
     this.levelData.tiles.forEach(
       /**
        * 依次处理集合中的每个条目。
@@ -261,14 +257,20 @@ export abstract class HotPotBoardActions extends HotPotView {
         if (tile.removed) {
           return;
         }
+        const visible = frontTiles.get(`${tile.x}:${tile.y}`) === tile;
+        if (visible && !this.tileNodes.has(tile.id)) {
+          this.createTileNode(tile);
+        }
         const node = this.tileNodes.get(tile.id);
         if (!node) {
           return;
         }
-        node.active = frontTiles.get(`${tile.x}:${tile.y}`) === tile;
+        node.active = visible;
         if (!node.active) {
           return;
         }
+        // A newly exposed lower tile must remain behind higher layers.
+        node.setSiblingIndex(sibling++);
         const selectable = this.isTileSelectable(tile, tilesById);
         if ((
             node as Node & {

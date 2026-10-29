@@ -92,6 +92,14 @@ class Node {
     child.setParent(this);
   }
 
+  setSiblingIndex(index) {
+    if (this.parent) {
+      const children = this.parent.children;
+      children.splice(children.indexOf(this), 1);
+      children.splice(index, 0, this);
+    }
+  }
+
   /**
    * 更新 setParent 对应的状态。
    */
@@ -1380,7 +1388,7 @@ for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
   g.refreshTileStates = Game.prototype.refreshTileStates.bind(g);
   const level = actualData.createLevel(2, seed);
   g.loadLevel(2, false, level);
-  assert.strictEqual(created, 888);
+  assert.strictEqual(created, draws);
   assert(draws <= 144, `seed ${seed} must not draw 888 hidden faces`);
   if (seed >= 2147483647) {
     assert.strictEqual(draws, 48, 'new layouts have 48 distinct positions');
@@ -1393,7 +1401,7 @@ for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
   draws = 0;
   g.rebuildBoardTiles = () => assert.fail('restore must build only once');
   g.restoreGame(checkpoint);
-  assert.strictEqual(created, 888);
+  assert.strictEqual(created, initialDraws);
   assert.strictEqual(draws, initialDraws);
   const inventory = g.levelData.tiles.map((tile) => tile.type).sort();
   draws = 0;
@@ -1418,9 +1426,15 @@ for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
       g.tileNodes.delete(tile.id);
     }
     g.refreshTileStates();
+    assert(g.tileNodes.size <= 144,
+      'hidden layers must not accumulate allocated nodes');
+    const layers = g.board.children.map((node) =>
+      g.levelData.tiles.find((tile) => `Tile_${tile.id}` === node.name).layer);
+    assert(layers.every((layer, i) => i === 0 || layers[i - 1] <= layer),
+      'newly exposed lower tiles must remain behind upper tiles');
     const positions = new Set();
     for (const tile of g.levelData.tiles) {
-      if (tile.removed || !g.tileNodes.get(tile.id).active) {
+      if (tile.removed || !g.tileNodes.get(tile.id)?.active) {
         continue;
       }
       const key = `${tile.x}:${tile.y}`;

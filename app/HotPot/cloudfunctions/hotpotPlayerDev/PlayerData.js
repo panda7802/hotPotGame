@@ -211,13 +211,22 @@ const randomTemplates = new Map();
  * 使用关卡种子创建可验证的棋盘模板。
  */
 function template(index, layoutSeed = 0, ingredientSeed = 0) {
-    const cache = layoutSeed === 0 && ingredientSeed === 0 ? templates : randomTemplates;
-    if (!cache.has(index)
-        || (cache.get(index).layoutSeed || 0) !== layoutSeed ||
-        (cache.get(index).ingredientSeed || 0) !== ingredientSeed) {
-        cache.set(index, (0, GameData_1.createLevel)(index, layoutSeed, undefined, ingredientSeed));
+    if (layoutSeed === 0 && ingredientSeed === 0) {
+        if (!templates.has(index)) {
+            templates.set(index, (0, GameData_1.createLevel)(index, 0, undefined, 0));
+        }
+        return templates.get(index);
     }
-    return cache.get(index);
+    // Inventory validation and geometry restoration use different seeds. They
+    // must not evict each other and regenerate a full board on every restore.
+    const key = `${index}:${layoutSeed}:${ingredientSeed}`;
+    if (!randomTemplates.has(key)) {
+        randomTemplates.set(key, (0, GameData_1.createLevel)(index, layoutSeed, undefined, ingredientSeed));
+        if (randomTemplates.size > 4) {
+            randomTemplates.delete(randomTemplates.keys().next().value);
+        }
+    }
+    return randomTemplates.get(key);
 }
 /**
  * 检查稳定结算后的存档；不接受飞牌中或三消未结算的半成品。

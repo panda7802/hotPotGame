@@ -924,7 +924,11 @@ function service(
   webPlayer.setSave({...completed, runId: 'web-qinhuai-test-1'});
   let signedIn = false;
   let webSignIns = 0;
-  const session = () => ({data: {session: signedIn ? {user: {}} : null}});
+  let webSessionError = 'INVALID_CREDENTIALS';
+  const session = () => ({
+    data: {session: signedIn ? {user: {}} : null},
+    error: signedIn ? null : {category: webSessionError},
+  });
   browserRuntime.document = {createElement() { throw new Error('No CDN'); }};
   browserRuntime.cloudbase = {
     init({env}) {
@@ -945,6 +949,14 @@ function service(
     },
   };
   try {
+    webSessionError = 'SERVICE_ERROR';
+    const {createWebCloud} = load(require('path').join(
+      root, 'assets/scripts/core/WebCloudBridge',
+    ));
+    await assert.rejects(createWebCloud(settings),
+      (error) => error.category === 'SERVICE_ERROR');
+    assert.strictEqual(webSignIns, 0);
+    webSessionError = 'INVALID_CREDENTIALS';
     await webPlayer.initialize();
     await webPlayer.refreshLeaderboard();
     await webPlayer.flush();
