@@ -3,18 +3,21 @@ import {HotPotReferenceCollection} from './HotPotReferenceCollection';
 import {ArtPage,Box,art,fullOverlay,hit,place,text} from './HotPotReferenceArt';
 import {getPageTheme} from '../data/PageTheme';
 import {drawRoundRect,transform} from './HotPotUi';
+import {fitReferenceContent,referenceHeight} from './HotPotReferenceLayout';
 
 export abstract class HotPotReferenceResults extends HotPotReferenceCollection {
   protected endGame(won:boolean):void{
     if(won&&!this.gameEnded)this.recordReferenceWin();
     super.endGame(won);
     const overlay=this.node.getChildByName('ResultOverlay'),panel=overlay?.getChildByName('ResultPanel');if(!panel)return;
-    Tween.stopAllByTarget(panel);panel.setPosition(0,0);panel.setScale(1,1,1);
+    Tween.stopAllByTarget(panel);
+    const h=referenceHeight(won?'win'+(this.levelIndex+1):'revive',getPageTheme().id);
+    transform(panel,720,h);(panel as any).referenceHeight=h;fitReferenceContent(panel,h);
     if(!won)return;
     for(const n of panel.children.slice()){n.removeFromParent();n.destroy()}
     panel.getComponent(Graphics)?.clear();
     delete (panel as any).pageSkin;
-    const id=getPageTheme().id,h=this.viewportHeight;
+    const id=getPageTheme().id;
     const page=('win'+(this.levelIndex+1)) as ArtPage;
     const bounds:Box=id===1?[.12,.14,.78,.59]:id===4?[.10,.19,.80,.48]:id===8?[.075,.20,.85,.51]:[.08,.135,.84,.525];
     const picture=art(panel,page,bounds,h,id,bounds);
@@ -27,7 +30,7 @@ export abstract class HotPotReferenceResults extends HotPotReferenceCollection {
   }
 
   protected drawFailurePanel(panel:Node):void{
-    const id=getPageTheme().id,h=this.viewportHeight;
+    const id=getPageTheme().id,h=referenceHeight('revive',getPageTheme().id);
     const bounds:Box=id===1?[.065,.205,.88,.50]:id===4?[.10,.22,.80,.58]:id===8?[.06,.17,.88,.55]:[.04,.17,.92,.58];
     const picture=art(panel,'revive',bounds,h,id,bounds);
     if(id===4)this.clipPicture(picture,bounds,[.10,.30,.80,.50],h,[.50,.31,.19]);
@@ -45,9 +48,9 @@ export abstract class HotPotReferenceResults extends HotPotReferenceCollection {
 
   protected showRestartConfirmation():void{
     if(!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded)||this.node.getChildByName('RestartConfirmOverlay'))return;
-    const h=this.viewportHeight,id=getPageTheme().id;
-    const {panel}=fullOverlay(this.node,'RestartConfirmOverlay',h);
-    drawRoundRect(panel,720,h,0,'#29150FAA');
+    const id=getPageTheme().id,h=referenceHeight('restart',id);
+    const {overlay,panel}=fullOverlay(this.node,'RestartConfirmOverlay',this.viewportHeight,h);
+    drawRoundRect(overlay,720,this.viewportHeight,0,'#29150FAA');
     const bounds:Box=id===1?[.065,.205,.88,.48]:id===4?[.10,.22,.80,.58]:id===8?[.06,.17,.88,.53]:[.04,.17,.92,.58];
     const picture=art(panel,'restart',bounds,h,id,bounds);
     if(id===4)this.clipPicture(picture,bounds,[.10,.30,.80,.50],h,[.50,.31,.19]);

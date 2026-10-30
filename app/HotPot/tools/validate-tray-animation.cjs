@@ -287,7 +287,10 @@ vm.runInNewContext(compiled.outputText, {
   exports: moduleObject.exports,
   require: loadDependency,
 });
-const Game = moduleObject.exports.HotPotGame;
+// Exercise the real gameplay layer with the existing rendering stubs. Native
+// skin overlays, transforms and actual clicks are checked in the web engine by
+// verify-design-720.cjs, rather than pretending to render them in this harness.
+const Game = loadDependency('./HotPotLegacyGame').HotPotLegacyGame;
 
 for (const [levelIndex, status, expected] of [
   [0, 'lost', 0],

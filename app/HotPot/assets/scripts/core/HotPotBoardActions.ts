@@ -338,9 +338,19 @@ export abstract class HotPotBoardActions extends HotPotView {
     const transitionUI = this.foodTransitionLayer.getComponent(UITransform)!;
     const startWorld = boardUI.convertToWorldSpaceAR(node.position);
     const targetWorld = trayUI.convertToWorldSpaceAR(new Vec3(targetX, 0));
+    const startWorldScale = node.worldScale.clone();
+    const transitionWorldScale = this.foodTransitionLayer.worldScale;
+    const trayWorldScale = this.trayNode.worldScale;
+    const destinationScale = new Vec3(
+      80 / TILE_WIDTH * trayWorldScale.x / transitionWorldScale.x,
+      78 / TILE_HEIGHT * trayWorldScale.y / transitionWorldScale.y,
+      1,
+    );
 
     // 脱离棋盘并保持屏幕位置不变；此后整段移动轨迹都处于界面最上层。
     node.setParent(this.foodTransitionLayer);
+    node.setScale(startWorldScale.x / transitionWorldScale.x,
+      startWorldScale.y / transitionWorldScale.y, 1);
     node.setPosition(transitionUI.convertToNodeSpaceAR(startWorld));
     node.setSiblingIndex(this.foodTransitionLayer.children.length - 1);
     const targetLocal = transitionUI.convertToNodeSpaceAR(targetWorld);
@@ -354,7 +364,7 @@ export abstract class HotPotBoardActions extends HotPotView {
         0.2,
         {
           position: targetLocal,
-          scale: new Vec3(startScale.x * 0.72, startScale.y * 0.72, 1),
+          scale: destinationScale,
         },
         {easing: 'cubicOut'},
       )

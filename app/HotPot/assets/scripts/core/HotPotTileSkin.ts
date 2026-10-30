@@ -3,7 +3,7 @@ import {Color,Node, Rect, resources,Size, Sprite, SpriteFrame,
 
 import {getPageTheme, PageStyle} from '../data/PageTheme';
 
-export const CLIENT_BUILD = '20261030-reference-replica';
+export const CLIENT_BUILD = '20261030-ui720-ranking';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 const frameCache = new Map<PageStyle, SpriteFrame[]>();

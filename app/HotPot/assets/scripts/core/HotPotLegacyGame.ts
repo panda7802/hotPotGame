@@ -172,7 +172,6 @@ export abstract class HotPotLegacyGame extends HotPotDialogs {
         label.fontSize = keyword ? 24 : 29;
         label.color = hex(theme.ink);
         if (compact) label.horizontalAlign = Label.HorizontalAlign.LEFT;
-        if (this.regionFont) {label.font = this.regionFont; label.useSystemFont = false;}
         if (leaderboard) {
           const total = makeBodyLabel(button, count.slice(3), 23, theme.ink,
             new Vec3(172, 0), 136, 40);

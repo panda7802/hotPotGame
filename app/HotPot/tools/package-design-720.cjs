@@ -1,0 +1,27 @@
+'use strict';
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=require('assert');
+const repo=path.resolve(__dirname,'../../..'),project=path.join(repo,'app/HotPot'),built=path.join(repo,'tmp/build-ui720-20261030/app/HotPot');
+const marker=fs.readFileSync(path.join(project,'assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
+const ranking=marker.endsWith('-ranking'),polished=ranking||marker.endsWith('-polish'),revision=ranking?'-ranking':polished?'-polish':'',delivery=path.join(repo,'exports','HotPot-ui720'+revision+'-20261030');
+function files(root){const result=[];function walk(dir){for(const e of fs.readdirSync(dir,{withFileTypes:true})){const f=path.join(dir,e.name);if(e.isDirectory())walk(f);else result.push(f)}}walk(root);return result}
+function hash(file){return crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex')}
+const sources=[...files(path.join(project,'assets/scripts')).filter(f=>f.endsWith('.ts')),...files(path.join(project,'assets/resources')).filter(f=>!f.endsWith('.meta'))].map(file=>{
+  const relative=path.relative(project,file),staged=path.join(built,relative);assert(fs.existsSync(staged)&&hash(staged)===hash(file),'Build source is stale: '+relative);return {file:relative.replaceAll('\\','/'),sha256:hash(file)};
+});
+for(const [dir,key] of [['web-ui720','assets/main/index.js'],['wechatgame-cloud-dev','subpackages/main/game.js']])assert(fs.readFileSync(path.join(built,'build',dir,key),'utf8').includes(marker),'Wrong build marker '+dir);
+const verification=JSON.parse(fs.readFileSync(path.join(repo,'design/implemented-720-20261030','runtime'+revision+'/verification.json'),'utf8'));
+assert.equal(verification.build,marker);assert.deepEqual(verification.pageErrors,[]);assert.deepEqual(verification.missingLocalAssets,[]);assert.deepEqual(verification.styles,[1,4,8,9]);
+if(fs.existsSync(delivery))throw Error('Refusing to overwrite an existing delivery: '+delivery);
+fs.mkdirSync(delivery,{recursive:true});fs.cpSync(path.join(built,'build/wechatgame-cloud-dev'),path.join(delivery,'wechatgame'),{recursive:true});fs.cpSync(path.join(built,'build/web-ui720'),path.join(delivery,'web'),{recursive:true});
+const wx=path.join(delivery,'wechatgame'),configFile=path.join(wx,'project.config.json'),config=JSON.parse(fs.readFileSync(configFile,'utf8'));delete config.cloudfunctionRoot;config.projectname='锅里捞啥-四套720UI';fs.writeFileSync(configFile,JSON.stringify(config,null,2));
+const inventory=files(wx).map(file=>({file:path.relative(wx,file).replaceAll('\\','/'),bytes:fs.statSync(file).size,sha256:hash(file)}));
+const total=inventory.reduce((n,f)=>n+f.bytes,0),game=JSON.parse(fs.readFileSync(path.join(wx,'game.json'),'utf8'));
+const packages=(game.subpackages||game.subPackages||[]).map(p=>({name:p.name,root:p.root,bytes:inventory.filter(f=>f.file.startsWith(p.root.replace(/\/$/,'')+'/')).reduce((n,f)=>n+f.bytes,0)}));
+const main=total-packages.reduce((n,p)=>n+p.bytes,0);assert(total<4000000,'WeChat client must be below 4,000,000 bytes');assert(main<2000000&&packages.every(p=>p.bytes<2000000),'Each local package must be below 2,000,000 bytes');
+const images=inventory.filter(f=>/\.(jpg|png)$/.test(f.file));
+const report={build:marker,canvas:{width:720,height:1280},totalClientBytes:total,limitBytes:4000000,remainingBytes:4000000-total,mainPackageBytes:main,subpackages:packages,imageCount:images.length,runtime:verification,sourceHashes:sources,files:inventory};
+fs.writeFileSync(path.join(delivery,'build-report.json'),JSON.stringify(report,null,2));
+fs.writeFileSync(path.join(delivery,'导入说明.md'),`# 锅里捞啥 · 四套 720×1280 UI\n\n版本：${marker}。\n\n微信开发者工具请导入本目录的 **wechatgame** 子文件夹。源码项目仍为 app/HotPot；本次未上传、发布小游戏或部署云函数。\n\n完整微信客户端未压缩合计 **${total.toLocaleString('en-US')} 字节**，严格低于4,000,000字节，剩余 ${(4000000-total).toLocaleString('en-US')} 字节。主包 ${main.toLocaleString('en-US')} 字节，各本地分包均低于2,000,000字节。以上统计包含全部微信客户端文件，不以ZIP体积代替客户端体积。网页构建、报告和截图不放入微信客户端。完整清单与SHA256见 build-report.json。\n\n已接入01市井朱红、04奶油黏土、08青瓷雅韵、09宣纸朱印的主界面、我的小馆、换肤、地域榜单、50种食材图鉴及详情、成就、地区选择、隐藏调试页、通关/复活/重开弹框和提示。全部采用统一720×1280画布与真实文字、按钮和动态数据，复用背景及食材图集；未将108张整屏稿放入游戏包。旧六宫格图集保留在 assets/art-archive/pre-design-720-reference，已退出运行资源。\n\n**散装江苏设定**：只有江苏展开到市、区县，其他省级地区选到本级即可保存；保留原地区数据，不补其他省份的下级。江苏未选到末级时保存按钮禁用。\n\n真实Cocos网页构建已检查四套皮肤的连续拿牌与三消、换肤应用/取消、图鉴滚动和详情、地区选择与保存、隐藏入口、复活与重开、三关结果，以及多尺寸完整画布和模拟微信安全区。所有50种食材和4段音频加载成功，没有页面脚本错误或本地素材缺失。已进行类型检查、关卡/存档及纹理性能回归。手机微信真机扫码尚未执行；中文系统字体在不同设备上可能有差异。\n\n网页静态版位于 **web**，通过HTTP服务器访问。不要把web文件夹一起导入微信项目。\n`);
+if(polished)fs.appendFileSync(path.join(delivery,'导入说明.md'),'\n## 本次修订\n\n- 普通三消不再弹出“+30”或连消加分提示，阶段道具奖励提示保留。\n- 第一关隐藏道具图片、次数角标及点击区域，只显示重新开始与声音控制；第二、三关保留道具。\n- 背景画面等比覆盖整个窗口，消除原先因9:16内容居中产生的两侧纯色空白。牌面、按钮及文字继续等比适配，避免变形和裁切。\n- 四套皮肤均验证以上行为，并额外检查754×878截图尺寸、其他多种窗口和页面的背景覆盖。\n');
+if(ranking){assert(verification.profileStatisticsInert&&verification.dedicatedRankingOption);fs.appendFileSync(path.join(delivery,'导入说明.md'),'\n## 榜单入口调整\n\n我的小馆的累计通关、食材发现和已获成就仅展示数据，点击不再打开榜单。新增独立的“地域榜单”菜单项；四套皮肤共用此交互，五个菜单选项及返回游戏按钮均完整显示。已在真实引擎中逐一点击三列统计、新增榜单入口与返回，并检查不同屏幕下的选项间距。\n')}
+console.log(JSON.stringify({delivery,totalClientBytes:total,remainingBytes:4000000-total,mainPackageBytes:main,packages,imageCount:images.length,checks:verification.checks.length},null,2));

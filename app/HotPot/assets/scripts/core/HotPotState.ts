@@ -1,5 +1,4 @@
 import {
-  Font,
   game as cocosGame,
   Game,
   JsonAsset,
@@ -49,7 +48,7 @@ export abstract class HotPotState extends HotPotFields {
         ? ResolutionPolicy.SHOW_ALL
         : ResolutionPolicy.FIXED_WIDTH;
     const referenceHeight=frameSize.width>0?DESIGN_WIDTH*frameSize.height/frameSize.width:DESIGN_HEIGHT;
-    view.setDesignResolutionSize(DESIGN_WIDTH,this.referenceLayout?referenceHeight:DESIGN_HEIGHT,policy);
+    view.setDesignResolutionSize(DESIGN_WIDTH,DESIGN_HEIGHT,policy);
     if (frameSize.width > 0 && frameSize.height > 0) {
       this.viewportHeight = this.referenceLayout ? referenceHeight : Math.max(
         DESIGN_HEIGHT,
@@ -110,24 +109,6 @@ export abstract class HotPotState extends HotPotFields {
    * 加载地区数据、连接云档案并恢复当前对局。
    */
   protected async initializePlayer(): Promise<void> {
-    await new Promise<void>(
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ (resolve) => {
-        resources.load(
-          'fonts/HotPotRegion',
-          Font,
-          /**
-           * 在资源加载完成后更新有效节点或处理失败。
-           */ (error, font) => {
-            if (!error) {
-              this.regionFont = font;
-            }
-            resolve();
-          },
-        );
-      },
-    );
     const regions = await new Promise<RegionNode[]>(
       /**
        * 在当前操作完成后更新相关游戏状态。

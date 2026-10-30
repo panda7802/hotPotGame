@@ -1,38 +1,24 @@
 import {BlockInputEvents,Color,Label,Node,Rect,resources,Sprite,SpriteFrame,Texture2D,UITransform,Vec3} from 'cc';
-import {REFERENCE_AUX_LAYOUTS} from '../data/ReferenceAssets';
 import {getPageTheme,PageStyle} from '../data/PageTheme';
 import {drawRoundRect,hex,makeLabel,transform} from './HotPotUi';
+import {fitReferenceContent,referenceSource} from './HotPotReferenceLayout';
 
 export type Box=[number,number,number,number];
 export type ArtPage='rank'|'profile'|'picker'|'win1'|'win2'|'win3'|'collection'|'detail'|'achievements'|'region'|'revive'|'restart';
-const index:Record<ArtPage,number>={rank:0,profile:1,picker:2,win1:3,win2:4,win3:5,collection:0,detail:1,achievements:2,region:3,revive:4,restart:5};
 export function place(node:Node,box:Box,height:number):void{
   transform(node,box[2]*720,box[3]*height);
   node.setPosition((box[0]+box[2]/2-.5)*720,(.5-box[1]-box[3]/2)*height);
 }
 /** Original artwork is a shared texture; all data and hit regions remain live. */
-export function art(parent:Node,page:ArtPage|'shell',box:Box,height:number,style=getPageTheme().id,crop:Box=[0,0,1,1]):Node{
+export function art(parent:Node,page:ArtPage|'shell'|'background',box:Box,height:number,style=getPageTheme().id,crop:Box=[0,0,1,1]):Node{
   const node=new Node('ReferenceArtwork_'+page);parent.addChild(node);place(node,box,height);
   if(box[0]<0){transform(node,(parent.getComponent(UITransform)?.width||720)*box[2],height*box[3]);node.setPosition(0,0)}
-  const group=page==='shell'?'shell':index[page]<3&&['rank','profile','picker'].includes(page)||page.startsWith('win')?'a':'b';
-  const actual=group==='b'&&![4,8].includes(style)&&!REFERENCE_AUX_LAYOUTS[style]?8:style;
-  const key='reference/'+group+'-0'+actual;
+  const source=referenceSource(page,style);
+  const key='reference/'+source.group+'-0'+source.style;
   resources.load(key+'/texture',Texture2D,(error,texture)=>{
     if(error||!texture||!node.isValid)return;
-    let x=0,y=0,w=texture.width,h=texture.height;
-    if(page!=='shell'){
-      const i=index[page];
-      const a:any={1:{width:1151,height:1367,cols:[[0,383],[388,378],[771,380]],rows:[[0,638],[643,724]]},
-        4:{width:941,height:1672,cols:[[0,312],[318,307],[631,310]],rows:[[0,835],[839,833]]},
-        8:{width:1151,height:1366,cols:[[0,387],[396,362],[772,379]],rows:[[0,629],[634,732]]},
-        9:{width:941,height:1672,cols:[[0,312],[318,307],[631,310]],rows:[[0,834],[839,833]]}};
-      const shape=group==='a'?a[actual]:REFERENCE_AUX_LAYOUTS[actual]|| (actual===4?{width:1152,height:1366,cols:[[0,382],[386,381],[771,381]],rows:[[0,680],[685,681]]}
-        :{width:941,height:1672,cols:[[0,309],[316,308],[632,309]],rows:[[0,834],[839,833]]});
-      x=shape.cols[i%3][0]/shape.width*texture.width;
-      y=shape.rows[i<3?0:1][0]/shape.height*texture.height;
-      w=shape.cols[i%3][1]/shape.width*texture.width;
-      h=shape.rows[i<3?0:1][1]/shape.height*texture.height;
-    }
+    const x=source.x/source.width*texture.width,y=source.y/source.height*texture.height;
+    const w=source.w/source.width*texture.width,h=source.h/source.height*texture.height;
     const frame=new SpriteFrame();frame.texture=texture;
     frame.rect=new Rect(Math.round(x+crop[0]*w),Math.round(y+crop[1]*h),Math.max(1,Math.floor(crop[2]*w)),Math.max(1,Math.floor(crop[3]*h)));
     const image=node.addComponent(Sprite);image.sizeMode=Sprite.SizeMode.CUSTOM;image.spriteFrame=frame;
@@ -53,9 +39,17 @@ export function text(parent:Node,value:string,box:Box,height:number,size=28,colo
 export function patch(parent:Node,page:ArtPage,box:Box,height:number,crop:Box,style=getPageTheme().id):void{
   art(parent,page,box,height,style,crop);
 }
-export function fullOverlay(parent:Node,name:string,height:number):{overlay:Node,panel:Node}{
+export function fullOverlay(parent:Node,name:string,height:number,contentHeight=height):{overlay:Node,panel:Node}{
   const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,height);overlay.addComponent(BlockInputEvents);
-  const panel=new Node('PlayerPanel');overlay.addChild(panel);transform(panel,720,height);return {overlay,panel};
+  drawRoundRect(overlay,720,height,0,getPageTheme().id===1?getPageTheme().dark:getPageTheme().panel);
+  const panel=new Node('PlayerPanel');overlay.addChild(panel);transform(panel,720,contentHeight);
+  (panel as any).referenceHeight=contentHeight;fitReferenceContent(panel,contentHeight);return {overlay,panel};
+}
+export function pageHeight(node:Node):number{
+  for(let parent:Node|null=node;parent;parent=parent.parent){
+    if((parent as any).referenceHeight)return (parent as any).referenceHeight;
+  }
+  return node.getComponent(UITransform)?.height||1280;
 }
 export function plainColor(value:string){return hex(value)}
 

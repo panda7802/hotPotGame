@@ -66,7 +66,7 @@ for(const id of ['01','04','08','09']){
       layers.push({input:front,left:0,top:0});
     }
     if(layers.length)image=image.composite(layers);
-    await image.resize({width:group==='A'?1200:780,withoutEnlargement:true}).jpeg({quality:group==='A'?58:40,mozjpeg:true}).toFile(file);meta(file);
+    await image.resize({width:group==='A'?1200:780,withoutEnlargement:true}).jpeg({quality:group==='A'?61:40,mozjpeg:true}).toFile(file);meta(file);
   }
 }
 for(const letter of ['a','b']){

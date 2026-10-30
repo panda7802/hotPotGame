@@ -87,10 +87,7 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     );
     const reward = this.grantBoilRewards();
     this.updateProgress();
-    this.showToast(
-      reward || `${this.combo > 1 ? `连消 x${this.combo}  ` : ''}+30`,
-      '#D64A36',
-    );
+    if (reward) this.showToast(reward, '#D64A36');
     tween(effects)
       .delay(0.82)
       .call(

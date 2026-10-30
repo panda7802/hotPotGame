@@ -5,7 +5,8 @@ import {INGREDIENTS,IngredientType,getIngredient} from '../data/GameData';
 import {achievementEntries,INGREDIENT_STORIES} from '../data/CollectionData';
 import {regionPath,RegionNode} from '../data/PlayerData';
 import {HotPotReferenceMenus} from './HotPotReferenceMenus';
-import {ArtPage,Box,art,fullOverlay,hit,patch,place,text} from './HotPotReferenceArt';
+import {ArtPage,Box,art,fullOverlay,hit,patch,place,text,pageHeight} from './HotPotReferenceArt';
+import {referenceHeight} from './HotPotReferenceLayout';
 import {drawFoodTile,drawRoundRect,hex,transform} from './HotPotUi';
 
 /** Live collections, real progress and real province/city/county choices. */
@@ -16,40 +17,41 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
   protected referenceAux(name:string,page:ArtPage):Node|null{
     if([4,8].includes(getPageTheme().id)||REFERENCE_AUX_LAYOUTS[getPageTheme().id])return this.referencePage(name,page);
     if(!this.playerService||!this.levelData||this.hasPlayerMenu())return null;
-    const {panel}=fullOverlay(this.node,name,this.viewportHeight);
-    art(panel,'shell',[0,0,1,1],this.viewportHeight);
+    const h=referenceHeight('shell',getPageTheme().id);
+    const {panel}=fullOverlay(this.node,name,this.viewportHeight,h);
+    art(panel,'shell',[0,0,1,1],h);
     const paper=new Node('PaperContent');panel.addChild(paper);
-    place(paper,[.045,.16,.91,.73],this.viewportHeight);
-    drawRoundRect(paper,655,.73*this.viewportHeight,24,getPageTheme().panel,getPageTheme().edge,4);
+    place(paper,[.045,.16,.91,.73],h);
+    drawRoundRect(paper,655,.73*h,24,getPageTheme().panel,getPageTheme().edge,4);
     text(panel,{collection:'食材图鉴',detail:'食材详情',achievements:'我的成就',region:'选择所在地',revive:'托盘满啦',restart:'重新开始？'}[page]||'',
-      [.15,.17,.70,.07],this.viewportHeight,38,getPageTheme().ink,true);
+      [.15,.17,.70,.07],h,38,getPageTheme().ink,true);
     return panel;
   }
 
   private paper(parent:Node,box:Box):Node{
-    const n=new Node('LivePaper');parent.addChild(n);place(n,box,this.viewportHeight);
-    drawRoundRect(n,box[2]*720,box[3]*this.viewportHeight,2,getPageTheme().panel);return n;
+    const h=pageHeight(parent),n=new Node('LivePaper');parent.addChild(n);place(n,box,h);
+    drawRoundRect(n,box[2]*720,box[3]*h,2,getPageTheme().panel);return n;
   }
 
   protected referenceButton(parent:Node,name:string,caption:string,box:Box,action:()=>void):Node{
-    const n=hit(parent,name,box,this.viewportHeight,action);
+    const h=pageHeight(parent),n=hit(parent,name,box,h,action);
     // Use the ornate action from the approved result art, keeping its real frame.
     const id=getPageTheme().id;
     const crop:Box=id===1?[.14,.585,.72,.065]:id===4?[.16,.515,.68,.055]:id===8?[.12,.63,.76,.077]:[.18,.565,.64,.07];
-    art(n,'win1',[-.5,-.5,1,1],box[3]*this.viewportHeight,id,crop);
+    art(n,'win1',[-.5,-.5,1,1],box[3]*h,id,crop);
     // Only the label area is replaced; illustrated corners, shadows and frame stay.
     const cover=new Node('ButtonLabelCover');n.addChild(cover);
-    drawRoundRect(cover,box[2]*720*.64,box[3]*this.viewportHeight*.58,4,getPageTheme().accent);
-    const label=text(n,caption,[-.42,-.35,.84,.7],box[3]*this.viewportHeight,27,getPageTheme().onAccent,true);
+    drawRoundRect(cover,box[2]*720*.64,box[3]*h*.58,4,getPageTheme().accent);
+    const label=text(n,caption,[-.42,-.35,.84,.7],box[3]*h,27,getPageTheme().onAccent,true);
     label.node.setPosition(0,0);return n;
   }
 
   private scroll(parent:Node,name:string,box:Box,contentHeight:number,offset=0):Node{
-    const viewport=new Node(name);parent.addChild(viewport);place(viewport,box,this.viewportHeight);
+    const h=pageHeight(parent),viewport=new Node(name);parent.addChild(viewport);place(viewport,box,h);
     viewport.addComponent(Mask);
     const content=new Node(name==='CollectionViewport'?'CollectionContent':'RegionContent');viewport.addChild(content);
     transform(content,box[2]*720,contentHeight).setAnchorPoint(.5,1);
-    content.setPosition(0,box[3]*this.viewportHeight/2+offset);
+    content.setPosition(0,box[3]*h/2+offset);
     const view=viewport.addComponent(ScrollView);view.content=content;view.horizontal=false;view.vertical=true;view.elastic=false;view.inertia=true;view.cancelInnerEvents=true;
     return content;
   }
@@ -58,7 +60,7 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
     const page=tab==='ingredients'?'collection':'achievements';
     const p=this.referenceAux('CollectionOverlay',page);if(!p)return;
     this.referenceTab=tab;
-    const h=this.viewportHeight,id=getPageTheme().id,t=getPageTheme(),state=this.playerService!.state;
+    const h=pageHeight(p),id=getPageTheme().id,t=getPageTheme(),state=this.playerService!.state;
     const top=tab==='achievements'?.22:id===4?.27:.26,bottom=id===4?.91:.865;
     this.paper(p,[.04,top,.92,bottom-top]);
     const titleTaps={count:entry?.headingTaps||0,food:entry?.ingredientTaps||0};
@@ -104,7 +106,7 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
 
   protected showIngredientDetail(type:IngredientType):void{
     const p=this.referenceAux('CollectionDetailOverlay','detail');if(!p)return;
-    const h=this.viewportHeight,t=getPageTheme(),item=getIngredient(type),known=this.playerService!.state.progress.discovered.includes(type);
+    const h=pageHeight(p),t=getPageTheme(),item=getIngredient(type),known=this.playerService!.state.progress.discovered.includes(type);
     const back=()=>{this.dismissPlayerMenu('CollectionDetailOverlay');this.showCollection(this.referenceTab)};
     if(type==='shrimp'&&known&&([4,8].includes(t.id)||REFERENCE_AUX_LAYOUTS[t.id])){
       hit(p,'Button_返回图鉴',[.08,.885,.84,.09],h,back);hit(p,'MenuClose',[0,0,.18,.13],h,back);return;
@@ -122,7 +124,7 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
   protected showRegionPicker(codes:string[],leaderboard=false,_query=''):void{
     if(leaderboard){this.showReferenceRanking();return}
     const p=this.referenceAux('RegionOverlay','region');if(!p)return;
-    const h=this.viewportHeight,t=getPageTheme(),all=this.playerService!.regions;
+    const h=pageHeight(p),t=getPageTheme(),all=this.playerService!.regions;
     const selected=(codes.length?codes:this.playerService!.state.profile.regionCodes).slice();
     this.paper(p,[.055,.22,.89,.65]);
     let lists:RegionNode[][]=[all,all.find(n=>n.code===selected[0])?.children||[],[]];

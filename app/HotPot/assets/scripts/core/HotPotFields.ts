@@ -2,7 +2,6 @@ import {
   AudioClip,
   AudioSource,
   Component,
-  Font,
   Label,
   Node,
   SpriteFrame,
@@ -97,10 +96,6 @@ export abstract class HotPotFields extends Component {
    * 玩家存档摘要的文字节点。
    */
   protected playerSaveLabel: Label | null = null;
-  /**
-   * 地区名称使用的字体。
-   */
-  protected regionFont: Font | null = null;
   /**
    * 玩家档案入口的文字节点。
    */

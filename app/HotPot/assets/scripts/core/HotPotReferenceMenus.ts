@@ -4,7 +4,8 @@ import {PageStyle,getPageTheme} from '../data/PageTheme';
 import {regionPath} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
 import {HotPotReferenceShell} from './HotPotReferenceShell';
-import {ArtPage,Box,art,blendField,fullOverlay,hit,patch,text} from './HotPotReferenceArt';
+import {ArtPage,Box,art,blendField,fullOverlay,hit,patch,text,pageHeight} from './HotPotReferenceArt';
+import {referenceHeight} from './HotPotReferenceLayout';
 import {drawRoundRect,hex,transform} from './HotPotUi';
 
 /** Full-page compositions are taken from the approved art, not recolored dialogs. */
@@ -32,8 +33,9 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
 
   protected referencePage(name:string,page:ArtPage):Node|null{
     if(!this.playerService||!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded))return null;
-    const {panel}=fullOverlay(this.node,name,this.viewportHeight);
-    art(panel,page,[0,0,1,1],this.viewportHeight);
+    const h=referenceHeight(page,getPageTheme().id);
+    const {panel}=fullOverlay(this.node,name,this.viewportHeight,h);
+    art(panel,page,[0,0,1,1],h);
     return panel;
   }
 
@@ -49,16 +51,16 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
     if(!REFERENCE_CLEAN_STYLES.includes(id)){
       const point:Box=page==='profile'?(id===1&&dark?[.87,.30,.001,.001]:id===8?[.85,.25,.001,.001]:[.43,.44,.001,.001]):[.67,.39,.001,.001];
       const colors=REFERENCE_PATCH_COLORS[id+'-'+page+'-'+box.map(v=>v.toFixed(4)).join(',')];
-      if(colors)blendField(panel,box,this.viewportHeight,colors);else patch(panel,page,box,this.viewportHeight,point);
+      if(colors)blendField(panel,box,pageHeight(panel),colors);else patch(panel,page,box,pageHeight(panel),point);
     }
-    const label=text(panel,value,box,this.viewportHeight,size,dark?'#FFF0D6':getPageTheme().ink,true);
+    const label=text(panel,value,box,pageHeight(panel),size,dark?'#FFF0D6':getPageTheme().ink,true);
     if(!dark&&/^[0-9/.]+$/.test(value)&&size>=29)label.color=hex(id===4?getPageTheme().success:getPageTheme().accent);
     label.node.name='LiveData_'+value;return label;
   }
 
   protected showPlayerProfile():void{
     const p=this.referencePage('PlayerOverlay','profile');if(!p)return;
-    const id=getPageTheme().id,h=this.viewportHeight,state=this.playerService!.state;
+    const id=getPageTheme().id,h=pageHeight(p),state=this.playerService!.state;
     const address=regionPath(this.playerService!.regions,state.profile.regionCodes).map(n=>n.name).join(' · ')||'尚未选择地区';
     const complete=state.progress.completedLevels.length,found=state.progress.discovered.length;
     const stats=this.referenceStats();
@@ -105,7 +107,7 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
   protected showPageStyles():void{
     const p=this.referencePage('StyleOverlay','picker');if(!p)return;
     if(this.referenceOriginalStyle===null)this.referenceOriginalStyle=getPageTheme().id;
-    const id=getPageTheme().id,h=this.viewportHeight;
+    const id=getPageTheme().id,h=pageHeight(p);
     const top=id===8?.105:id===1?.25:id===4?.225:.21;
     const cardH=id===8?.345:id===1?.255:id===4?.27:.28;
     [1,4,8,9].forEach((value,i)=>hit(p,'PageStyle_'+value,
@@ -132,7 +134,7 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
 
   protected showReferenceRanking(scope=0):void{
     const p=this.referencePage('RegionOverlay','rank');if(!p)return;
-    const service=this.playerService!,h=this.viewportHeight,id=getPageTheme().id;
+    const service=this.playerService!,h=pageHeight(p),id=getPageTheme().id;
     const selected=service.state.profile.regionCodes;
     let regions=service.regions;
     if(scope>0){const province=regions.find(n=>n.code===selected[0]);regions=province?.children||[];if(scope>1)regions=regions.find(n=>n.code===selected[1])?.children||[]}

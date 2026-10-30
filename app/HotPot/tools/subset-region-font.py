@@ -1,4 +1,4 @@
-"""Rebuild the bundled region font after editing doc/res/regions.json.
+"""Rebuild the archived legacy region font after editing doc/res/regions.json.
 
 Requires fonttools (pip install fonttools). The full upstream font stays outside
 the Cocos assets directory so it never enters the WeChat package.
@@ -10,7 +10,8 @@ from fontTools.ttLib import TTFont
 
 root = Path(__file__).resolve().parents[3]
 source = root / 'doc/res/fonts/ZCOOLKuaiLe-Regular.ttf'
-output = root / 'app/HotPot/assets/resources/fonts/HotPotRegion.ttf'
+# Current pages use system fonts. Keep the legacy subset out of runtime bundles.
+output = root / 'app/HotPot/assets/art-archive/unused-region-font/HotPotRegion.ttf'
 regions = json.loads(
     (root / 'doc/res/regions.json').read_text(encoding='utf-8-sig')
 )
