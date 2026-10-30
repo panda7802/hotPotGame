@@ -1,0 +1,68 @@
+{
+  "preservedCurrentGameRuntimeEvidence": "implemented-720-20261030",
+  "runtimeEvidenceFolders": [
+    "implemented-1279",
+    "implemented-1489",
+    "asset-audit-20261030",
+    "screenfit-20261030"
+  ],
+  "productionGameFilesEdited": false,
+  "savedSourceArt": [
+    "bg-01-source.png",
+    "shell-01-source.png",
+    "bg-04-source.png",
+    "shell-04-source.png",
+    "bg-08-source.png",
+    "shell-08-source.png",
+    "bg-09-source.png",
+    "shell-09-source.png",
+    "tiles-source.png",
+    "food-atlas-a-source.png",
+    "food-atlas-b-source.png"
+  ],
+  "preservedSeparateMarketingDesign": "promo-cover-20261030",
+  "removedUiDrafts": [
+    "first-level-responsive-20261030",
+    "home-ninepatch-20261030",
+    "home-ninepatch-4themes-20261030",
+    "ingredients-1489-20261029",
+    "reference-replica-20261030",
+    "selected-1-7-9",
+    "style-exploration",
+    "style7-review-20261029",
+    "ui-4themes-720x1280-20261030",
+    "ui-c-ingredients",
+    "ui-expanded-1489-2026-10-29"
+  ],
+  "runtimeEvidenceMovedTo": "D:\\codeX\\create\\.codex-work\\ui-runtime-evidence-20261030",
+  "removedOldDesignZip": "D:\\codeX\\create\\exports\\HotPot-UI-720x1280-design-20261030.zip",
+  "latestDesign": "D:\\codeX\\create\\design\\all-pages-ninepatch-20261030",
+  "finalCleanup": {
+    "currentCoverConsolidatedTo": "D:\\codeX\\create\\design\\all-pages-ninepatch-20261030\\assets\\cover",
+    "removedDirectories": [
+      "D:\\codeX\\create\\design\\implemented-720-20261030",
+      "D:\\codeX\\create\\design\\promo-cover-20261030",
+      "D:\\codeX\\create\\.codex-work\\ui-runtime-evidence-20261030"
+    ],
+    "removedOldExportPreviews": [
+      "D:\\codeX\\create\\exports\\HotPot-header-spacing-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-profile-borders-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-profile-close-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-profile-spacing-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-style7-achievements-review2.png",
+      "D:\\codeX\\create\\exports\\HotPot-style7-failure-review.png",
+      "D:\\codeX\\create\\exports\\HotPot-style7-other-pages-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-style7-review-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-style7-three-wins-review.png",
+      "D:\\codeX\\create\\exports\\HotPot-themes-20261029-preview.png",
+      "D:\\codeX\\create\\exports\\HotPot-themes4-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-ui-clarity-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-ui1279-home-runtime.png",
+      "D:\\codeX\\create\\exports\\HotPot-ui1279-profile-runtime.png"
+    ],
+    "archivedOldDesignsRetained": false,
+    "remainingDesignDirectories": [
+      "all-pages-ninepatch-20261030"
+    ]
+  }
+}

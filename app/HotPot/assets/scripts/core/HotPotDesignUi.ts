@@ -90,6 +90,7 @@ export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageT
   else if(type==='pin'){g.circle(0,3*s,6*s);g.stroke();g.circle(0,3*s,2*s);g.stroke();line([[7,13],[12,21],[17,13]])}
   else if(type==='trophy'){line([[7,3],[17,3],[17,10],[15,14],[9,14],[7,10]],true);line([[7,5],[3,5],[3,9],[7,12]]);line([[17,5],[21,5],[21,9],[17,12]]);line([[12,14],[12,20]]);line([[8,21],[16,21]])}
   else if(type==='palette'){g.circle(0,0,9*s);g.stroke();for(const [x,y] of [[-4,4],[3,5],[-5,-2],[3,-3]]){g.circle(x*s,y*s,1.3*s);g.fill()}}
+  else if(type==='share'){line([[12,16],[12,3]]);line([[7,8],[12,3],[17,8]]);line([[5,12],[5,21],[19,21],[19,12]])}
   else if(type==='warning'){line([[12,3],[22,21],[2,21]],true);line([[12,9],[12,14]]);g.circle(0,-5*s,.8*s);g.fill()}
   else if(type==='check')line([[5,12],[10,17],[20,6]]);
   else if(type==='refresh'){line([[20,5],[20,11],[14,11]]);line([[4,19],[4,13],[10,13]]);g.arc(0,0,7*s,.25,2.7,false);g.stroke();g.arc(0,0,7*s,3.4,5.85,false);g.stroke()}

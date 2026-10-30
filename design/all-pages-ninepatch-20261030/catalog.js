@@ -1,0 +1,13 @@
+(function(){
+const core=[
+['game1','第一关 · 开锅尝鲜','主界面'],['game1-muted','第一关 · 声音关闭','主界面'],['game2','第二关 · 热锅练手','主界面'],['game2-muted','第二关 · 声音关闭','主界面'],['game3','第三关 · 千层盛宴','主界面'],['game3-muted','第三关 · 声音关闭','主界面'],['game-reserve','复活后 · 寄存区','主界面'],
+['profile','我的小馆','子页面'],['picker','页面换肤 · 选择与确认','子页面'],['rank-national','地域榜单 · 全国','子页面'],['rank-province','地域榜单 · 江苏省内','子页面'],['rank-city','地域榜单 · 南京市内','子页面'],['rank-empty','地域榜单 · 暂无成绩','空状态'],['rank-loading','地域榜单 · 加载中','空状态'],['rank-offline','地域榜单 · 暂不可用','空状态'],
+['collection','食材图鉴 · 首屏','子页面'],['collection-end','食材图鉴 · 末页','子页面'],['collection-empty','食材图鉴 · 尚未发现','空状态'],['detail-locked','食材详情 · 尚未发现','食材详情'],['achievements','我的成就 · 首屏','子页面'],['achievements-end','我的成就 · 末页','子页面'],
+['region-unselected','所在地 · 尚未选择','子页面'],['region-province','所在地 · 非江苏直接保存','子页面'],['region-jiangsu','所在地 · 江苏待选城市','子页面'],['region-city','所在地 · 南京待选区县','子页面'],['region-complete','所在地 · 江苏完整选择','子页面'],['backdoor','隐藏调试 · 第二关','子页面'],['backdoor-no-tools','隐藏调试 · 第一关无道具','子页面'],
+['win1','第一关完成','弹框'],['win2','第二关完成','弹框'],['win3','全部通关','弹框'],['revive','托盘已满 · 免费复活','弹框'],['revive-used','托盘已满 · 复活已使用','弹框'],['restart','重新开始确认','弹框'],['cloud-conflict','本机与云端存档冲突','弹框'],
+['toast-reward','提示 · 获得阶段道具','提示'],['toast-saved','提示 · 地区已保存','提示'],['toast-sound-on','提示 · 声音已开启','提示'],['toast-sound-off','提示 · 声音已关闭','提示'],['toast-restored','提示 · 已恢复本局进度','提示'],['toast-save-error','提示 · 保存失败','提示'],['toast-region-error','提示 · 地区加载失败','提示'],['toast-new-day','提示 · 新的一天','提示']
+];
+core.push(['achievements-empty','我的成就 · 尚未达成','空状态'],['account-choice','账号连接 · 进度选择','弹框'],['cloud-confirm','确认使用云端进度','弹框'],['ingredient-dialog','图鉴 · 食材故事弹框','弹框'],['region-confirm','地区 · 保存确认','弹框'],['region-discard','地区 · 放弃修改','弹框'],['region-error-dialog','地区 · 加载异常','弹框'],['picker-confirm','换肤 · 应用确认','弹框'],['picker-discard','换肤 · 放弃预览','弹框'],['rank-error-dialog','榜单 · 加载异常','弹框'],['rank-region-required','榜单 · 未选择所在地','弹框'],['rank-no-subdivision','榜单 · 此地区无下级','弹框'],['save-error-dialog','小馆 · 同步失败','弹框'],['debug-clear-confirm','调试 · 修改牌阵确认','弹框'],['new-day-dialog','每日关卡 · 更新确认','弹框'],['toast-style-saved','提示 · 换肤成功','提示']);
+core.push(['toast-share-web','分享 · 网页环境提示','提示']);
+window.CORE_STATES=core.map(([id,title,category])=>({id,title,category}));window.STATES=[...CORE_STATES,...FOODS.map((food,index)=>({id:'detail-'+food.id,title:'食材详情 · '+food.name,category:'食材详情',food:index}))];window.SIZES=[{id:'720x1280',w:720,h:1280,label:'720 × 1280 标准'},{id:'1440x3200',w:1440,h:3200,label:'1440 × 3200 长屏'},{id:'720x1080',w:720,h:1080,label:'720 × 1080 扁屏'}];
+})();

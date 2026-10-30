@@ -1,0 +1,430 @@
+{
+  "build": "20261030-reference-replica-screenfit",
+  "totalClientBytes": 3807790,
+  "limitBytes": 4000000,
+  "mainPackageBytes": 1490180,
+  "subpackages": [
+    {
+      "name": "internal",
+      "bytes": 160098
+    },
+    {
+      "name": "resources",
+      "bytes": 1989597
+    },
+    {
+      "name": "main",
+      "bytes": 167915
+    }
+  ],
+  "runtimeChecks": 145,
+  "pageErrors": [],
+  "wechatValidation": "Layout API simulation in the actual web engine; physical WeChat device still required",
+  "files": [
+    {
+      "file": "application.js",
+      "bytes": 3302,
+      "sha256": "359f85dd922e2568aa991af95a5c356a0102042c8918252987bfbd37f2153eb2"
+    },
+    {
+      "file": "cocos-js/cc.js",
+      "bytes": 1317552,
+      "sha256": "8b94aa2184f266c2a4c02c83d91f03ce8aeeb870e75511092eb7b542fb93ad80"
+    },
+    {
+      "file": "engine-adapter.js",
+      "bytes": 20342,
+      "sha256": "5b649b336c4be870e7d40cad6b5231623032a77444644e42af34ad31fd9fd031"
+    },
+    {
+      "file": "first-screen.js",
+      "bytes": 1207,
+      "sha256": "af10dccc7796d2402c3ace607dd1d7a990ca2943977ba96942d2579e0b6b77dd"
+    },
+    {
+      "file": "game.js",
+      "bytes": 2741,
+      "sha256": "530844b4ad322802098765bdd355b1eb42b7d61194061cc512bb1dbef7ab0de1"
+    },
+    {
+      "file": "game.json",
+      "bytes": 303,
+      "sha256": "79fe5c19d19cdf3d7cae8c73fa212ce9c14fdbd5ba7379792303e33626dffdb3"
+    },
+    {
+      "file": "logo.png",
+      "bytes": 14496,
+      "sha256": "9e6a5832c6bc9c5f2da97dc54d916fd257a6ab35e9ffd57dbe88c435bd535940"
+    },
+    {
+      "file": "project.config.json",
+      "bytes": 668,
+      "sha256": "61f286a7d74217c179ee334639792728f5f71322fd90441bcc6843b0f5199981"
+    },
+    {
+      "file": "slogan.png",
+      "bytes": 11482,
+      "sha256": "b3113554f80c03f9ce51d12ea7c17d68bf7914b89d092743cc54cd370d7f65a9"
+    },
+    {
+      "file": "src/chunks/bundle.js",
+      "bytes": 3414,
+      "sha256": "8ea7b6c98a721a5c629c1ce09abb3d95a472ece4f364b51c2bd6da6d6685695e"
+    },
+    {
+      "file": "src/effect.bin",
+      "bytes": 5755,
+      "sha256": "b0d92f8307e3109abe8af8a863d68feb58cf4f49cf000b1d48fbb3dc3ad45556"
+    },
+    {
+      "file": "src/import-map.js",
+      "bytes": 210,
+      "sha256": "f3cf39bc861d3a2ffd0bfc7d2e7df4397e54d13f71d3f74fbe213219e728bbdc"
+    },
+    {
+      "file": "src/polyfills.bundle.js",
+      "bytes": 8394,
+      "sha256": "cb588d11797e0ca56123d979812db39c8b38dd01c5a6761b2aa5f79cb1d4c701"
+    },
+    {
+      "file": "src/settings.json",
+      "bytes": 1940,
+      "sha256": "2eb3c027f828d207c9e5af75ee79d521a6f20faa6dda4fa0316437bc058643d8"
+    },
+    {
+      "file": "src/system.bundle.js",
+      "bytes": 8319,
+      "sha256": "9e52437715d2e6a8acacb41f1c64d916e4b455d2a9d448f09cecd551dc084b84"
+    },
+    {
+      "file": "subpackages/internal/config.json",
+      "bytes": 1906,
+      "sha256": "dd25a5a233c3abbd9653c8fb8f47a0709d8e18f92dcf5e8fa9e903dd2396b63a"
+    },
+    {
+      "file": "subpackages/internal/game.js",
+      "bytes": 45110,
+      "sha256": "19bd675acfdd6f12d4bfec92fa4fa354b57c1dee7256325dce20ebfc5657b58c"
+    },
+    {
+      "file": "subpackages/internal/import/05/05de040c9.json",
+      "bytes": 10004,
+      "sha256": "eb49b006a2b85662bce08987b11b86f46dc1bb566042151c362120d68ab21f91"
+    },
+    {
+      "file": "subpackages/internal/import/0b/0ba503733.json",
+      "bytes": 66497,
+      "sha256": "d7a292f1ad2465dd7c08aeff030c16f23ac7555c72b5d00734668abc7612140b"
+    },
+    {
+      "file": "subpackages/internal/import/0d/0dfe1b9d0.json",
+      "bytes": 2095,
+      "sha256": "0bfb29423466306e5cd81c6596efb7a5405683395edd973e9b411b87f4ce511a"
+    },
+    {
+      "file": "subpackages/internal/import/0e/0e7a008af.json",
+      "bytes": 5916,
+      "sha256": "a3be17c38b37f34a3a7f537c39dd85f0cd8639fa903b9216b9666a18910789df"
+    },
+    {
+      "file": "subpackages/internal/import/5c/5c601d96-e4c7-4698-991b-7ee674b11079.json",
+      "bytes": 7309,
+      "sha256": "edded69beb89d3f71d8d091eb16f69e7e884fc2e606ac82b096d0ccf2cafa7b6"
+    },
+    {
+      "file": "subpackages/internal/import/6a/6a2d0734-bd9e-4ddf-946e-caa52498cb75.json",
+      "bytes": 15682,
+      "sha256": "705dd4fc7e87f290c67efcaf3606e20ccc6c75dbcb06aace6e05206df8f1ea42"
+    },
+    {
+      "file": "subpackages/internal/import/97/970b0598-bcb0-4714-91fb-2e81440dccd8.json",
+      "bytes": 3692,
+      "sha256": "7bcee959de0ca0bc6d5564c2a69c810dd7c879b3abd8ec83bfaf89b49ee21335"
+    },
+    {
+      "file": "subpackages/internal/import/d9/d930590d-bb92-4cc8-8bd1-23cd027f9edf.json",
+      "bytes": 308,
+      "sha256": "c32d16df8e06a6086d21018995a68ab5df8eff5cf05f8007b0b7007449e7e7d9"
+    },
+    {
+      "file": "subpackages/internal/import/dd/dd3a144d-ab7f-41f0-82b8-2e43a090d496.json",
+      "bytes": 333,
+      "sha256": "34e4870f9cb54b87e3afb3712177e873919f961019583cb5a344cf4b66f04650"
+    },
+    {
+      "file": "subpackages/internal/import/e9/e9aa9a3e-5b2b-4ac7-a2c7-073de2b2b24f.json",
+      "bytes": 273,
+      "sha256": "467203472f4bb302bd5e2b27fa8b600ab8d12ac3f4b6a441b8fdb0b2e190ce2e"
+    },
+    {
+      "file": "subpackages/internal/import/ef/efe8e2a3-eace-427b-b4f1-cb8a937ec77d.json",
+      "bytes": 324,
+      "sha256": "6b2521390036eff7e0f75f9cdbdd2e99c61715cccc274bba511fceb6c5b78401"
+    },
+    {
+      "file": "subpackages/internal/import/f9/f92806d7-1768-443f-afe8-12bcde84d0f0.json",
+      "bytes": 329,
+      "sha256": "85f072a7d9d164b60221bf1ccecf2205a79976883d89c5ce93d4a9459c18deeb"
+    },
+    {
+      "file": "subpackages/internal/import/fd/fda095cb-831d-4601-ad94-846013963de8.json",
+      "bytes": 320,
+      "sha256": "365d002a2cb7a9ae7b20eb9b264f549f7f3c8747b79892cd5933411a7666cd35"
+    },
+    {
+      "file": "subpackages/main/config.json",
+      "bytes": 578,
+      "sha256": "8e043fca4c8dcb1db50e8ec55400aa9a8be528dba45bea0cd2127eb2f2165acd"
+    },
+    {
+      "file": "subpackages/main/game.js",
+      "bytes": 165121,
+      "sha256": "c6e1f160b388611239baaebfe8f19f0c1894721928d0b9c43ae6e3612dfbdb78"
+    },
+    {
+      "file": "subpackages/main/import/7c/7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb.json",
+      "bytes": 1544,
+      "sha256": "a7ae1165015b643dc0167c60dce26a897cac3f612aee18d9eeb4db3554255d12"
+    },
+    {
+      "file": "subpackages/main/import/ba/ba21476f-2866-4f81-9c4d-6e359316e448.json",
+      "bytes": 192,
+      "sha256": "0a34e9263b215bb661d6334db6a255497c6cdac1f1c40b130f50bf9d91f4dd39"
+    },
+    {
+      "file": "subpackages/main/import/fd/fd8ec536-a354-4a17-9c74-4f3883c378c8.json",
+      "bytes": 480,
+      "sha256": "c2eee4552a460ed97591f527e127b95c811d5f796b9448f3f705974af9beba9d"
+    },
+    {
+      "file": "subpackages/resources/config.json",
+      "bytes": 2605,
+      "sha256": "6840f727a092a1bebdc263221fa577c9753a8dd9cd825560c8b7fa8fdc828ffc"
+    },
+    {
+      "file": "subpackages/resources/game.js",
+      "bytes": 605,
+      "sha256": "51a07ab61ee49561d29734ff6ee095b0d8a47998bbe30a6f1973bf3c8b7faa25"
+    },
+    {
+      "file": "subpackages/resources/import/0d/0d150762f.json",
+      "bytes": 678,
+      "sha256": "46e51f260cf2db0c30b670724ae7091c4ce2bfde750928299e046111c2036ad8"
+    },
+    {
+      "file": "subpackages/resources/import/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.json",
+      "bytes": 120,
+      "sha256": "bea268a0da2ce3add9aeb4589e6f62b286384af6e95f80fdf184d5ef462756cf"
+    },
+    {
+      "file": "subpackages/resources/import/18/18967655-3469-49eb-98d2-ad3549e385ac.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.json",
+      "bytes": 119,
+      "sha256": "5964ae3ca5f25802ecf731f7e60f41c76dddf7fe4efd7d460f823d53ec6d8d88"
+    },
+    {
+      "file": "subpackages/resources/import/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.json",
+      "bytes": 121,
+      "sha256": "7d97fdec996f9d786723d564ac7637999b4e240e45457f6fb9d9ab6fe46ccf7e"
+    },
+    {
+      "file": "subpackages/resources/import/3a/3a67081d-5f3c-41ac-9952-1df2bcf5e778.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/4a/4adf5510-dcd1-4a77-86b8-fe9b63d65b7d.json",
+      "bytes": 5648,
+      "sha256": "f903876d2e9882d578b598424d84dcc542af5bc5f1db2d70f9e0f86432754ef1"
+    },
+    {
+      "file": "subpackages/resources/import/54/5438d38e-9991-468b-a45a-8d7eea241267.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/import/5d/5d04c15c-1163-4246-b4d5-f1d58c5cde8a.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/64/64b520f3-ccc8-4b4c-964b-7383dcb26ff4.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/7c/7c21064e-165c-4851-8077-565871e827db.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/8f/8fc3c180-2105-4518-a8f4-9537662db23e.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/a4/a437db33-7d3e-4d20-be28-58b6f62497d3.json",
+      "bytes": 4774,
+      "sha256": "36ee563493ab54cad8bc9fcb6ec199be8582a17dd8add25f66042cca2ff0811f"
+    },
+    {
+      "file": "subpackages/resources/import/ab/abeeba23-0827-4238-989e-020da89a6937.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/import/cb/cb6d27c4-0cd1-44e6-88e8-13fc35541ca7.json",
+      "bytes": 115,
+      "sha256": "02a4d6826813e353716517e44ae76eb9d7696b0db8335b6ceee45d1fd4ea2e2a"
+    },
+    {
+      "file": "subpackages/resources/import/ce/ce858f88-73d9-4163-8a1f-261475f8606b.json",
+      "bytes": 120,
+      "sha256": "8665f3a4db2e2103f1d83e7104fc0ebef34f2f9b549acf4a40876fa05bcbe64b"
+    },
+    {
+      "file": "subpackages/resources/import/e5/e5bdb0d0-ad0a-4632-8182-350b3bf28aff.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/native/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.jpg",
+      "bytes": 55945,
+      "sha256": "75add5f1b13fe953d0f950768cc6810235c3c07456c4264a11717f8aba1f5f31"
+    },
+    {
+      "file": "subpackages/resources/native/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.mp3",
+      "bytes": 12430,
+      "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5"
+    },
+    {
+      "file": "subpackages/resources/native/18/18967655-3469-49eb-98d2-ad3549e385ac.jpg",
+      "bytes": 203190,
+      "sha256": "83f0920b7fc9f51e350e015bd84a51dc6a70ad861c1f87554893e6b937f30dcb"
+    },
+    {
+      "file": "subpackages/resources/native/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.jpg",
+      "bytes": 61899,
+      "sha256": "4cb09e4f2caedd5e2911f53350ae9dee52ec2f5e80a0b7ce53649f3f21691514"
+    },
+    {
+      "file": "subpackages/resources/native/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.mp3",
+      "bytes": 23626,
+      "sha256": "4fb2795f1f48f7ad63456aae207e3f307f59fbf22b8136acb8d26ea35f8ae617"
+    },
+    {
+      "file": "subpackages/resources/native/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.mp3",
+      "bytes": 5511,
+      "sha256": "56a1441d44f24e23e91fb09f784706f6d509ffcc1005ef59d3ec1bb038937679"
+    },
+    {
+      "file": "subpackages/resources/native/3a/3a67081d-5f3c-41ac-9952-1df2bcf5e778.jpg",
+      "bytes": 72001,
+      "sha256": "de374f5ed7a336203ad57cabf9060f1059ddb1e2818e94bcedd1c953b72a27b8"
+    },
+    {
+      "file": "subpackages/resources/native/54/5438d38e-9991-468b-a45a-8d7eea241267.jpg",
+      "bytes": 174832,
+      "sha256": "85675411c806c7cf6d59d4c24023a83fef64253f46e9aba80e2870a797116d5f"
+    },
+    {
+      "file": "subpackages/resources/native/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.png",
+      "bytes": 115488,
+      "sha256": "b08eba917853d2f7346fc12054e64d0f779d481356ea6dcc997eee813adf18dc"
+    },
+    {
+      "file": "subpackages/resources/native/5d/5d04c15c-1163-4246-b4d5-f1d58c5cde8a.jpg",
+      "bytes": 138317,
+      "sha256": "7f1003e313aca95fc43b76df7a60aa2861a16fe4f6d71d223f6e849d4a034409"
+    },
+    {
+      "file": "subpackages/resources/native/64/64b520f3-ccc8-4b4c-964b-7383dcb26ff4.jpg",
+      "bytes": 154541,
+      "sha256": "d1c38cdfe73d85b5b9a4e52f5544f022853971b09b56c19da0784cce358ea8fa"
+    },
+    {
+      "file": "subpackages/resources/native/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.jpg",
+      "bytes": 36617,
+      "sha256": "016ccb61f425b0aac2c70ad4ee6ea84720d8e866b9aeea88464a25e1b95f739e"
+    },
+    {
+      "file": "subpackages/resources/native/7c/7c21064e-165c-4851-8077-565871e827db.jpg",
+      "bytes": 125951,
+      "sha256": "5149fc8eca72a765f8f22a4700453691765dad2fca615d23236b52dcfa3b29da"
+    },
+    {
+      "file": "subpackages/resources/native/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.jpg",
+      "bytes": 72451,
+      "sha256": "c9a9b1d22fe7a789b09a44b71a7c66f3ca3bb7e83d24ff41eac668b263d3b343"
+    },
+    {
+      "file": "subpackages/resources/native/8f/8fc3c180-2105-4518-a8f4-9537662db23e.jpg",
+      "bytes": 148766,
+      "sha256": "de15dd53478bbac6b4571fe14658b00966e4d1cf5f97173c9600536b06caeda9"
+    },
+    {
+      "file": "subpackages/resources/native/ab/abeeba23-0827-4238-989e-020da89a6937.png",
+      "bytes": 21376,
+      "sha256": "6c176ac5af536610b728f2efc70a23b9693efc5b6e7b77a21b76a843351f283e"
+    },
+    {
+      "file": "subpackages/resources/native/cb/cb6d27c4-0cd1-44e6-88e8-13fc35541ca7/HotPotRegion.ttf",
+      "bytes": 31744,
+      "sha256": "8793cdce97c35e5269d5a917f15f3e3e4236375d34f2456a68beef67757eb1c4"
+    },
+    {
+      "file": "subpackages/resources/native/ce/ce858f88-73d9-4163-8a1f-261475f8606b.mp3",
+      "bytes": 299269,
+      "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba"
+    },
+    {
+      "file": "subpackages/resources/native/e5/e5bdb0d0-ad0a-4632-8182-350b3bf28aff.jpg",
+      "bytes": 102284,
+      "sha256": "164595ece2635c8c146b3d5adf39b9c081c4ac1ef2ff80bfed5a475b048d3c5b"
+    },
+    {
+      "file": "subpackages/resources/native/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.png",
+      "bytes": 117374,
+      "sha256": "718754eb3084840a714ca178a6cb84ff3ac4972dbaff22e92d61a755b662e24b"
+    },
+    {
+      "file": "web-adapter.js",
+      "bytes": 90055,
+      "sha256": "699ad028d891e2671b6be8c46bd7835d9dadbda23758b072e3db22085edea34f"
+    }
+  ]
+}

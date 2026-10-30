@@ -41,9 +41,8 @@ if($Platform -eq 'web-mobile') {
   [IO.File]::WriteAllText($taskConfig,($taskSettings|ConvertTo-Json -Depth 30),[Text.UTF8Encoding]::new($false))
 }
 $taskOptions="platform=$Platform;buildPath=project://build;outputName=$taskOutput;configPath="+$taskConfig.Replace('\','/')
-$taskProcess=Start-Process -FilePath $taskCreator -WindowStyle Hidden -PassThru -ArgumentList @('--project',$taskProject,'--build',$taskOptions) -RedirectStandardOutput (Join-Path $taskLogRoot ($Platform+'-stdout.log')) -RedirectStandardError (Join-Path $taskLogRoot ($Platform+'-stderr.log'))
-Write-Output "Building $Platform (PID $($taskProcess.Id))"
-while(-not $taskProcess.HasExited){Start-Sleep -Seconds 2;$taskProcess.Refresh()}
+Write-Output "Building $Platform"
+$taskProcess=Start-Process -FilePath $taskCreator -WindowStyle Hidden -Wait -PassThru -ArgumentList @('--project',$taskProject,'--build',$taskOptions) -RedirectStandardOutput (Join-Path $taskLogRoot ($Platform+'-stdout.log')) -RedirectStandardError (Join-Path $taskLogRoot ($Platform+'-stderr.log'))
 if($taskProcess.ExitCode -ne 36){throw "Cocos build failed ($($taskProcess.ExitCode)); inspect $taskLogRoot"}
 Write-Output "Cocos build succeeded: $taskProject\build\$taskOutput"
 if($Platform -eq 'wechatgame') {

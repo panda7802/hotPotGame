@@ -1,0 +1,165 @@
+{
+  "build": "20261030-reference-replica-screenfit-assets",
+  "auditedBuild": "exports/HotPot-screenfit-assets-20261030/wechatgame",
+  "baselineClientBytes": 3807790,
+  "currentClientBytes": 3770837,
+  "resourceCount": 20,
+  "imageCount": 15,
+  "audioCount": 4,
+  "dataCount": 1,
+  "removedFromRuntime": [
+    {
+      "file": "fonts/HotPotRegion.ttf",
+      "bytes": 31744,
+      "reason": "Only the overridden legacy region picker used this font; active pages use system fonts"
+    },
+    {
+      "file": "fonts/OFL.txt",
+      "bytes": 4490,
+      "reason": "Font and accompanying license are retained together under assets/art-archive/unused-region-font"
+    }
+  ],
+  "otherUnusedRuntimeResources": [],
+  "duplicateNativeAssets": [],
+  "assets": [
+    {
+      "file": "audio/bgm.mp3",
+      "use": "HotPotResources: background music or match/win/lose effect",
+      "bytes": 299269,
+      "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba",
+      "packagedFile": "subpackages/resources/native/ce/ce858f88-73d9-4163-8a1f-261475f8606b.mp3"
+    },
+    {
+      "file": "audio/match.mp3",
+      "use": "HotPotResources: background music or match/win/lose effect",
+      "bytes": 5511,
+      "sha256": "56a1441d44f24e23e91fb09f784706f6d509ffcc1005ef59d3ec1bb038937679",
+      "packagedFile": "subpackages/resources/native/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.mp3"
+    },
+    {
+      "file": "audio/win.mp3",
+      "use": "HotPotResources: background music or match/win/lose effect",
+      "bytes": 23626,
+      "sha256": "4fb2795f1f48f7ad63456aae207e3f307f59fbf22b8136acb8d26ea35f8ae617",
+      "packagedFile": "subpackages/resources/native/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.mp3"
+    },
+    {
+      "file": "audio/lose.mp3",
+      "use": "HotPotResources: background music or match/win/lose effect",
+      "bytes": 12430,
+      "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5",
+      "packagedFile": "subpackages/resources/native/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.mp3"
+    },
+    {
+      "file": "data/regions.json",
+      "use": "HotPotState + HotPotReferenceCollection: province/city/county data",
+      "bytes": 5560,
+      "sha256": "640b8e969ce608efcc0b8d948d4a775afd71ffc47fed2d8327123ca1eac9967c"
+    },
+    {
+      "file": "ingredients/food-a.png",
+      "use": "HotPotResources: 25 ingredients per shared sheet, 50 in total",
+      "bytes": 117374,
+      "sha256": "718754eb3084840a714ca178a6cb84ff3ac4972dbaff22e92d61a755b662e24b",
+      "packagedFile": "subpackages/resources/native/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.png"
+    },
+    {
+      "file": "ingredients/food-b.png",
+      "use": "HotPotResources: 25 ingredients per shared sheet, 50 in total",
+      "bytes": 115488,
+      "sha256": "b08eba917853d2f7346fc12054e64d0f779d481356ea6dcc997eee813adf18dc",
+      "packagedFile": "subpackages/resources/native/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.png"
+    },
+    {
+      "file": "reference/shell-01.jpg",
+      "use": "HotPotReferenceShell: main gameplay composition for this selectable theme",
+      "bytes": 72451,
+      "sha256": "c9a9b1d22fe7a789b09a44b71a7c66f3ca3bb7e83d24ff41eac668b263d3b343",
+      "packagedFile": "subpackages/resources/native/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.jpg"
+    },
+    {
+      "file": "reference/a-01.jpg",
+      "use": "HotPotReferenceMenus/Results: ranking, profile, style picker and three level results",
+      "bytes": 203190,
+      "sha256": "83f0920b7fc9f51e350e015bd84a51dc6a70ad861c1f87554893e6b937f30dcb",
+      "packagedFile": "subpackages/resources/native/18/18967655-3469-49eb-98d2-ad3549e385ac.jpg"
+    },
+    {
+      "file": "reference/b-01.jpg",
+      "use": "HotPotReferenceCollection/Results: collection, detail, achievements, region, revive and restart",
+      "bytes": 138317,
+      "sha256": "7f1003e313aca95fc43b76df7a60aa2861a16fe4f6d71d223f6e849d4a034409",
+      "packagedFile": "subpackages/resources/native/5d/5d04c15c-1163-4246-b4d5-f1d58c5cde8a.jpg"
+    },
+    {
+      "file": "reference/shell-04.jpg",
+      "use": "HotPotReferenceShell: main gameplay composition for this selectable theme",
+      "bytes": 36617,
+      "sha256": "016ccb61f425b0aac2c70ad4ee6ea84720d8e866b9aeea88464a25e1b95f739e",
+      "packagedFile": "subpackages/resources/native/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.jpg"
+    },
+    {
+      "file": "reference/a-04.jpg",
+      "use": "HotPotReferenceMenus/Results: ranking, profile, style picker and three level results",
+      "bytes": 148766,
+      "sha256": "de15dd53478bbac6b4571fe14658b00966e4d1cf5f97173c9600536b06caeda9",
+      "packagedFile": "subpackages/resources/native/8f/8fc3c180-2105-4518-a8f4-9537662db23e.jpg"
+    },
+    {
+      "file": "reference/b-04.jpg",
+      "use": "HotPotReferenceCollection/Results: collection, detail, achievements, region, revive and restart",
+      "bytes": 72001,
+      "sha256": "de374f5ed7a336203ad57cabf9060f1059ddb1e2818e94bcedd1c953b72a27b8",
+      "packagedFile": "subpackages/resources/native/3a/3a67081d-5f3c-41ac-9952-1df2bcf5e778.jpg"
+    },
+    {
+      "file": "reference/shell-08.jpg",
+      "use": "HotPotReferenceShell: main gameplay composition for this selectable theme",
+      "bytes": 55945,
+      "sha256": "75add5f1b13fe953d0f950768cc6810235c3c07456c4264a11717f8aba1f5f31",
+      "packagedFile": "subpackages/resources/native/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.jpg"
+    },
+    {
+      "file": "reference/a-08.jpg",
+      "use": "HotPotReferenceMenus/Results: ranking, profile, style picker and three level results",
+      "bytes": 154541,
+      "sha256": "d1c38cdfe73d85b5b9a4e52f5544f022853971b09b56c19da0784cce358ea8fa",
+      "packagedFile": "subpackages/resources/native/64/64b520f3-ccc8-4b4c-964b-7383dcb26ff4.jpg"
+    },
+    {
+      "file": "reference/b-08.jpg",
+      "use": "HotPotReferenceCollection/Results: collection, detail, achievements, region, revive and restart",
+      "bytes": 102284,
+      "sha256": "164595ece2635c8c146b3d5adf39b9c081c4ac1ef2ff80bfed5a475b048d3c5b",
+      "packagedFile": "subpackages/resources/native/e5/e5bdb0d0-ad0a-4632-8182-350b3bf28aff.jpg"
+    },
+    {
+      "file": "reference/shell-09.jpg",
+      "use": "HotPotReferenceShell: main gameplay composition for this selectable theme",
+      "bytes": 61899,
+      "sha256": "4cb09e4f2caedd5e2911f53350ae9dee52ec2f5e80a0b7ce53649f3f21691514",
+      "packagedFile": "subpackages/resources/native/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.jpg"
+    },
+    {
+      "file": "reference/a-09.jpg",
+      "use": "HotPotReferenceMenus/Results: ranking, profile, style picker and three level results",
+      "bytes": 174832,
+      "sha256": "85675411c806c7cf6d59d4c24023a83fef64253f46e9aba80e2870a797116d5f",
+      "packagedFile": "subpackages/resources/native/54/5438d38e-9991-468b-a45a-8d7eea241267.jpg"
+    },
+    {
+      "file": "reference/b-09.jpg",
+      "use": "HotPotReferenceCollection/Results: collection, detail, achievements, region, revive and restart",
+      "bytes": 125951,
+      "sha256": "5149fc8eca72a765f8f22a4700453691765dad2fca615d23236b52dcfa3b29da",
+      "packagedFile": "subpackages/resources/native/7c/7c21064e-165c-4851-8077-565871e827db.jpg"
+    },
+    {
+      "file": "reference/tiles.png",
+      "use": "HotPotTileSkin: four selectable themes share this tile-face atlas",
+      "bytes": 21376,
+      "sha256": "6c176ac5af536610b728f2efc70a23b9693efc5b6e7b77a21b76a843351f283e",
+      "packagedFile": "subpackages/resources/native/ab/abeeba23-0827-4238-989e-020da89a6937.png"
+    }
+  ]
+}

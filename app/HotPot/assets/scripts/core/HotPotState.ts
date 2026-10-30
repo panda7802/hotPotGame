@@ -21,6 +21,7 @@ import {LevelData} from '../data/GameData';
 
 import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
+import {WechatShareService} from './WechatShareService';
 
 import {
   achievementEntries,
@@ -35,10 +36,21 @@ import {readPageStyle, setPageTheme} from '../data/PageTheme';
  */
 export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
+  private readonly wechatSharing = new WechatShareService();
+
+  protected shareGame(): void {
+    const result = this.wechatSharing.share();
+    if (result === 'unsupported') {
+      this.showToast('请在微信小游戏中使用“分享给好友”', '#A24A3C');
+    } else if (result === 'failed') {
+      this.showToast('暂时无法打开分享，请稍后重试', '#A24A3C');
+    }
+  }
   /**
    * 初始化画布、游戏界面、资源和玩家档案。
    */
   onLoad(): void {
+    this.wechatSharing.start();
     setPageTheme(readPageStyle(sys.localStorage));
     const frameSize = view.getFrameSize();
     // 较短的屏幕完整显示加高后的界面，避免八行图片或底部按钮被裁掉。
@@ -96,6 +108,7 @@ export abstract class HotPotState extends HotPotFields {
    * 释放事件监听与音频，并提交待同步存档。
    */
   onDestroy(): void {
+    this.wechatSharing.dispose();
     this.releasePageBackdrop();
     this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
     this.bgmSource?.stop();

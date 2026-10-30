@@ -1,0 +1,1079 @@
+{
+  "build": "20261030-ui720-share",
+  "canvas": {
+    "width": 720,
+    "height": 1280
+  },
+  "totalClientBytes": 3000646,
+  "limitBytes": 4000000,
+  "remainingBytes": 999354,
+  "mainPackageBytes": 1490173,
+  "subpackages": [
+    {
+      "name": "internal",
+      "root": "subpackages/internal/",
+      "bytes": 160098
+    },
+    {
+      "name": "resources",
+      "root": "subpackages/resources/",
+      "bytes": 1151033
+    },
+    {
+      "name": "main",
+      "root": "subpackages/main/",
+      "bytes": 199342
+    }
+  ],
+  "imageCount": 13,
+  "runtime": {
+    "build": "20261030-ui720-share",
+    "styles": [
+      1,
+      4,
+      8,
+      9
+    ],
+    "checks": [
+      {
+        "style": 1,
+        "name": "PlayerOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 1,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "style": 1,
+        "name": "StyleOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 1,
+        "scope": 0,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 1,
+        "scope": 1,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 1,
+        "scope": 2,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 4,
+        "name": "PlayerOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 4,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "style": 4,
+        "name": "StyleOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 4,
+        "scope": 0,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 4,
+        "scope": 1,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 4,
+        "scope": 2,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 8,
+        "name": "PlayerOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 8,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "style": 8,
+        "name": "StyleOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 8,
+        "scope": 0,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 8,
+        "scope": 1,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 8,
+        "scope": 2,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 9,
+        "name": "PlayerOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 9,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "style": 9,
+        "name": "StyleOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 9,
+        "scope": 0,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 9,
+        "scope": 1,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "style": 9,
+        "scope": 2,
+        "name": "RegionOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 0.9984375
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 0.9984375
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 0.9984375
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 0.9984375
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 0.9984375
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 0.9984375
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 1
+      },
+      {
+        "width": 390,
+        "height": 844,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 1
+      },
+      {
+        "width": 430,
+        "height": 932,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 1
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 754,
+        "height": 878,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 0.6550066312997347
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 0.75
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 0.75
+      },
+      {
+        "width": 768,
+        "height": 1024,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 0.75
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 0.75
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 0.75
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 0.75
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "ReferenceShell",
+        "scale": 0.2599229857819905
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "PlayerOverlay",
+        "scale": 0.2599229857819905
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "name": "Profile menu",
+        "options": 6,
+        "statisticsInteractive": false
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "StyleOverlay",
+        "scale": 0.2599229857819905
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "CollectionOverlay",
+        "scale": 0.2599229857819905
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "BackdoorOverlay",
+        "scale": 0.2599229857819905
+      },
+      {
+        "width": 720,
+        "height": 1280,
+        "name": "RestartConfirmOverlay",
+        "scale": 0.2599229857819905
+      },
+      {
+        "wechat": "safe-area simulation",
+        "name": "PlayerOverlay",
+        "width": 720,
+        "height": 1280,
+        "scale": 0.22019542041957724
+      }
+    ],
+    "pageErrors": [],
+    "missingLocalAssets": [],
+    "loadedIngredients": 50,
+    "loadedAudio": 4,
+    "noScorePopups": true,
+    "firstLevelToolsHidden": true,
+    "viewportSceneryCovers": true,
+    "profileStatisticsInert": true,
+    "dedicatedRankingOption": true,
+    "wechatSharing": true,
+    "network": "External requests blocked; fixture changes apply to this isolated test browser only",
+    "wechat": "Safe-area API simulation; physical device testing still required"
+  },
+  "sourceHashes": [
+    {
+      "file": "assets/scripts/core/HotPotAppearanceMenus.ts",
+      "sha256": "95caba54ee17bec1b46082dba98e4ea6694dc67ec369cce8eca4d004c7b15567"
+    },
+    {
+      "file": "assets/scripts/core/HotPotBoard.ts",
+      "sha256": "95392d378d5490496e4dce337b3bae626355266d2d250977ec6101ca9758bfc6"
+    },
+    {
+      "file": "assets/scripts/core/HotPotBoardActions.ts",
+      "sha256": "d657df2ee03343183973b447865d9343645fc5b35ffb5ab3cbdc5c93b050f5bd"
+    },
+    {
+      "file": "assets/scripts/core/HotPotDesignCollection.ts",
+      "sha256": "773ed0ce7e6a8edde474381fcabcead06aeb79991ede5e285f1b050953030536"
+    },
+    {
+      "file": "assets/scripts/core/HotPotDesignMenus.ts",
+      "sha256": "a814706314530c8ab091c63530a9848b757446965cb9a4e20676448cb9f5c664"
+    },
+    {
+      "file": "assets/scripts/core/HotPotDesignResults.ts",
+      "sha256": "a2de9e53e249f3460c03ed4aca6c5d21beefe806ed31087c4834cd9887c6ae93"
+    },
+    {
+      "file": "assets/scripts/core/HotPotDesignUi.ts",
+      "sha256": "3990798f7e2d5052484590aa4736f0dd0f6dc6d320e379b215a8195eb2307252"
+    },
+    {
+      "file": "assets/scripts/core/HotPotDialogs.ts",
+      "sha256": "ce9a25a5e4a6628287a03d8e329dbbde05b9e5b2012aaa3dc40bb86c28a9f9e1"
+    },
+    {
+      "file": "assets/scripts/core/HotPotFields.ts",
+      "sha256": "346d99aca6debd112251246ae6df178b808bf8927999db3cebb357bf78917a25"
+    },
+    {
+      "file": "assets/scripts/core/HotPotGame.ts",
+      "sha256": "05f50c8da3256170ac7d7aaa3533907349629997c381320b0e81e09e6656c279"
+    },
+    {
+      "file": "assets/scripts/core/HotPotLegacyGame.ts",
+      "sha256": "9fb137ed4295ca13b45527de687f48b253cacd10e698f81b7a5dd0b27f314696"
+    },
+    {
+      "file": "assets/scripts/core/HotPotPlayerMenus.ts",
+      "sha256": "be3169782493163cc3d4bb8a2404a642ace72d71f79a9519aed5a45eb7fc7c57"
+    },
+    {
+      "file": "assets/scripts/core/HotPotProfileMenus.ts",
+      "sha256": "4a6253081cc2a7eaf8f2dc2e117c5e9c1b36f4abdb4319762fe4fb704cb4ef0e"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceArt.ts",
+      "sha256": "77a6d35bad1ceeb53ed066864ac89d0485295e013a8f4e6688644509a36bb4b5"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceCollection.ts",
+      "sha256": "6192f73dc399e7ab8db166f7986c647dd1676ff6bac0176dedf0c81e99efd883"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceLayout.ts",
+      "sha256": "e307391dd9a0220ade9885d5966836723dd1b7a11f1e8f26612514be92978d91"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceMenus.ts",
+      "sha256": "6fc1d729d71fb6b6a814708c9c769b23c16bc7116d9685b4224528b0bfab23a7"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceResults.ts",
+      "sha256": "ab45ea83fe5ca7dfc380732c22a91ee025c7a5964b0690f0409b6c5a27e86530"
+    },
+    {
+      "file": "assets/scripts/core/HotPotReferenceShell.ts",
+      "sha256": "6684c2a77fc69a355f96f631dd4f7a4fe290213363fb1253ec68022c564ce93b"
+    },
+    {
+      "file": "assets/scripts/core/HotPotResources.ts",
+      "sha256": "3e1de5e9ca0764119a7d47f7c3ade7ec6854b664dcd0030e04caca01f70d265a"
+    },
+    {
+      "file": "assets/scripts/core/HotPotState.ts",
+      "sha256": "2f28cb8cd12078def7f4c60e0ea331c339915272ea9d29aa255bfe20051571d7"
+    },
+    {
+      "file": "assets/scripts/core/HotPotTileSkin.ts",
+      "sha256": "8c455cee1484bb94028d1f63d3700f9cda4cd172244a715a831615e8a4264130"
+    },
+    {
+      "file": "assets/scripts/core/HotPotToolActions.ts",
+      "sha256": "d9314c9e58cb0a5cef81779911fccfe78a7e4cf2dd5c19c24b120ceca857c748"
+    },
+    {
+      "file": "assets/scripts/core/HotPotTools.ts",
+      "sha256": "23945b4805dd29fc9ab1cdb82e9ff388c252dcfedbe2ce616da5e1e615e7f893"
+    },
+    {
+      "file": "assets/scripts/core/HotPotUi.ts",
+      "sha256": "d25c7d6899e46ed8647ecdd9944467d81d532b368fdb4bcaa44cd35a1236800e"
+    },
+    {
+      "file": "assets/scripts/core/HotPotView.ts",
+      "sha256": "2e23764f3870cd37a9ab0dba1d35da78be926c80bd42af7d1f03a7fca9bd0f79"
+    },
+    {
+      "file": "assets/scripts/core/PlayerService.ts",
+      "sha256": "dce649bd7a64f7d614cb7bbc07e6d5fa318a30e5f3f08fbb0098a8fb72b0b63d"
+    },
+    {
+      "file": "assets/scripts/core/PlayerServiceBase.ts",
+      "sha256": "5298f3949cf19f2f2836d3dfb11b40efca1ff0635d1112992cb6d887f52b120f"
+    },
+    {
+      "file": "assets/scripts/core/RegionLeaderboardService.ts",
+      "sha256": "4f5cb33bedf28c7845fa5e68b45f6ce40543852cdfbef45f21362e64f3539187"
+    },
+    {
+      "file": "assets/scripts/core/WebCloudBridge.ts",
+      "sha256": "f8f375a203419d97a6ddfc55399ac2b6efd8edd9c303c45b9f84403066e63e34"
+    },
+    {
+      "file": "assets/scripts/core/WechatShareService.ts",
+      "sha256": "87fa915052db8f667803baf1f21a852627d481c231fbd3f8e72b493b79ffda29"
+    },
+    {
+      "file": "assets/scripts/data/CloudConfig.ts",
+      "sha256": "2ff7e07871c14a6b2991f85200eff292f58c7de897a2ebe68f4e4ebe5c84aa48"
+    },
+    {
+      "file": "assets/scripts/data/CollectionData.ts",
+      "sha256": "4f6e0cf7e3dd55ee1f302f971b1e65bb51a9405b4d2f3fd007a3eef20c4be559"
+    },
+    {
+      "file": "assets/scripts/data/GameConfig.ts",
+      "sha256": "07381b07e47c304683ecaba7808b26d61e25bfa77e0a6ce1be6fcf8d1080c5d8"
+    },
+    {
+      "file": "assets/scripts/data/GameData.ts",
+      "sha256": "c1eaa9077ea8c2db4d869d2d0ed6b2e57c8b069ffa5671e49a1f9c71a4c5729c"
+    },
+    {
+      "file": "assets/scripts/data/IngredientArt.ts",
+      "sha256": "e26af42b48af0b10f622b4f7bfbafacbf98728a4c9b388901a7921a9628776e8"
+    },
+    {
+      "file": "assets/scripts/data/PageTheme.ts",
+      "sha256": "451b23113cd57af01a311cd9eb49b8e1d3b9bf1ce5370ef5e7066114079cdc38"
+    },
+    {
+      "file": "assets/scripts/data/PlayerData.ts",
+      "sha256": "b34b86ffb49a28ad67eb9960833b1effb5b640d857e44a8cc1d72db7a4f80b19"
+    },
+    {
+      "file": "assets/scripts/data/PlayerTypes.ts",
+      "sha256": "b75c46e26920336078c1e7f6c7d4653552e96b6ab2b1bde45fc44bbb836b272a"
+    },
+    {
+      "file": "assets/scripts/data/ReferenceAssets.ts",
+      "sha256": "cd66a3fc5b28d8f8002dc230c6fe0db3f48b46858344747b21f592513b0c4b0e"
+    },
+    {
+      "file": "assets/scripts/data/RegionData.ts",
+      "sha256": "bfced54bee491decc2f9a9313402b397d6daaa7f0102e47f1afec45759a20ce1"
+    },
+    {
+      "file": "assets/scripts/data/RuntimeConfig.ts",
+      "sha256": "f8b62f96b41432847a69dbbc4b444a9bfb929a4bc9e484da612efb9eb6c501b7"
+    },
+    {
+      "file": "assets/resources/audio/bgm.mp3",
+      "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba"
+    },
+    {
+      "file": "assets/resources/audio/lose.mp3",
+      "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5"
+    },
+    {
+      "file": "assets/resources/audio/match.mp3",
+      "sha256": "56a1441d44f24e23e91fb09f784706f6d509ffcc1005ef59d3ec1bb038937679"
+    },
+    {
+      "file": "assets/resources/audio/win.mp3",
+      "sha256": "4fb2795f1f48f7ad63456aae207e3f307f59fbf22b8136acb8d26ea35f8ae617"
+    },
+    {
+      "file": "assets/resources/data/regions.json",
+      "sha256": "640b8e969ce608efcc0b8d948d4a775afd71ffc47fed2d8327123ca1eac9967c"
+    },
+    {
+      "file": "assets/resources/ingredients/food-a.png",
+      "sha256": "718754eb3084840a714ca178a6cb84ff3ac4972dbaff22e92d61a755b662e24b"
+    },
+    {
+      "file": "assets/resources/ingredients/food-b.png",
+      "sha256": "b08eba917853d2f7346fc12054e64d0f779d481356ea6dcc997eee813adf18dc"
+    },
+    {
+      "file": "assets/resources/reference/bg-01.jpg",
+      "sha256": "cb96c72e7b61d41a9a55e584ca9bd5a3f9b157253b154f4815076d0931a2d2a0"
+    },
+    {
+      "file": "assets/resources/reference/bg-04.jpg",
+      "sha256": "a346f082fe9f1d59cb9e3dd21ac22fda207b38d7b6de965c776becd9aea0a10e"
+    },
+    {
+      "file": "assets/resources/reference/bg-08.jpg",
+      "sha256": "a46809c3883ee807577426fda7ad1d0b09a5ed8b9471c46a6952a0fe953bd576"
+    },
+    {
+      "file": "assets/resources/reference/bg-09.jpg",
+      "sha256": "e4d038010cc92c2d5a3436e4e0b77f01dbdfe2b6002b630f1950bd86e72ec59f"
+    },
+    {
+      "file": "assets/resources/reference/shell-01.jpg",
+      "sha256": "7ab5b223822f19501e8cec8c4962ad37d1b8c11da89df200d496d9b6685fe9df"
+    },
+    {
+      "file": "assets/resources/reference/shell-04.jpg",
+      "sha256": "9aad0866fee0ca7b5d4098359f46189859504f3a7ddb025d5dd46c39c840ebc3"
+    },
+    {
+      "file": "assets/resources/reference/shell-08.jpg",
+      "sha256": "957d91c3a2cb0eefec92bd11d6947e7a917f6055b2ff26be2f0bc5fedab55be8"
+    },
+    {
+      "file": "assets/resources/reference/shell-09.jpg",
+      "sha256": "5f79f6be4670ded477d72e798fe85a520583af2f84c6f46e5a0ed36caf70d2a1"
+    },
+    {
+      "file": "assets/resources/reference/tiles.png",
+      "sha256": "6c176ac5af536610b728f2efc70a23b9693efc5b6e7b77a21b76a843351f283e"
+    }
+  ],
+  "files": [
+    {
+      "file": "application.js",
+      "bytes": 3302,
+      "sha256": "359f85dd922e2568aa991af95a5c356a0102042c8918252987bfbd37f2153eb2"
+    },
+    {
+      "file": "cocos-js/cc.js",
+      "bytes": 1317552,
+      "sha256": "8b94aa2184f266c2a4c02c83d91f03ce8aeeb870e75511092eb7b542fb93ad80"
+    },
+    {
+      "file": "engine-adapter.js",
+      "bytes": 20342,
+      "sha256": "5b649b336c4be870e7d40cad6b5231623032a77444644e42af34ad31fd9fd031"
+    },
+    {
+      "file": "first-screen.js",
+      "bytes": 1207,
+      "sha256": "af10dccc7796d2402c3ace607dd1d7a990ca2943977ba96942d2579e0b6b77dd"
+    },
+    {
+      "file": "game.js",
+      "bytes": 2741,
+      "sha256": "cbdf3e364424effc02ab69304d69d2dfb821f67ce94b51a556fcdfc23b12cec2"
+    },
+    {
+      "file": "game.json",
+      "bytes": 303,
+      "sha256": "79fe5c19d19cdf3d7cae8c73fa212ce9c14fdbd5ba7379792303e33626dffdb3"
+    },
+    {
+      "file": "logo.png",
+      "bytes": 14496,
+      "sha256": "9e6a5832c6bc9c5f2da97dc54d916fd257a6ab35e9ffd57dbe88c435bd535940"
+    },
+    {
+      "file": "project.config.json",
+      "bytes": 661,
+      "sha256": "190e8afb18a01eb75cc2ac18afeb8efbf0d3979516c5d771f591b3336899e2ce"
+    },
+    {
+      "file": "slogan.png",
+      "bytes": 11482,
+      "sha256": "b3113554f80c03f9ce51d12ea7c17d68bf7914b89d092743cc54cd370d7f65a9"
+    },
+    {
+      "file": "src/chunks/bundle.js",
+      "bytes": 3414,
+      "sha256": "8ea7b6c98a721a5c629c1ce09abb3d95a472ece4f364b51c2bd6da6d6685695e"
+    },
+    {
+      "file": "src/effect.bin",
+      "bytes": 5755,
+      "sha256": "b0d92f8307e3109abe8af8a863d68feb58cf4f49cf000b1d48fbb3dc3ad45556"
+    },
+    {
+      "file": "src/import-map.js",
+      "bytes": 210,
+      "sha256": "f3cf39bc861d3a2ffd0bfc7d2e7df4397e54d13f71d3f74fbe213219e728bbdc"
+    },
+    {
+      "file": "src/polyfills.bundle.js",
+      "bytes": 8394,
+      "sha256": "cb588d11797e0ca56123d979812db39c8b38dd01c5a6761b2aa5f79cb1d4c701"
+    },
+    {
+      "file": "src/settings.json",
+      "bytes": 1940,
+      "sha256": "2eb3c027f828d207c9e5af75ee79d521a6f20faa6dda4fa0316437bc058643d8"
+    },
+    {
+      "file": "src/system.bundle.js",
+      "bytes": 8319,
+      "sha256": "9e52437715d2e6a8acacb41f1c64d916e4b455d2a9d448f09cecd551dc084b84"
+    },
+    {
+      "file": "subpackages/internal/config.json",
+      "bytes": 1906,
+      "sha256": "dd25a5a233c3abbd9653c8fb8f47a0709d8e18f92dcf5e8fa9e903dd2396b63a"
+    },
+    {
+      "file": "subpackages/internal/game.js",
+      "bytes": 45110,
+      "sha256": "19bd675acfdd6f12d4bfec92fa4fa354b57c1dee7256325dce20ebfc5657b58c"
+    },
+    {
+      "file": "subpackages/internal/import/05/05de040c9.json",
+      "bytes": 10004,
+      "sha256": "eb49b006a2b85662bce08987b11b86f46dc1bb566042151c362120d68ab21f91"
+    },
+    {
+      "file": "subpackages/internal/import/0b/0ba503733.json",
+      "bytes": 66497,
+      "sha256": "d7a292f1ad2465dd7c08aeff030c16f23ac7555c72b5d00734668abc7612140b"
+    },
+    {
+      "file": "subpackages/internal/import/0d/0dfe1b9d0.json",
+      "bytes": 2095,
+      "sha256": "0bfb29423466306e5cd81c6596efb7a5405683395edd973e9b411b87f4ce511a"
+    },
+    {
+      "file": "subpackages/internal/import/0e/0e7a008af.json",
+      "bytes": 5916,
+      "sha256": "a3be17c38b37f34a3a7f537c39dd85f0cd8639fa903b9216b9666a18910789df"
+    },
+    {
+      "file": "subpackages/internal/import/5c/5c601d96-e4c7-4698-991b-7ee674b11079.json",
+      "bytes": 7309,
+      "sha256": "edded69beb89d3f71d8d091eb16f69e7e884fc2e606ac82b096d0ccf2cafa7b6"
+    },
+    {
+      "file": "subpackages/internal/import/6a/6a2d0734-bd9e-4ddf-946e-caa52498cb75.json",
+      "bytes": 15682,
+      "sha256": "705dd4fc7e87f290c67efcaf3606e20ccc6c75dbcb06aace6e05206df8f1ea42"
+    },
+    {
+      "file": "subpackages/internal/import/97/970b0598-bcb0-4714-91fb-2e81440dccd8.json",
+      "bytes": 3692,
+      "sha256": "7bcee959de0ca0bc6d5564c2a69c810dd7c879b3abd8ec83bfaf89b49ee21335"
+    },
+    {
+      "file": "subpackages/internal/import/d9/d930590d-bb92-4cc8-8bd1-23cd027f9edf.json",
+      "bytes": 308,
+      "sha256": "c32d16df8e06a6086d21018995a68ab5df8eff5cf05f8007b0b7007449e7e7d9"
+    },
+    {
+      "file": "subpackages/internal/import/dd/dd3a144d-ab7f-41f0-82b8-2e43a090d496.json",
+      "bytes": 333,
+      "sha256": "34e4870f9cb54b87e3afb3712177e873919f961019583cb5a344cf4b66f04650"
+    },
+    {
+      "file": "subpackages/internal/import/e9/e9aa9a3e-5b2b-4ac7-a2c7-073de2b2b24f.json",
+      "bytes": 273,
+      "sha256": "467203472f4bb302bd5e2b27fa8b600ab8d12ac3f4b6a441b8fdb0b2e190ce2e"
+    },
+    {
+      "file": "subpackages/internal/import/ef/efe8e2a3-eace-427b-b4f1-cb8a937ec77d.json",
+      "bytes": 324,
+      "sha256": "6b2521390036eff7e0f75f9cdbdd2e99c61715cccc274bba511fceb6c5b78401"
+    },
+    {
+      "file": "subpackages/internal/import/f9/f92806d7-1768-443f-afe8-12bcde84d0f0.json",
+      "bytes": 329,
+      "sha256": "85f072a7d9d164b60221bf1ccecf2205a79976883d89c5ce93d4a9459c18deeb"
+    },
+    {
+      "file": "subpackages/internal/import/fd/fda095cb-831d-4601-ad94-846013963de8.json",
+      "bytes": 320,
+      "sha256": "365d002a2cb7a9ae7b20eb9b264f549f7f3c8747b79892cd5933411a7666cd35"
+    },
+    {
+      "file": "subpackages/main/config.json",
+      "bytes": 578,
+      "sha256": "8e043fca4c8dcb1db50e8ec55400aa9a8be528dba45bea0cd2127eb2f2165acd"
+    },
+    {
+      "file": "subpackages/main/game.js",
+      "bytes": 196548,
+      "sha256": "5784bea900ff26b58ce35dc42c2cd6305f5a3cb8e17148d69b634db7734b7ff1"
+    },
+    {
+      "file": "subpackages/main/import/7c/7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb.json",
+      "bytes": 1544,
+      "sha256": "a7ae1165015b643dc0167c60dce26a897cac3f612aee18d9eeb4db3554255d12"
+    },
+    {
+      "file": "subpackages/main/import/ba/ba21476f-2866-4f81-9c4d-6e359316e448.json",
+      "bytes": 192,
+      "sha256": "0a34e9263b215bb661d6334db6a255497c6cdac1f1c40b130f50bf9d91f4dd39"
+    },
+    {
+      "file": "subpackages/main/import/fd/fd8ec536-a354-4a17-9c74-4f3883c378c8.json",
+      "bytes": 480,
+      "sha256": "c2eee4552a460ed97591f527e127b95c811d5f796b9448f3f705974af9beba9d"
+    },
+    {
+      "file": "subpackages/resources/config.json",
+      "bytes": 1988,
+      "sha256": "34936d8c07b076a9416587d39b27ce4173c56ce592f8ae80d0916c3b85482f6b"
+    },
+    {
+      "file": "subpackages/resources/game.js",
+      "bytes": 605,
+      "sha256": "51a07ab61ee49561d29734ff6ee095b0d8a47998bbe30a6f1973bf3c8b7faa25"
+    },
+    {
+      "file": "subpackages/resources/import/02/02394648a.json",
+      "bytes": 506,
+      "sha256": "5ca5c7780c9af4a72fd7cb061ee2daadafdd29c156ca6792e1a72f1d46934b44"
+    },
+    {
+      "file": "subpackages/resources/import/07/079dff7e-bd2d-4bd3-99ff-47e849b596fb.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.json",
+      "bytes": 120,
+      "sha256": "bea268a0da2ce3add9aeb4589e6f62b286384af6e95f80fdf184d5ef462756cf"
+    },
+    {
+      "file": "subpackages/resources/import/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.json",
+      "bytes": 119,
+      "sha256": "5964ae3ca5f25802ecf731f7e60f41c76dddf7fe4efd7d460f823d53ec6d8d88"
+    },
+    {
+      "file": "subpackages/resources/import/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.json",
+      "bytes": 121,
+      "sha256": "7d97fdec996f9d786723d564ac7637999b4e240e45457f6fb9d9ab6fe46ccf7e"
+    },
+    {
+      "file": "subpackages/resources/import/4a/4adf5510-dcd1-4a77-86b8-fe9b63d65b7d.json",
+      "bytes": 5648,
+      "sha256": "f903876d2e9882d578b598424d84dcc542af5bc5f1db2d70f9e0f86432754ef1"
+    },
+    {
+      "file": "subpackages/resources/import/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/import/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/a0/a033631e-c51c-4d1c-a664-5971b6afb45d.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/ab/abeeba23-0827-4238-989e-020da89a6937.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/import/b4/b49abfac-aaf6-4dd1-b811-6fc1ffa72a32.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/ce/ce858f88-73d9-4163-8a1f-261475f8606b.json",
+      "bytes": 120,
+      "sha256": "8665f3a4db2e2103f1d83e7104fc0ebef34f2f9b549acf4a40876fa05bcbe64b"
+    },
+    {
+      "file": "subpackages/resources/import/f5/f5fd4f77-6835-4293-8948-16ad32f182c0.json",
+      "bytes": 72,
+      "sha256": "6dfa3c0de2e1503d5c8ffe00e9594729e0eda1d6cff38f5b24be6cca3d8b1602"
+    },
+    {
+      "file": "subpackages/resources/import/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.json",
+      "bytes": 72,
+      "sha256": "60928632edcd22b5694a8c22de01de0d2cbb6f374103242a99a4394cc767f44d"
+    },
+    {
+      "file": "subpackages/resources/native/07/079dff7e-bd2d-4bd3-99ff-47e849b596fb.jpg",
+      "bytes": 59450,
+      "sha256": "a46809c3883ee807577426fda7ad1d0b09a5ed8b9471c46a6952a0fe953bd576"
+    },
+    {
+      "file": "subpackages/resources/native/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.jpg",
+      "bytes": 95842,
+      "sha256": "957d91c3a2cb0eefec92bd11d6947e7a917f6055b2ff26be2f0bc5fedab55be8"
+    },
+    {
+      "file": "subpackages/resources/native/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.mp3",
+      "bytes": 12430,
+      "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5"
+    },
+    {
+      "file": "subpackages/resources/native/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.jpg",
+      "bytes": 109016,
+      "sha256": "5f79f6be4670ded477d72e798fe85a520583af2f84c6f46e5a0ed36caf70d2a1"
+    },
+    {
+      "file": "subpackages/resources/native/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.mp3",
+      "bytes": 23626,
+      "sha256": "4fb2795f1f48f7ad63456aae207e3f307f59fbf22b8136acb8d26ea35f8ae617"
+    },
+    {
+      "file": "subpackages/resources/native/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.mp3",
+      "bytes": 5511,
+      "sha256": "56a1441d44f24e23e91fb09f784706f6d509ffcc1005ef59d3ec1bb038937679"
+    },
+    {
+      "file": "subpackages/resources/native/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.png",
+      "bytes": 115488,
+      "sha256": "b08eba917853d2f7346fc12054e64d0f779d481356ea6dcc997eee813adf18dc"
+    },
+    {
+      "file": "subpackages/resources/native/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.jpg",
+      "bytes": 63273,
+      "sha256": "9aad0866fee0ca7b5d4098359f46189859504f3a7ddb025d5dd46c39c840ebc3"
+    },
+    {
+      "file": "subpackages/resources/native/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.jpg",
+      "bytes": 129672,
+      "sha256": "7ab5b223822f19501e8cec8c4962ad37d1b8c11da89df200d496d9b6685fe9df"
+    },
+    {
+      "file": "subpackages/resources/native/a0/a033631e-c51c-4d1c-a664-5971b6afb45d.jpg",
+      "bytes": 5952,
+      "sha256": "a346f082fe9f1d59cb9e3dd21ac22fda207b38d7b6de965c776becd9aea0a10e"
+    },
+    {
+      "file": "subpackages/resources/native/ab/abeeba23-0827-4238-989e-020da89a6937.png",
+      "bytes": 21376,
+      "sha256": "6c176ac5af536610b728f2efc70a23b9693efc5b6e7b77a21b76a843351f283e"
+    },
+    {
+      "file": "subpackages/resources/native/b4/b49abfac-aaf6-4dd1-b811-6fc1ffa72a32.jpg",
+      "bytes": 45733,
+      "sha256": "e4d038010cc92c2d5a3436e4e0b77f01dbdfe2b6002b630f1950bd86e72ec59f"
+    },
+    {
+      "file": "subpackages/resources/native/ce/ce858f88-73d9-4163-8a1f-261475f8606b.mp3",
+      "bytes": 299269,
+      "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba"
+    },
+    {
+      "file": "subpackages/resources/native/f5/f5fd4f77-6835-4293-8948-16ad32f182c0.jpg",
+      "bytes": 37002,
+      "sha256": "cb96c72e7b61d41a9a55e584ca9bd5a3f9b157253b154f4815076d0931a2d2a0"
+    },
+    {
+      "file": "subpackages/resources/native/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.png",
+      "bytes": 117374,
+      "sha256": "718754eb3084840a714ca178a6cb84ff3ac4972dbaff22e92d61a755b662e24b"
+    },
+    {
+      "file": "web-adapter.js",
+      "bytes": 90055,
+      "sha256": "699ad028d891e2671b6be8c46bd7835d9dadbda23758b072e3db22085edea34f"
+    }
+  ]
+}

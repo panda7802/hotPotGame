@@ -1,6 +1,0 @@
-{
-  "style": "09 宣纸朱印",
-  "A": {"status": "complete", "file": "A.png", "size": [941,1672], "pages": ["榜单", "我的小馆", "页面换肤", "第一关完成", "第二关完成", "第三关完成"]},
-  "B": {"status": "failed", "attempts": 2, "error": "image generation failed: network error: error sending request", "pages": ["食材图鉴", "食材详情", "我的成就", "所在地区", "失败复活", "重开确认"]},
-  "notes": "A已视觉检查，中文及四主题选择卡齐全。生成图属于视觉提案，尚未接入游戏。B两次原生生成均网络失败，未输出文件。"
-}

@@ -1,17 +1,17 @@
 'use strict';
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert');
 const {chromium}=require('playwright');
-const root=path.resolve(__dirname,'../../..'),buildMarker=fs.readFileSync(path.join(root,'app/HotPot/assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1],revision=buildMarker.endsWith('-ranking')?'-ranking':buildMarker.endsWith('-polish')?'-polish':'',web=path.join(root,'tmp/build-ui720-20261030/app/HotPot/build/web-ui720'),out=path.join(root,'design/implemented-720-20261030/runtime'+revision);fs.mkdirSync(out,{recursive:true});
+const root=path.resolve(__dirname,'../../..'),buildMarker=fs.readFileSync(path.join(root,'app/HotPot/assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1],revision=buildMarker.endsWith('-share')?'-share':buildMarker.endsWith('-ranking')?'-ranking':buildMarker.endsWith('-polish')?'-polish':'',web=path.join(root,'tmp/build-ui720-20261030/app/HotPot/build/web-ui720'),out=path.join(root,'design/implemented-720-20261030/runtime'+revision);fs.mkdirSync(out,{recursive:true});
 const server=http.createServer((req,res)=>{const p=decodeURIComponent(new URL(req.url,'http://localhost').pathname),file=path.resolve(web,'.'+(p==='/'?'/index.html':p));if(!file.startsWith(web+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);return res.end()}res.setHeader('Content-Type',({'.js':'application/javascript','.json':'application/json','.html':'text/html','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.wasm':'application/wasm','.mp3':'audio/mpeg'})[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res)});
 async function clear(page){await page.evaluate(()=>{for(const n of g.node.children.slice())if(n.name.endsWith('Overlay')){n.removeFromParent();n.destroy()}g.locked=false;g.gameEnded=false})}
 async function click(page,names){const p=await page.evaluate(names=>{const n=names.reduce((n,k)=>n?.getChildByName(k),g.node);if(!n)throw Error('Missing '+names.join('/'));const b=n.getComponent(cc.UITransform).getBoundingBoxToWorld(),v=cc.view.getVisibleSize(),o=cc.view.getVisibleOrigin(),r=document.querySelector('canvas').getBoundingClientRect();return {x:r.x+(b.x+b.width/2-o.x)/v.width*r.width,y:r.y+(1-(b.y+b.height/2-o.y)/v.height)*r.height}},names);await page.mouse.click(p.x,p.y);await page.waitForTimeout(120)}
 async function shot(page,name){await page.waitForTimeout(280);await page.screenshot({path:path.join(out,name+'.png')})}
 async function profileMenuFits(page){return page.evaluate(()=>{
   const p=g.node.getChildByName('PlayerOverlay').getChildByName('PlayerPanel');
-  const names=['ProfileStats','Button_食材图鉴','Button_我的成就','Button_地域排行榜','Button_选择地区','Button_页面风格','Button_继续游戏'];
+  const names=['ProfileStats','Button_食材图鉴','Button_我的成就','Button_地域排行榜','Button_选择地区','Button_页面风格','Button_分享给好友','Button_继续游戏'];
   const boxes=names.map(name=>p.getChildByName(name).getComponent(cc.UITransform).getBoundingBoxToWorld());
   for(let i=1;i<boxes.length;i++)if(boxes[i].y+boxes[i].height>boxes[i-1].y)throw Error('Profile rows overlap: '+names[i]);
-  return {name:'Profile menu',options:5,statisticsInteractive:false};
+  return {name:'Profile menu',options:6,statisticsInteractive:false};
 })}
 async function safePanel(page,name){return page.evaluate(name=>{
   const n=g.node.getChildByName(name),p=name==='ReferenceShell'?n:n?.getChildByName('PlayerPanel')||n?.getChildByName('ResultPanel');if(!p)throw Error('Missing '+name);
@@ -44,6 +44,30 @@ for(const style of [1,4,8,9]){
   for(const level of [0,1,2]){await page.evaluate(level=>g.loadLevel(level),level);assert.equal(await page.evaluate(()=>g.toolBar.active),level>0);assert.equal(await page.evaluate(()=>g.node.getChildByName('ReferenceShell').getChildByName('FirstLevelBottom').active),level===0);await shot(page,'game'+(level+1)+'-'+style)}
   await page.evaluate(()=>g.showPlayerProfile());checks.push({style,...await safePanel(page,'PlayerOverlay')});await shot(page,'profile-'+style);
   checks.push({style,...await profileMenuFits(page)});
+  await click(page,['PlayerOverlay','PlayerPanel','Button_分享给好友']);
+  assert.equal(await page.evaluate(()=>g.toastLabel.string),'请在微信小游戏中使用“分享给好友”');
+  assert(await page.evaluate(()=>!!g.node.getChildByName('PlayerOverlay')));
+  await page.evaluate(()=>{
+    window.originalShareHost=g.wechatSharing.host;
+    window.shareRequests=[];window.shareMenuListener=null;window.shareMenuOptions=null;
+    g.wechatSharing.host={
+      shareAppMessage:message=>shareRequests.push(message),
+      onShareAppMessage:listener=>window.shareMenuListener=listener,
+      offShareAppMessage:listener=>{if(shareMenuListener!==listener)throw Error('Wrong listener');window.shareMenuListener=null},
+      showShareMenu:options=>window.shareMenuOptions=options,
+    };
+    g.wechatSharing.start();
+  });
+  const beforeShare=await page.evaluate(()=>JSON.stringify([g.levelData,g.tray,g.reserve,g.playerService.state.save]));
+  await click(page,['PlayerOverlay','PlayerPanel','Button_分享给好友']);
+  assert.equal(await page.evaluate(()=>shareRequests.length),1);
+  assert.equal(await page.evaluate(()=>shareRequests[0].query),'source=share&entry=button');
+  assert.equal(await page.evaluate(()=>shareMenuListener().query),'source=share&entry=menu');
+  assert.deepEqual(await page.evaluate(()=>shareMenuOptions.menus),['shareAppMessage']);
+  assert.equal(await page.evaluate(()=>JSON.stringify([g.levelData,g.tray,g.reserve,g.playerService.state.save])),beforeShare);
+  assert(await page.evaluate(()=>!!g.node.getChildByName('PlayerOverlay')));
+  await page.evaluate(()=>{g.wechatSharing.dispose();if(shareMenuListener!==null)throw Error('Share listener leaked');g.wechatSharing.host=originalShareHost});
+
   const profileId=await page.evaluate(()=>g.node.getChildByName('PlayerOverlay').uuid);
   for(const column of [0,1,2]){
     const point=await page.evaluate(column=>{const b=g.node.getChildByName('PlayerOverlay').getChildByName('PlayerPanel').getChildByName('ProfileStats').getComponent(cc.UITransform).getBoundingBoxToWorld(),v=cc.view.getVisibleSize(),o=cc.view.getVisibleOrigin(),r=document.querySelector('canvas').getBoundingClientRect();return {x:r.x+(b.x+b.width*(column+.5)/3-o.x)/v.width*r.width,y:r.y+(1-(b.y+b.height/2-o.y)/v.height)*r.height}},column);
@@ -102,6 +126,6 @@ for(const [width,height] of [[320,568],[390,844],[430,932],[754,878],[768,1024],
 }
 await clear(page);await page.setViewportSize({width:390,height:844});await page.evaluate(()=>{window.wx={getWindowInfo:()=>({windowWidth:390,windowHeight:844,safeArea:{left:0,right:390,top:47,bottom:810}}),getMenuButtonBoundingClientRect:()=>({height:32,bottom:87})};g.showPlayerProfile()});checks.push({wechat:'safe-area simulation',...await safePanel(page,'PlayerOverlay')});
 assert.deepEqual(errors,[]);assert.deepEqual(missing,[]);
-fs.writeFileSync(path.join(out,'verification.json'),JSON.stringify({build:buildMarker,styles:[1,4,8,9],checks,pageErrors:errors,missingLocalAssets:missing,loadedIngredients:50,loadedAudio:4,noScorePopups:true,firstLevelToolsHidden:true,viewportSceneryCovers:true,profileStatisticsInert:true,dedicatedRankingOption:true,network:'External requests blocked; fixture changes apply to this isolated test browser only',wechat:'Safe-area API simulation; physical device testing still required'},null,2));console.log('Native UI verification passed: '+checks.length+' layout checks, 4 styles, no page errors.');
+fs.writeFileSync(path.join(out,'verification.json'),JSON.stringify({build:buildMarker,styles:[1,4,8,9],checks,pageErrors:errors,missingLocalAssets:missing,loadedIngredients:50,loadedAudio:4,noScorePopups:true,firstLevelToolsHidden:true,viewportSceneryCovers:true,profileStatisticsInert:true,dedicatedRankingOption:true,wechatSharing:true,network:'External requests blocked; fixture changes apply to this isolated test browser only',wechat:'Safe-area API simulation; physical device testing still required'},null,2));console.log('Native UI verification passed: '+checks.length+' layout checks, 4 styles, no page errors.');
 }finally{await browser.close();server.close()}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1});
