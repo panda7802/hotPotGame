@@ -61,8 +61,9 @@ export function designHeader(panel:Node,title:string,back:()=>void):void {
   designText(panel,title,l.level as DesignRect,30,t.id===9?'#FFF0CE':t.accent,true);
   for(const [name,x,caption,icon] of [['MenuBack',45,'返回','back'],['MenuClose',599,'关闭','close']] as const){
     const button=designNode(panel,name,[x,65,83,106]);designSurface(button,t.id===1?'#59391F':t.card,undefined,t.edge);
-    designIcon(button,icon,[24,14,35,35],t.id===1?'#FFE0A0':t.ink);
-    designText(button,caption,[5,59,73,32],23,t.id===1?'#FFE0A0':t.ink,true);designHit(button,back);
+    designIcon(button,icon,[24,name==='MenuBack'?35:14,35,35],t.id===1?'#FFE0A0':t.ink);
+    if(name!=='MenuBack')designText(button,caption,[5,59,73,32],23,t.id===1?'#FFE0A0':t.ink,true);
+    designHit(button,back);
   }
 }
 export function designOverlay(parent:Node,name:string,viewport:number,modal=false):{overlay:Node,panel:Node} {

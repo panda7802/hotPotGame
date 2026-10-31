@@ -24,8 +24,8 @@ export function art(parent:Node,page:ArtPage|'shell'|'first'|'background',box:Bo
     const image=node.addComponent(Sprite);image.sizeMode=Sprite.SizeMode.CUSTOM;image.spriteFrame=frame;
     const slice=(node as any).nineSlice;
     if(slice){
-      frame.insetTop=Math.round(slice.top/1280*frame.rect.height);
-      frame.insetBottom=Math.round(slice.bottom/1280*frame.rect.height);
+      frame.insetTop=Math.round(slice.top/(slice.sourceHeight||1280)*frame.rect.height);
+      frame.insetBottom=Math.round(slice.bottom/(slice.sourceHeight||1280)*frame.rect.height);
       frame.insetLeft=52;frame.insetRight=52;image.type=Sprite.Type.SLICED;
     }
     node.on(Node.EventType.NODE_DESTROYED,()=>frame.destroy());

@@ -186,9 +186,18 @@ function finalizeCloudBuild({
       }, 0);
   }
   const bytes = size(build);
-  if (bytes >= 4000000) {
-    throw new Error(`开发包超过 4 MB：${bytes} 字节。`);
-  }
+  // Delivery budget covers every client file, including all resource subpackages.
+  const subpackageBytes = (game.subpackages || game.subPackages || []).reduce((total, item) => {
+    const folder = path.resolve(build, item.root);
+    if (!folder.startsWith(path.resolve(build) + path.sep)) {
+      throw new Error('分包路径超出构建目录');
+    }
+    return total + size(folder);
+  }, 0);
+  const mainBytes = bytes - subpackageBytes;
+  if (mainBytes >= 4000000) throw new Error(`微信主包超过 4 MB：${mainBytes} 字节。`);
+  if (bytes >= 4000000) throw new Error(`完整开发包超过 4 MB：${bytes} 字节。`);
+  console.log(`[HotPot Cloud Build] 主包 ${mainBytes} bytes，分包 ${subpackageBytes} bytes`);
   console.log(`[HotPot Cloud Build] 完成：${build} (${bytes} bytes)`);
   return {...target, bytes};
 }

@@ -2,8 +2,9 @@ import {Color,Node, Rect, resources,Size, Sprite, SpriteFrame,
   Texture2D, UITransform} from 'cc';
 
 import {getPageTheme, PageStyle} from '../data/PageTheme';
+import {paintGameArt,preloadGameArt} from './HotPotGameArt';
 
-export const CLIENT_BUILD = '20261030-confirmed-ui';
+export const CLIENT_BUILD = '20261031-four-style-game-ui';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 const frameCache = new Map<PageStyle, SpriteFrame[]>();
@@ -112,6 +113,6 @@ export function drawSharedTile(
   ui.setContentSize(width, height * 101.2 / 91.2);
   const sprite = face.getComponent(Sprite) || face.addComponent(Sprite);
   sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-  sprite.spriteFrame = paintedFrames.get(style)||frames[blocked ? 1 : 0];
+  paintGameArt(face,'tile',style);
   sprite.color=paintedFrames.has(style)&&blocked?new Color(130,126,116,255):Color.WHITE;
 }

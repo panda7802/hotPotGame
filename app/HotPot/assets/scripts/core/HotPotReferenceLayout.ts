@@ -29,13 +29,14 @@ export function referenceHeight(page:string, style:PageStyle):number {
   return 720*source.h/source.w;
 }
 
-export interface ReferenceArea {width:number;height:number;left:number;right:number;top:number;bottom:number}
+export interface ReferenceArea {width:number;height:number;left:number;right:number;top:number;bottom:number;systemTop?:number;menuBottom?:number}
 
 /** All values are design units; WeChat window/menu metrics arrive in CSS pixels. */
 export function referenceArea():ReferenceArea {
   const visible=view.getVisibleSize(),safe=sys.getSafeAreaRect(false);
-  const area={width:visible.width,height:visible.height,left:Math.max(0,safe.x),
+  const area:ReferenceArea={width:visible.width,height:visible.height,left:Math.max(0,safe.x),
     right:Math.max(0,visible.width-safe.x-safe.width),top:Math.max(0,visible.height-safe.y-safe.height),bottom:Math.max(0,safe.y)};
+  area.systemTop=area.top;
   const wx=(globalThis as any).wx;
   try {
     if(wx){
@@ -44,8 +45,10 @@ export function referenceArea():ReferenceArea {
         const sx=visible.width/info.windowWidth,sy=visible.height/info.windowHeight,s=info.safeArea;
         if(s){area.left=Math.max(area.left,s.left*sx);area.right=Math.max(area.right,(info.windowWidth-s.right)*sx);
           area.top=Math.max(area.top,s.top*sy);area.bottom=Math.max(area.bottom,(info.windowHeight-s.bottom)*sy)}
+        area.systemTop=area.top;
         const menu=wx.getMenuButtonBoundingClientRect?.();
-        if(menu?.height>0&&menu.bottom>0)area.top=Math.max(area.top,(menu.bottom+8)*sy);
+        if(menu?.bottom>0)area.menuBottom=menu.bottom*sy;
+        if(menu?.height>0&&menu.bottom>0)area.top=Math.max(area.top,(menu.bottom+20)*sy);
       }
     }
   }catch{/* Older hosts still have the engine safe area. */}

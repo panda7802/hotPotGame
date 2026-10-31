@@ -261,6 +261,19 @@ try {
    */
   assert.throws(() => finalizeCloudBuild({root, build}), /Mask/);
   write(engineFile, engine);
+  // The complete delivery budget includes resource subpackages as well.
+  const gameFile = path.join(build, 'game.json');
+  const originalGame = readJson(gameFile);
+  const resourceFile = path.join(build, 'subpackages', 'art-test', 'texture.bin');
+  write(gameFile, JSON.stringify({...originalGame,
+    subpackages: [{name: 'art-test', root: 'subpackages/art-test/'}],
+  }));
+  write(resourceFile, Buffer.alloc(2000000));
+  assert(finalizeCloudBuild({root, build}).bytes > 2000000);
+  write(resourceFile, Buffer.alloc(5000000));
+  assert.throws(() => finalizeCloudBuild({root, build}), /完整开发包.*4 MB/);
+  fs.unlinkSync(resourceFile);
+  write(gameFile, JSON.stringify(originalGame));
   write(path.join(build, 'oversize.bin'), Buffer.alloc(4000000));
   /**
    * 验证非法输入会被正确拒绝。

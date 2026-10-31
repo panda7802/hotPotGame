@@ -48,9 +48,9 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
       designText(stats,values[i],[i*213+8,12,197,54],38,t.accent,true);
       designText(stats,caption,[i*213+8,70,197,38],23,t.muted);
     });
-    const entries:Array<[string,string,string,()=>void]>=[['book','食材图鉴','Button_食材图鉴',()=>this.showCollection()],['trophy','我的成就','Button_我的成就',()=>this.showCollection('achievements')],['rank','地域榜单','Button_地域排行榜',()=>this.showRegionPicker([],true)],['pin','所在地选择','Button_选择地区',()=>this.showRegionPicker([])],['palette','页面换肤','Button_页面风格',()=>this.showPageStyles()],['share','分享给好友','Button_分享给好友',()=>this.shareGame()]];
+    const entries:Array<[string,string,string,()=>void]>=[['book','食材图鉴','Button_食材图鉴',()=>this.showCollection()],['trophy','我的成就','Button_我的成就',()=>this.showCollection('achievements')],['rank','地域榜单','Button_地域排行榜',()=>this.showRegionPicker([],true)],['pin','所在地选择','Button_选择地区',()=>this.showRegionPicker([])],['palette','页面换肤','Button_页面风格',()=>this.showPageStyles()]];
     entries.forEach(([icon,caption,name,action],i)=>{
-      const row=designNode(p,name,[40,638+i*78,640,68]);designSurface(row);designHit(row,()=>name==='Button_分享给好友'?action():open(action));
+      const row=designNode(p,name,[40,638+i*78,640,68]);designSurface(row);designHit(row,()=>open(action));
       const circle=designNode(row,'IconCircle',[28,6,56,56]);designSurface(circle,t.panel,28,'',false);designIcon(circle,icon,[10,10,36,36]);
       designText(row,caption,[116,2,420,64],30,t.ink,true,true);designIcon(row,'arrow',[584,21,26,26],t.muted);
     });

@@ -1,31 +1,35 @@
-import {Label,Node,Sprite,screen,view} from 'cc';
+import {Graphics,Label,Node,screen,UITransform,view} from 'cc';
 import {PageStyle,getPageTheme,setPageTheme} from '../data/PageTheme';
-import {CONFIRMED_SHELLS} from '../data/ConfirmedShells';
 import {HotPotLegacyGame} from './HotPotLegacyGame';
-import {Box,art,hit,place,text} from './HotPotReferenceArt';
+import {hit,text} from './HotPotReferenceArt';
 import {drawRoundRect,hex,opacity,refreshPageMaterials,ToolType,transform} from './HotPotUi';
 import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotReferenceLayout';
+import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
+import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
+import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
 
-const slots:Record<PageStyle,number[]>={1:[.136,.255,.375,.495,.615,.735,.855],4:[.114,.243,.371,.499,.627,.755,.882],8:[.152,.267,.384,.500,.616,.731,.848],9:[.113,.242,.371,.5,.629,.758,.887]};
-
-/** Confirmed artwork surrounds live tiles; only the quiet middle stretches. */
+/** Independent transparent artwork over one full-bleed scene; all gameplay remains live. */
 export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   protected referenceLayout=true;
-  private refBackground:Node|null=null;
-  private refMeter!:Node;
   private referenceRoot!:Node;
   private screenBackground!:Node;
   private screenBackdrop:Node|null=null;
   private firstLevelBottom!:Node;
-  private shellKey='';
+  private brand!:Node;
+  private boardArt!:Node;
+  private stageArt!:Node;
+  private trayArt!:Node;
+  private giftArt!:Node;
+  private refMeter!:Node;
   private shellHeight=1280;
+  private meterBox:GameBox=[100,260,495,13];
 
   private refreshReferenceViewport():void{
     this.scheduleOnce(()=>{
       if(!this.node.isValid)return;
       this.viewportHeight=view.getVisibleSize().height;
       drawRoundRect(this.screenBackground,720,this.viewportHeight,0,getPageTheme().panel);
-      if(this.screenBackdrop)fitReferenceBackdrop(this.screenBackdrop);
+      if(this.screenBackdrop)paintGameBackdrop(this.screenBackdrop,getPageTheme().id);
       this.positionReferenceShell();
       const toast=this.node.getChildByName('DesignToast');if(toast)fitReferenceContent(toast,1280);
       for(const overlay of this.node.children){
@@ -44,94 +48,116 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   protected buildShell():void{
     this.screenBackground=new Node('ReferenceScreenBackground');this.node.addChild(this.screenBackground);
     drawRoundRect(this.screenBackground,720,this.viewportHeight,0,getPageTheme().panel);
-    this.screenBackdrop=art(this.screenBackground,'background',[0,0,1,1],1280);
-    this.screenBackdrop.name='FullBleedBackground';fitReferenceBackdrop(this.screenBackdrop);
+    this.screenBackdrop=gameArtNode(this.screenBackground,'FullBleedBackground');paintGameBackdrop(this.screenBackdrop,getPageTheme().id);
     this.referenceRoot=new Node('ReferenceShell');this.node.addChild(this.referenceRoot);transform(this.referenceRoot,720,1280);
     screen.on('window-resize',this.refreshReferenceViewport,this);
-    this.firstLevelBottom=new Node('FirstLevelBottom');this.referenceRoot.addChild(this.firstLevelBottom);
-    this.levelLabel=text(this.referenceRoot,'',[.25,.14,.5,.045],1280,29);this.levelLabel.node.name='ReferenceLevel';
+    this.firstLevelBottom=gameArtNode(this.referenceRoot,'FirstLevelBottom');
+    this.brand=gameArtNode(this.referenceRoot,'BrandArtwork');
+    this.boardArt=gameArtNode(this.referenceRoot,'BoardArtwork');
+    this.stageArt=gameArtNode(this.referenceRoot,'StageArtwork');
+    this.trayArt=gameArtNode(this.referenceRoot,'TrayToolArtwork');
+    this.giftArt=gameArtNode(this.referenceRoot,'GiftArtwork');
+    this.levelLabel=text(this.referenceRoot,'',[0,0,1,.05],1280,29);this.levelLabel.node.name='ReferenceLevel';
     this.levelLabel.fontFamily='Microsoft YaHei, sans-serif';this.levelLabel.isBold=true;
-    this.progressLabel=text(this.referenceRoot,'',[.2,.18,.6,.035],1280,24);this.progressLabel.node.name='ReferenceProgress';
+    this.progressLabel=text(this.referenceRoot,'',[0,0,1,.04],1280,24);this.progressLabel.node.name='ReferenceProgress';
     this.progressLabel.fontFamily='Microsoft YaHei, sans-serif';
-    this.refMeter=new Node('ReferenceProgressMeter');this.referenceRoot.addChild(this.refMeter);
-    const profile=hit(this.referenceRoot,'Button_我的',[.02,.035,.17,.12],1280,()=>this.showCollection());
-    hit(this.referenceRoot,'Button_设置',[.81,.035,.17,.12],1280,()=>this.showPlayerProfile());
-    this.profileButtonLabel=text(profile,'',[0,0,0,0],1280,1);
-    this.board=new Node('Board');this.referenceRoot.addChild(this.board);transform(this.board,680,830);
-    this.trayNode=new Node('Tray');this.referenceRoot.addChild(this.trayNode);transform(this.trayNode,680,100);
-    this.reserveNode=new Node('ReviveReserve');this.referenceRoot.addChild(this.reserveNode);transform(this.reserveNode,560,90);this.reserveNode.active=false;
-    this.toolBar=new Node('ToolBar');this.referenceRoot.addChild(this.toolBar);
+    this.refMeter=gameArtNode(this.referenceRoot,'ReferenceProgressMeter');
+    const settings=hit(this.referenceRoot,'Button_设置',[0,0,.1,.1],1280,()=>this.showPlayerProfile());
+    this.profileButtonLabel=text(settings,'',[0,0,0,0],1280,1);this.profileButtonLabel.node.active=false;
+    this.board=gameArtNode(this.referenceRoot,'Board');
+    this.trayNode=gameArtNode(this.referenceRoot,'Tray');
+    this.reserveNode=gameArtNode(this.referenceRoot,'ReviveReserve');this.reserveNode.active=false;
+    this.toolBar=gameArtNode(this.referenceRoot,'ToolBar');
     (['undo','bomb','shuffle'] as ToolType[]).forEach(type=>{
       const action=()=>type==='undo'?this.useUndoTool():type==='bomb'?this.useBombTool():this.useShuffleTool();
-      const button=hit(this.toolBar,'ReferenceTool_'+type,[0,0,.25,.13],1280,action);
-      const badge=new Node('UsesBadge');button.addChild(badge);transform(badge,32,32);
-      const count=text(badge,'1',[-.5,-.5,1,1],32,22,'#FFF8E7',true);count.node.name='Label';
-      count.fontFamily='Arial';count.lineHeight=28;count.verticalAlign=Label.VerticalAlign.CENTER;
-      this.toolButtons.set(type,button);
+      const button=hit(this.toolBar,'ReferenceTool_'+type,[0,0,1,1],1280,action);
+      const label=text(button,{undo:'撤回',bomb:'炸',shuffle:'翻锅'}[type],[0,0,1,.1],1280,30,'#FFF4D8',true);label.node.name='ToolLabel';label.fontFamily='Microsoft YaHei, sans-serif';
+      const badge=gameArtNode(button,'UsesBadge');
+      const count=text(badge,'1',[0,0,1,1],40,25,'#FFF8E7',true);count.node.name='Label';
+      count.fontFamily='Arial';this.toolButtons.set(type,button);
     });
-    hit(this.referenceRoot,'Button_重新开始',[0,0,1,1],1280,()=>this.showRestartConfirmation());
-    const sound=hit(this.referenceRoot,'Button_声音',[0,0,1,1],1280,()=>this.toggleSound());
-    this.soundButtonLabel=text(sound,'',[0,0,0,0],1280,1);
-    const toast=new Node('ToastBackground');this.referenceRoot.addChild(toast);drawRoundRect(toast,640,56,18,'#182B25E8');opacity(toast,0);
+    this.makeGameControl('Button_重新开始','重新开始',()=>this.showRestartConfirmation());
+    const sound=this.makeGameControl('Button_声音','声音：开',()=>this.toggleSound());
+    this.soundButtonLabel=sound.getChildByName('Label')!.getComponent(Label)!;
+    const muted=gameArtNode(sound,'MutedMark');muted.active=false;
+    const toast=gameArtNode(this.referenceRoot,'ToastBackground');drawRoundRect(toast,640,56,18,'#182B25E8');opacity(toast,0);
     this.toastLabel=text(toast,'',[-.5,-.5,1,1],56,24,'#FFF4DF');opacity(this.toastLabel.node,0);
-    this.foodTransitionLayer=new Node('FoodTransitionLayer');this.referenceRoot.addChild(this.foodTransitionLayer);transform(this.foodTransitionLayer,720,1280);
+    this.foodTransitionLayer=gameArtNode(this.referenceRoot,'FoodTransitionLayer');
     this.positionReferenceShell();
   }
-
+  private makeGameControl(name:string,caption:string,action:()=>void):Node{
+    const button=hit(this.referenceRoot,name,[0,0,1,1],1280,action);
+    const label=text(button,caption,[0,0,1,.1],1280,29,'#FFF4DF',true);label.node.name='Label';
+    label.fontFamily='Microsoft YaHei, sans-serif';return button;
+  }
+  private positionBox(node:Node,b:GameBox):void{
+    transform(node,b[2],b[3]);node.setScale(1,1,1);node.setPosition(b[0]+b[2]/2-360,this.shellHeight/2-b[1]-b[3]/2);
+  }
+  private positionArt(node:Node,role:GameArtRole,b:GameBox,style:PageStyle,sliced=false,contain=false):void{
+    if(contain){const source=GAME_ART_RECTS[style][role],s=Math.min(b[2]/source[2],b[3]/source[3]);
+      b=[b[0]+(b[2]-source[2]*s)/2,b[1]+(b[3]-source[3]*s)/2,source[2]*s,source[3]*s]}
+    this.positionBox(node,b);paintGameArt(node,role,style,sliced);
+  }
   protected positionReferenceShell():void{
     if(!this.referenceRoot||!this.levelLabel)return;
-    const t=getPageTheme(),l=CONFIRMED_SHELLS[t.id],first=this.levelIndex===0;
-    const area=referenceArea(),width=Math.max(1,area.width-area.left-area.right),available=Math.max(1,area.height-area.top-area.bottom);
-    const fit=Math.min(width/720,available/1080),h=available/fit;this.shellHeight=h;
-    transform(this.referenceRoot,720,h);this.referenceRoot.setScale(fit,fit,1);this.referenceRoot.setPosition((area.left-area.right)/2,(area.bottom-area.top)/2);
-    transform(this.foodTransitionLayer,720,h);
-    const start=first?l.firstStart:l.start,bottom=1280-start,key=t.id+':'+first;
-    if(key!==this.shellKey){
-      if(this.refBackground){this.refBackground.removeFromParent();this.refBackground.destroy()}
-      this.refBackground=art(this.referenceRoot,first?'first':'shell',[0,0,1,1],h,t.id);
-      this.refBackground.name='WarmBackground';this.refBackground.setSiblingIndex(0);this.shellKey=key;
-      // Corners, sign, tray and controls keep their size. Only the central strip stretches.
-      (this.refBackground as any).nineSlice={top:l.top+64,bottom:bottom+64};
-    }
-    transform(this.refBackground!,720,h);this.refBackground!.setPosition(0,0);
-    const rect=(n:Node,b:number[])=>place(n,[b[0]/720,b[1]/h,b[2]/720,b[3]/h],h);
-    rect(this.levelLabel.node,l.level);this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.accent);
-    rect(this.progressLabel.node,l.progress);this.progressLabel.color=hex(t.id===1?'#FFF0CE':t.ink);
-    // Fit the actual board without changing coordinates, coverage or the save seed.
+    const t=getPageTheme(),first=this.levelIndex===0;
+    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0);
+    this.shellHeight=l.h;transform(this.referenceRoot,720,l.h);this.referenceRoot.setPosition(0,0);this.referenceRoot.setScale(l.scale,l.scale,1);
+    transform(this.foodTransitionLayer,720,l.h);
+    this.positionArt(this.brand,'brand',l.brand,t.id,false,true);
+    this.positionArt(this.boardArt,'panel',l.board,t.id,true);
+    this.positionArt(this.stageArt,'stage',l.stage,t.id);
+    this.positionArt(this.trayArt,'tray',l.tray,t.id,true);
+    this.positionArt(this.giftArt,'gift',[l.meter[0]+l.meter[2]+14,l.meter[1]-22*l.c,54*l.c,52*l.c],t.id,false,true);
+    const settings=this.referenceRoot.getChildByName('Button_设置')!;this.positionArt(settings,'settings',l.settings,t.id,false,true);
+    this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
+    this.levelLabel.fontSize=29*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
+    this.positionBox(this.progressLabel.node,l.progress);this.progressLabel.fontSize=24*l.c;this.progressLabel.lineHeight=30*l.c;
+    this.progressLabel.color=hex(t.id===1?'#FFF0CE':t.ink);
+    this.meterBox=l.meter;this.updateReferenceMeter();
     const tiles=this.levelData?.tiles;
     if(tiles?.length){
-      const tileScale=this.levelData.config.tileScale||1;
-      const minX=Math.min(...tiles.map(tile=>tile.x))-55.2*tileScale,maxX=Math.max(...tiles.map(tile=>tile.x))+55.2*tileScale;
-      const minY=Math.min(...tiles.map(tile=>tile.y))-45.6*tileScale,maxY=Math.max(...tiles.map(tile=>tile.y))+45.6*tileScale;
+      // Original coordinates and blocker graph are unchanged; stable bounds include removed tiles.
+      const ts=this.levelData.config.tileScale||1;
+      const minX=Math.min(...tiles.map(tile=>tile.x))-55.2*ts,maxX=Math.max(...tiles.map(tile=>tile.x))+55.2*ts;
+      const minY=Math.min(...tiles.map(tile=>tile.y))-50.6*ts,maxY=Math.max(...tiles.map(tile=>tile.y))+50.6*ts;
       transform(this.board,maxX-minX,maxY-minY).setAnchorPoint(-minX/(maxX-minX),-minY/(maxY-minY));
-      const top=l.top+48,end=h-bottom-(this.reserve.length?174:44);
-      const scale=Math.min(1,588/(maxX-minX),Math.max(80,end-top)/(maxY-minY));
-      this.board.setScale(scale,scale,1);this.board.setPosition(-(minX+maxX)/2*scale,h/2-(top+end)/2-(minY+maxY)/2*scale);
+      const s=Math.min(1,l.play[2]/(maxX-minX),l.play[3]/(maxY-minY));
+      this.board.setScale(s,s,1);this.board.setPosition(l.play[0]+l.play[2]/2-360-(minX+maxX)/2*s,l.h/2-l.play[1]-l.play[3]/2-(minY+maxY)/2*s);
     }
-    const sourceDelta=start-l.start,trayY=h-1280+sourceDelta+(l.tray[0]+l.tray[1])/2,ss=slots[t.id];
-    this.trayNode.setPosition((ss[3]-.5)*720,h/2-trayY);
-    const trayScale=(ss[6]-ss[0])*720/(6*94);this.trayNode.setScale(trayScale,trayScale,1);
-    this.reserveNode.setPosition(0,h/2-trayY+114);
+    const innerWidth=l.tray[2]-40,spacing=innerWidth/7,trayScale=spacing/94;
+    this.trayNode.setPosition(l.tray[0]+l.tray[2]/2-360,l.h/2-l.tray[1]-l.tray[3]/2);
+    this.trayNode.setScale(trayScale,trayScale,1);
+    for(const slot of this.trayNode.children.filter(n=>n.name.startsWith('TraySlot_'))){
+      const graphics=slot.getComponent(Graphics);if(graphics)graphics.enabled=false;
+      const height=Math.min(94,(l.tray[3]-24)/trayScale);transform(slot,86,height);
+      const face=slot.getChildByName('SlotArtwork')||gameArtNode(slot,'SlotArtwork');transform(face,86,height);face.setPosition(0,0);paintGameArt(face,'slot',t.id);slot.active=true;
+    }
+    this.reserveNode.setPosition(0,l.h/2-l.tray[1]+64);
     (['undo','bomb','shuffle'] as ToolType[]).forEach((type,i)=>{
-      const button=this.toolButtons.get(type)!,[bx,by]=l.badges[i];
-      const sourceY=by+46,sourceX=bx-66;
-      const target=[sourceX-83,h-1280+sourceY-64,166,128];rect(button,target);
-      const badge=button.getChildByName('UsesBadge')!;
-      // These coordinates are the measured centers of the illustrated red circles.
-      badge.setPosition(bx-sourceX,sourceY-by);
+      const button=this.toolButtons.get(type)!,b=l.tools[i];this.positionArt(button,type,b,t.id);
+      const label=button.getChildByName('ToolLabel')!;transform(label,b[2]*.5,b[3]*.65);label.setPosition(b[2]*.22,0);
+      const component=label.getComponent(Label)!;component.fontSize=30*l.c;component.lineHeight=40*l.c;component.color=hex(t.id===8||t.id===9?t.ink:'#FFF5D9');
+      const badge=button.getChildByName('UsesBadge')!;transform(badge,38,38);const g=badge.getComponent(Graphics)||badge.addComponent(Graphics);g.clear();g.fillColor=hex('#EA5937');g.strokeColor=hex('#FFE9AF');g.lineWidth=2;g.circle(0,0,18);g.fill();g.stroke();
+      badge.setPosition(b[2]/2-13,b[3]/2-1);const count=badge.getChildByName('Label')!;transform(count,36,36);count.setPosition(0,0);
     });
-    rect(this.referenceRoot.getChildByName('Button_重新开始')!,[185,h-1280+1148,205,74]);
-    rect(this.referenceRoot.getChildByName('Button_声音')!,[395,h-1280+1148,155,74]);
-    for(const name of ['Button_我的','Button_设置']){
-      const n=this.referenceRoot.getChildByName(name)!;rect(n,[name==='Button_我的'?20:584,48,116,140]);
+    for(const [i,name] of ['Button_重新开始','Button_声音'].entries()){
+      const button=this.referenceRoot.getChildByName(name)!,b=l.controls[i];this.positionArt(button,i===0?'restart':'sound',b,t.id);
+      const label=button.getChildByName('Label')!;transform(label,148,b[3]*.75);label.setPosition(43,0);
+      const component=label.getComponent(Label)!;component.fontSize=27*l.c;component.lineHeight=38*l.c;component.color=hex('#FFF4DF');
     }
-    this.firstLevelBottom.active=first;this.toolBar.active=!first;
-    this.updateReferenceMeter();
+    this.firstLevelBottom.active=first;this.toolBar.active=!first;this.updateSoundMark();
+  }
+  private updateReferenceMeter():void{
+    if(!this.refMeter)return;
+    const b=this.meterBox;this.positionBox(this.refMeter,b);
+    const g=drawRoundRect(this.refMeter,b[2],b[3],b[3]/2,'#F1E4C8','#CDAF75',1);
+    const value=this.levelData?Math.max(0,this.clearedTileCount()/this.levelData.total):0;
+    if(value>0){g.fillColor=hex('#78A44D');g.roundRect(-b[2]/2,-b[3]/2,Math.max(1,b[2]*value),b[3],Math.min(b[3]/2,b[2]*value/2));g.fill()}
   }
   protected previewPageStyle(style:PageStyle):void{
-    setPageTheme(style);refreshPageMaterials(this.board);this.shellKey='';
-    this.screenBackdrop?.destroy();this.screenBackdrop=art(this.screenBackground,'background',[0,0,1,1],1280,style);
-    this.screenBackdrop.name='FullBleedBackground';fitReferenceBackdrop(this.screenBackdrop);
+    setPageTheme(style);refreshPageMaterials(this.board);refreshPageMaterials(this.trayNode);refreshPageMaterials(this.reserveNode);
+    if(this.screenBackdrop)paintGameBackdrop(this.screenBackdrop,style);
     this.positionReferenceShell();this.updateToolButtons();this.refreshReferenceViewport();
   }
   protected updateProgress():void{
@@ -139,14 +165,12 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     if(this.levelLabel)this.levelLabel.string='第 '+(this.levelIndex+1)+' 关 · '+this.levelData.config.title;
     if(this.refMeter)this.updateReferenceMeter();
   }
-  private updateReferenceMeter():void{
-    if(!this.refMeter)return;
-    const b=CONFIRMED_SHELLS[getPageTheme().id].meter,h=this.shellHeight;
-    this.refMeter.setPosition(b[0]+b[2]/2-360,h/2-b[1]-b[3]/2);
-    const g=drawRoundRect(this.refMeter,b[2],b[3],b[3]/2,'#EFDFBD');
-    const value=this.levelData?Math.max(0,this.clearedTileCount()/this.levelData.total):0;
-    if(value>0){g.fillColor=hex('#67974C');g.roundRect(-b[2]/2,-b[3]/2,Math.max(1,b[2]*value),b[3],Math.min(b[3]/2,b[2]*value/2));g.fill()}
+  private updateSoundMark():void{
+    const sound=this.referenceRoot?.getChildByName('Button_声音'),mark=sound?.getChildByName('MutedMark');if(!mark)return;
+    const b=sound!.getComponent(UITransform)!;transform(mark,46,46);mark.setPosition(-b.width*.28,0);mark.active=!this.soundEnabled;
+    const g=mark.getComponent(Graphics)||mark.addComponent(Graphics);g.clear();g.strokeColor=hex('#9D281D');g.lineWidth=6;g.moveTo(-17,-17);g.lineTo(17,17);g.stroke();
   }
+  protected toggleSound():void{super.toggleSound();this.updateSoundMark()}
   protected updateToolButtons():void{
     if(this.toolBar)this.toolBar.active=this.levelIndex>0;
     for(const type of ['undo','bomb','shuffle'] as ToolType[]){
@@ -156,7 +180,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       if(label)label.string=this.levelIndex>0?(this.unlimitedTools[type]?'∞':String(this.toolUses[type])):'0';
     }
   }
-  protected renderTray():void{super.renderTray();for(const n of this.trayNode.children)if(n.name.startsWith('TraySlot_'))n.active=false}
+  protected renderTray():void{super.renderTray();this.positionReferenceShell()}
   protected renderReserve():void{super.renderReserve();this.positionReferenceShell()}
   protected loadLevel(index:number,persist=true,restored?:any):void{super.loadLevel(index,persist,restored);this.positionReferenceShell()}
 }

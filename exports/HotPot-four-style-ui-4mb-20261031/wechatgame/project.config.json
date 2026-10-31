@@ -1,0 +1,35 @@
+{
+  "description": "项目配置文件。",
+  "miniprogramRoot": "./",
+  "setting": {
+    "urlCheck": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": false,
+    "enhance": true,
+    "useIsolateContext": true
+  },
+  "compileType": "game",
+  "libVersion": "widelyUsed",
+  "appid": "wx943cc2d81ec6f820",
+  "projectname": "锅里捞啥-四风格-4MB版",
+  "condition": {
+    "search": {
+      "current": -1,
+      "list": []
+    },
+    "conversation": {
+      "current": -1,
+      "list": []
+    },
+    "game": {
+      "currentL": -1,
+      "list": [],
+      "current": -1
+    },
+    "miniprogram": {
+      "current": -1,
+      "list": []
+    }
+  }
+}
