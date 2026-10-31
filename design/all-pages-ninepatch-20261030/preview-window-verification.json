@@ -1,0 +1,149 @@
+{
+  "checks": [
+    {
+      "theme": 1,
+      "viewport": {
+        "width": 743,
+        "height": 915
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 1,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 1,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 1,
+      "viewport": {
+        "width": 720,
+        "height": 1280
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 4,
+      "viewport": {
+        "width": 743,
+        "height": 915
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 4,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 4,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 4,
+      "viewport": {
+        "width": 720,
+        "height": 1280
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 8,
+      "viewport": {
+        "width": 743,
+        "height": 915
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 8,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 8,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 8,
+      "viewport": {
+        "width": 720,
+        "height": 1280
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 9,
+      "viewport": {
+        "width": 743,
+        "height": 915
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 9,
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 9,
+      "viewport": {
+        "width": 1280,
+        "height": 720
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    },
+    {
+      "theme": 9,
+      "viewport": {
+        "width": 720,
+        "height": 1280
+      },
+      "controlsVisible": true,
+      "resizePreservesDialog": true
+    }
+  ],
+  "errors": []
+}

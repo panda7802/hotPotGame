@@ -10,7 +10,7 @@ export function place(node:Node,box:Box,height:number):void{
   node.setPosition((box[0]+box[2]/2-.5)*720,(.5-box[1]-box[3]/2)*height);
 }
 /** Original artwork is a shared texture; all data and hit regions remain live. */
-export function art(parent:Node,page:ArtPage|'shell'|'background',box:Box,height:number,style=getPageTheme().id,crop:Box=[0,0,1,1]):Node{
+export function art(parent:Node,page:ArtPage|'shell'|'first'|'background',box:Box,height:number,style=getPageTheme().id,crop:Box=[0,0,1,1]):Node{
   const node=new Node('ReferenceArtwork_'+page);parent.addChild(node);place(node,box,height);
   if(box[0]<0){transform(node,(parent.getComponent(UITransform)?.width||720)*box[2],height*box[3]);node.setPosition(0,0)}
   const source=referenceSource(page,style);
@@ -22,6 +22,12 @@ export function art(parent:Node,page:ArtPage|'shell'|'background',box:Box,height
     const frame=new SpriteFrame();frame.texture=texture;
     frame.rect=new Rect(Math.round(x+crop[0]*w),Math.round(y+crop[1]*h),Math.max(1,Math.floor(crop[2]*w)),Math.max(1,Math.floor(crop[3]*h)));
     const image=node.addComponent(Sprite);image.sizeMode=Sprite.SizeMode.CUSTOM;image.spriteFrame=frame;
+    const slice=(node as any).nineSlice;
+    if(slice){
+      frame.insetTop=Math.round(slice.top/1280*frame.rect.height);
+      frame.insetBottom=Math.round(slice.bottom/1280*frame.rect.height);
+      frame.insetLeft=52;frame.insetRight=52;image.type=Sprite.Type.SLICED;
+    }
     node.on(Node.EventType.NODE_DESTROYED,()=>frame.destroy());
   });
   return node;

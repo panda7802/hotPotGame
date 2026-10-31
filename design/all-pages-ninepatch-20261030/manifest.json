@@ -1,6 +1,6 @@
 {
   "designOnly": true,
-  "generatedAt": "2026-10-30T09:49:51.297Z",
+  "generatedAt": "2026-10-30T13:19:02.781Z",
   "themeCount": 4,
   "statesPerTheme": 110,
   "coreStates": 60,
@@ -1256,7 +1256,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -1313,7 +1313,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -1332,7 +1332,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -1351,7 +1351,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -1370,7 +1370,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -1853,7 +1853,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -1872,7 +1872,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -1891,7 +1891,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -1986,7 +1986,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -2062,7 +2062,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -2081,7 +2081,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -2138,7 +2138,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -2157,7 +2157,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -3391,7 +3391,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -3448,7 +3448,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -3467,7 +3467,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -3486,7 +3486,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -3505,7 +3505,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -3988,7 +3988,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -4007,7 +4007,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -4026,7 +4026,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -4121,7 +4121,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -4197,7 +4197,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -4216,7 +4216,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -4273,7 +4273,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -4292,7 +4292,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -5526,7 +5526,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -5583,7 +5583,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -5602,7 +5602,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -5621,7 +5621,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -5640,7 +5640,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -6123,7 +6123,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -6142,7 +6142,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -6161,7 +6161,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -6256,7 +6256,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -6332,7 +6332,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -6351,7 +6351,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -6408,7 +6408,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -6427,7 +6427,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -7661,7 +7661,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -7718,7 +7718,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -7737,7 +7737,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -7756,7 +7756,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -7775,7 +7775,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -8258,7 +8258,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -8277,7 +8277,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -8296,7 +8296,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -8391,7 +8391,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -8467,7 +8467,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -8486,7 +8486,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -8543,7 +8543,7 @@
         720,
         1080
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -8562,7 +8562,7 @@
         720,
         1080
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -9796,7 +9796,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -9853,7 +9853,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -9872,7 +9872,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -9891,7 +9891,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -9910,7 +9910,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -10393,7 +10393,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -10412,7 +10412,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -10431,7 +10431,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -10526,7 +10526,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -10602,7 +10602,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -10621,7 +10621,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -10678,7 +10678,7 @@
         720,
         1280
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -10697,7 +10697,7 @@
         720,
         1280
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -11931,7 +11931,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -11988,7 +11988,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12007,7 +12007,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12026,7 +12026,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12045,7 +12045,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12528,7 +12528,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -12547,7 +12547,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -12566,7 +12566,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -12661,7 +12661,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12737,7 +12737,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12756,7 +12756,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": false,
       "foodCards": 0,
       "scroll": null
@@ -12813,7 +12813,7 @@
         1440,
         3200
       ],
-      "tiles": 24,
+      "tiles": 21,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -12832,7 +12832,7 @@
         1440,
         3200
       ],
-      "tiles": 40,
+      "tiles": 38,
       "dialog": true,
       "foodCards": 0,
       "scroll": null
@@ -20463,8 +20463,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20482,8 +20482,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20501,8 +20501,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20520,8 +20520,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20539,8 +20539,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20558,8 +20558,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20577,8 +20577,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -20618,8 +20618,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21060,8 +21060,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21079,8 +21079,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21098,8 +21098,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21136,8 +21136,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21193,8 +21193,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21269,8 +21269,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21288,8 +21288,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21326,8 +21326,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21345,8 +21345,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -21364,8 +21364,8 @@
       "width": 720,
       "height": 1080,
       "normalizedHeight": 1080,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22598,8 +22598,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22617,8 +22617,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22636,8 +22636,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22655,8 +22655,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22674,8 +22674,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22693,8 +22693,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22712,8 +22712,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -22753,8 +22753,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23195,8 +23195,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23214,8 +23214,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23233,8 +23233,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23271,8 +23271,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23328,8 +23328,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23404,8 +23404,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23423,8 +23423,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23461,8 +23461,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23480,8 +23480,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -23499,8 +23499,8 @@
       "width": 720,
       "height": 1280,
       "normalizedHeight": 1280,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24733,8 +24733,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24752,8 +24752,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24771,8 +24771,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24790,8 +24790,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24809,8 +24809,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24828,8 +24828,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24847,8 +24847,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -24888,8 +24888,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25330,8 +25330,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25349,8 +25349,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25368,8 +25368,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25406,8 +25406,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25463,8 +25463,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25539,8 +25539,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25558,8 +25558,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25596,8 +25596,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 284,
+      "top": 288,
+      "bottom": 246,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25615,8 +25615,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -25634,8 +25634,8 @@
       "width": 1440,
       "height": 3200,
       "normalizedHeight": 1600,
-      "top": 330,
-      "bottom": 400,
+      "top": 288,
+      "bottom": 362,
       "designOnly": true,
       "errors": [],
       "screen": [
@@ -26254,5 +26254,16 @@
     }
   ],
   "verifiedPngHeaders": 1320,
-  "complete": true
+  "complete": true,
+  "mainRedesign": {
+    "themes": [
+      1,
+      4
+    ],
+    "material": [
+      "copper-lacquer",
+      "cream-clay"
+    ]
+  },
+  "wood09AndBadgeCentering": true
 }

@@ -1,0 +1,4555 @@
+{
+  "updatedScreens": 252,
+  "allGlyphsCentered": true,
+  "errors": [],
+  "checks": [
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 1,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 4,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 8,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1280
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 1440,
+        "h": 3200
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game1-muted",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game-reserve",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "game3-muted",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win1",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win2",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "win3",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "revive-used",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "restart",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-off",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-reward",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-new-day",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "toast-sound-on",
+      "badges": 3,
+      "centerError": [
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        },
+        {
+          "x": 0,
+          "y": 0
+        }
+      ]
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "new-day-dialog",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-discard",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker",
+      "badges": 0,
+      "centerError": []
+    },
+    {
+      "theme": 9,
+      "size": {
+        "w": 720,
+        "h": 1080
+      },
+      "state": "picker-confirm",
+      "badges": 0,
+      "centerError": []
+    }
+  ]
+}

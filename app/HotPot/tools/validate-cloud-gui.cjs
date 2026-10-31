@@ -41,6 +41,17 @@ const copy = (src, dest) => write(dest, fs.readFileSync(src));
  */
 const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 try {
+  // A field validator must work before Builder UI has assembled the full task.
+  // The real pre-build guard below must still reject unsafe complete options.
+  const fieldRule = require('../extensions/hotpot-cloud-build/builder.js')
+    .configs.wechatgame.verifyRuleMap.cloudDevelopmentTarget.func;
+  for (const partial of [undefined, {}, {platform:'wechatgame'}, {protectRelease:true}, {common:{outputName:config.outputName}}]) {
+    assert.strictEqual(fieldRule(true, partial), true,
+      'Missing unrelated fields must not falsely report an unset output name');
+  }
+  for (const disabled of [false, undefined, null, 'true']) {
+    assert.strictEqual(fieldRule(disabled, config), false);
+  }
   assertBranch(project);
   assertBuildOptions(root, config);
   /**
@@ -157,13 +168,20 @@ try {
 
   // Use genuine existing compiled JS as a fixture without changing its original
   // directory.
+  const compiledBuild = [
+    process.env.HOTPOT_BUILD_FIXTURE,
+    path.join(project, 'build/wechatgame-cloud-dev'),
+    path.resolve(project, '../../tmp/build-confirmed-ui-20261030/app/HotPot/build/wechatgame-cloud-dev'),
+  ].filter(Boolean).find(folder => ['cocos-js/cc.js', 'subpackages/main/game.js', 'game.js']
+    .every(file => fs.existsSync(path.join(folder, file))));
+  assert(compiledBuild, 'Build a genuine WeChat client or set HOTPOT_BUILD_FIXTURE first.');
   for (const file of [
     'cocos-js/cc.js',
     'subpackages/main/game.js',
     'game.js',
   ]) {
     copy(
-      path.join(project, 'build/wechatgame-cloud-dev', file),
+      path.join(compiledBuild, file),
       path.join(build, file),
     );
   }

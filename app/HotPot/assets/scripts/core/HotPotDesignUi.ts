@@ -2,6 +2,7 @@ import {BlockInputEvents,Graphics,Label,Mask,Node,resources,ScrollView,Sprite,Sp
 import {getPageTheme,PageStyle} from '../data/PageTheme';
 import {hex,transform} from './HotPotUi';
 import {fitReferenceBackdrop,fitReferenceContent} from './HotPotReferenceLayout';
+import {CONFIRMED_SHELLS} from '../data/ConfirmedShells';
 
 /** Pixel coordinates measured from the top left of the approved 720×1280 canvas. */
 export type DesignRect=[number,number,number,number];
@@ -54,12 +55,15 @@ export function designImage(parent:Node,name:string,key:string,box:DesignRect):N
   });return n;
 }
 export function designHeader(panel:Node,title:string,back:()=>void):void {
-  const c=designOnBackground();
-  designText(panel,'烟 火 小 馆',[160,84,400,30],19,c);
-  const brand=designText(panel,'锅里捞啥',[150,119,470,82],58,getPageTheme().id===1?'#FFE0A0':getPageTheme().id===4?'#E8793E':c,true);
-  brand.node.name='Brand';
-  designText(panel,title,[150,202,470,50],32,c,true);
-  designButton(panel,'MenuClose','←',[40,129,76,76],back,true);
+  const t=getPageTheme(),l=CONFIRMED_SHELLS[t.id],head={1:246,4:232,8:226,9:214}[t.id];
+  const clip=designNode(panel,'IllustratedHeader',[0,0,720,head]);clip.addComponent(Mask);
+  designImage(clip,'Brand','reference/shell-0'+t.id,[0,0,720,1280]);
+  designText(panel,title,l.level as DesignRect,30,t.id===9?'#FFF0CE':t.accent,true);
+  for(const [name,x,caption,icon] of [['MenuBack',45,'返回','back'],['MenuClose',599,'关闭','close']] as const){
+    const button=designNode(panel,name,[x,65,83,106]);designSurface(button,t.id===1?'#59391F':t.card,undefined,t.edge);
+    designIcon(button,icon,[24,14,35,35],t.id===1?'#FFE0A0':t.ink);
+    designText(button,caption,[5,59,73,32],23,t.id===1?'#FFE0A0':t.ink,true);designHit(button,back);
+  }
 }
 export function designOverlay(parent:Node,name:string,viewport:number,modal=false):{overlay:Node,panel:Node} {
   const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,viewport);overlay.addComponent(BlockInputEvents);
@@ -91,6 +95,8 @@ export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageT
   else if(type==='trophy'){line([[7,3],[17,3],[17,10],[15,14],[9,14],[7,10]],true);line([[7,5],[3,5],[3,9],[7,12]]);line([[17,5],[21,5],[21,9],[17,12]]);line([[12,14],[12,20]]);line([[8,21],[16,21]])}
   else if(type==='palette'){g.circle(0,0,9*s);g.stroke();for(const [x,y] of [[-4,4],[3,5],[-5,-2],[3,-3]]){g.circle(x*s,y*s,1.3*s);g.fill()}}
   else if(type==='share'){line([[12,16],[12,3]]);line([[7,8],[12,3],[17,8]]);line([[5,12],[5,21],[19,21],[19,12]])}
+  else if(type==='back'){line([[14,5],[7,12],[14,19]]);line([[7,12],[21,12]])}
+  else if(type==='close'){line([[5,5],[19,19]]);line([[19,5],[5,19]])}
   else if(type==='warning'){line([[12,3],[22,21],[2,21]],true);line([[12,9],[12,14]]);g.circle(0,-5*s,.8*s);g.fill()}
   else if(type==='check')line([[5,12],[10,17],[20,6]]);
   else if(type==='refresh'){line([[20,5],[20,11],[14,11]]);line([[4,19],[4,13],[10,13]]);g.arc(0,0,7*s,.25,2.7,false);g.stroke();g.arc(0,0,7*s,3.4,5.85,false);g.stroke()}

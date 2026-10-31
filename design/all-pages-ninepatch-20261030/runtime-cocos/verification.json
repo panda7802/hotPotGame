@@ -1,0 +1,536 @@
+{
+  "build": "20261030-confirmed-ui",
+  "styles": [
+    1,
+    4,
+    8,
+    9
+  ],
+  "checks": [
+    {
+      "level": 1,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 2,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 3,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "style": 1,
+      "name": "PlayerOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 1,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "style": 1,
+      "name": "StyleOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 1,
+      "scope": 0,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 1,
+      "scope": 1,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 1,
+      "scope": 2,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "level": 1,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 2,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 3,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "style": 4,
+      "name": "PlayerOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 4,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "style": 4,
+      "name": "StyleOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 4,
+      "scope": 0,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 4,
+      "scope": 1,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 4,
+      "scope": 2,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "level": 1,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 2,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 3,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "style": 8,
+      "name": "PlayerOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 8,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "style": 8,
+      "name": "StyleOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 8,
+      "scope": 0,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 8,
+      "scope": 1,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 8,
+      "scope": 2,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "level": 1,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 2,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "level": 3,
+      "nineSlice": true,
+      "centeredCounts": 3,
+      "height": 1280
+    },
+    {
+      "style": 9,
+      "name": "PlayerOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 9,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "style": 9,
+      "name": "StyleOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 9,
+      "scope": 0,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 9,
+      "scope": 1,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "style": 9,
+      "scope": 2,
+      "name": "RegionOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1278,
+      "name": "ReferenceShell",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 0.9984375
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 0.9984375
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 0.9984375
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 0.9984375
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 0.9984375
+    },
+    {
+      "width": 720,
+      "height": 1558.1538461538462,
+      "name": "ReferenceShell",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 1
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1560.5581395348838,
+      "name": "ReferenceShell",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 1
+    },
+    {
+      "width": 430,
+      "height": 932,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 1
+    },
+    {
+      "width": 720,
+      "height": 1080,
+      "name": "ReferenceShell",
+      "scale": 0.7763041556145004
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 0.6550066312997347
+    },
+    {
+      "width": 754,
+      "height": 878,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 0.6550066312997347
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 0.6550066312997347
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 0.6550066312997347
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 0.6550066312997347
+    },
+    {
+      "width": 720,
+      "height": 1080,
+      "name": "ReferenceShell",
+      "scale": 0.8888888888888888
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 0.75
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 0.75
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 0.75
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 0.75
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 0.75
+    },
+    {
+      "width": 720,
+      "height": 1080,
+      "name": "ReferenceShell",
+      "scale": 0.3080568720379147
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "PlayerOverlay",
+      "scale": 0.2599229857819905
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "name": "Profile menu",
+      "options": 6,
+      "statisticsInteractive": false
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "StyleOverlay",
+      "scale": 0.2599229857819905
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "CollectionOverlay",
+      "scale": 0.2599229857819905
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "BackdoorOverlay",
+      "scale": 0.2599229857819905
+    },
+    {
+      "width": 720,
+      "height": 1280,
+      "name": "RestartConfirmOverlay",
+      "scale": 0.2599229857819905
+    },
+    {
+      "wechat": "safe-area simulation",
+      "name": "PlayerOverlay",
+      "width": 720,
+      "height": 1280,
+      "scale": 1
+    }
+  ],
+  "pageErrors": [],
+  "missingLocalAssets": [],
+  "loadedIngredients": 50,
+  "loadedAudio": 4,
+  "noScorePopups": true,
+  "firstLevelToolsHidden": true,
+  "viewportSceneryCovers": true,
+  "profileStatisticsInert": true,
+  "dedicatedRankingOption": true,
+  "wechatSharing": true,
+  "network": "External requests blocked; fixture changes apply to this isolated test browser only",
+  "wechat": "Safe-area API simulation; physical device testing still required"
+}

@@ -14,7 +14,7 @@ const layouts: Record<number, any> = {
 /** Use the same source rectangle for the picture, data fields and hit targets. */
 export function referenceSource(page:string, style:PageStyle) {
   if(page==='background')return {group:'bg',style,width:720,height:1280,x:0,y:0,w:720,h:1280};
-  if(page==='shell')return {group:'shell',style,width:540,height:960,x:0,y:0,w:540,h:960};
+  if(page==='shell'||page==='first')return {group:page,style,width:720,height:1280,x:0,y:0,w:720,h:1280};
   const group=['rank','profile','picker'].includes(page)||page.startsWith('win')?'a':'b';
   const actual=group==='b'&&![4,8].includes(style)&&!REFERENCE_AUX_LAYOUTS[style]?8:style;
   const shape=group==='a'?layouts[actual]:REFERENCE_AUX_LAYOUTS[actual]||

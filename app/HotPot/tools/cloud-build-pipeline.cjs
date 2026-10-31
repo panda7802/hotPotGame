@@ -23,6 +23,13 @@ const samePath = (a, b) =>
  * 读取工作区当前 Git 分支。
  */
 function readCurrentBranch(repository) {
+  // Isolated build copies may live below the actual checkout, like any other
+  // untracked subdirectory. Find its real Git ancestor; keep the branch guard.
+  while (!fs.existsSync(path.join(repository, '.git'))) {
+    const parent = path.dirname(repository);
+    if (parent === repository) throw new Error('Cannot find the build repository.');
+    repository = parent;
+  }
   let gitDirectory = path.join(repository, '.git');
   if (fs.statSync(gitDirectory).isFile()) {
     const pointer = fs.readFileSync(gitDirectory, 'utf8').trim();

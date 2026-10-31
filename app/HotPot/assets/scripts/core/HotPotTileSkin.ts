@@ -3,7 +3,7 @@ import {Color,Node, Rect, resources,Size, Sprite, SpriteFrame,
 
 import {getPageTheme, PageStyle} from '../data/PageTheme';
 
-export const CLIENT_BUILD = '20261030-ui720-share';
+export const CLIENT_BUILD = '20261030-confirmed-ui';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 const frameCache = new Map<PageStyle, SpriteFrame[]>();

@@ -1,6 +1,6 @@
 'use strict';
-const fs=require('fs'),path=require('path'),assert=require('assert'),{chromium}=require('C:/Users/13520/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
-(async()=>{const browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});const results=[],dir=__dirname;
+const fs=require('fs'),path=require('path'),assert=require('assert'),{chromium,launchOptions}=require('./runtime.cjs');
+(async()=>{const browser=await chromium.launch(launchOptions);const results=[],dir=__dirname;
 try{const p=await browser.newPage({viewport:{width:720,height:1080}});const errors=[];p.on('pageerror',e=>errors.push(e.message));const base='file:///'+dir.replaceAll('\\','/')+'/screen.html?w=720&h=1080&theme=1&page=';const go=async s=>{await p.goto(base+s);await p.waitForFunction(()=>window.DESIGN_READY)};
 await go('profile');assert.equal(await p.locator('.menu-row').count(),6);assert.equal(await p.locator('.stats button').count(),0);await p.getByRole('button',{name:'地域榜单',exact:false}).click();assert.equal((await p.evaluate(()=>getDesignState())).state,'rank-national');results.push('统计区无跳转，地域榜单有独立入口');
 await go('picker');await p.locator('[data-style="8"]').click();assert.equal((await p.evaluate(()=>getDesignState())).theme,8);await p.getByRole('button',{name:'取消',exact:true}).click();assert.equal((await p.evaluate(()=>getDesignState())).state,'picker-discard');await p.getByRole('button',{name:'放弃并返回',exact:true}).click();assert.equal((await p.evaluate(()=>getDesignState())).theme,1);results.push('换肤预览、放弃确认、恢复原风格');
