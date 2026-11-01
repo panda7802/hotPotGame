@@ -2,7 +2,7 @@
 const fs=require('fs'),path=require('path'),os=require('os');
 const repo=path.resolve(__dirname,'../../..'),dest=path.join(repo,'app/HotPot/assets/resources/game-ui');
 const sharp=require(require.resolve('sharp',{paths:[repo,path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules')]}));
-const masters=path.join(repo,'design/four-style-previews-20261031/production-masters');
+const masters=path.join(repo,'app/HotPot/art-source/game-ui');
 fs.mkdirSync(masters,{recursive:true});
 const report=[];
 (async()=>{

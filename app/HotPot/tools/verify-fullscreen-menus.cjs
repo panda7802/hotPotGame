@@ -1,9 +1,9 @@
 'use strict';
 const fs=require('fs'),path=require('path'),http=require('http'),assert=require('assert');
 const repo=path.resolve(__dirname,'../../..');
-const {chromium,launchOptions}=require(path.join(repo,'design/all-pages-ninepatch-20261030/runtime.cjs'));
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const web=path.join(repo,'app/HotPot/build/web-menu-review');
-const out=path.join(repo,'design/implemented-fullscreen-20261101');
+const out=path.join(repo,'design/latest/runtime');
 const build=fs.readFileSync(path.join(repo,'app/HotPot/assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
 assert(fs.readFileSync(path.join(web,'assets/main/index.js'),'utf8').includes(build),'Stale web build');
 fs.mkdirSync(out,{recursive:true});

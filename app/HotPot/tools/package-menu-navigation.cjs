@@ -12,7 +12,7 @@ const delivery = path.resolve(process.argv[2]
 const marker = fs.readFileSync(path.join(project,
   'assets/scripts/core/HotPotTileSkin.ts'), 'utf8')
   .match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
-const runtimeRoot = path.join(repo, 'design/implemented-fullscreen-20261101');
+const runtimeRoot = path.join(repo, 'design/latest/runtime');
 const runtime = JSON.parse(fs.readFileSync(
   path.join(runtimeRoot, 'verification.json'), 'utf8'));
 const mobile = {build:runtime.build,

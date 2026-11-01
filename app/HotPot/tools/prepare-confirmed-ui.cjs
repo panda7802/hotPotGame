@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('fs'),path=require('path'),vm=require('vm'),crypto=require('crypto'),os=require('os');
 const repo=path.resolve(__dirname,'../../..'),design=path.join(repo,'design/all-pages-ninepatch-20261030');
-const {chromium,launchOptions}=require(path.join(design,'runtime.cjs'));
+const {chromium,launchOptions}=require('./browser-runtime.cjs');
 const sharp=require(require.resolve('sharp',{paths:[path.join(os.homedir(),'.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules'),repo]}));
 const dest=path.join(repo,'app/HotPot/assets/resources/reference'),ctx={};ctx.window=ctx;
 vm.runInNewContext(fs.readFileSync(path.join(design,'themes.js'),'utf8'),ctx);
