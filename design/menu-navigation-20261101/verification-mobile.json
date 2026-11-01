@@ -1,0 +1,14 @@
+{
+  "checks": [
+    {
+      "style": 8,
+      "homeCollection": true,
+      "profileCollectionRemoved": true,
+      "closeToGame": true,
+      "collectionBackRemoved": true,
+      "styleNumbersRemoved": true,
+      "previewRolledBack": true
+    }
+  ],
+  "errors": []
+}
