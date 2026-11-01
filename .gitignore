@@ -11,4 +11,6 @@
 /node_modules/
 /tmp/build-confirmed-ui-20261030/
 /.codex-work/confirmed-ui/
+/.codex-work/menu-20261101/
+/app/HotPot/tools/package-private-keys/
 /tmp/build-ui720-20261030/

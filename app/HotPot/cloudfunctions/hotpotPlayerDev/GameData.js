@@ -402,7 +402,7 @@ function getIngredient(type) {
 /**
  * 只选择棋盘上未拿取的牌（含被遮挡的牌），不修改棋盘或托盘。
  */
-function selectBombTargets(tiles, random = Math.random) {
+function selectBombTargets(tiles, random = Math.random, maxCount = 6) {
     const groups = new Map();
     /**
      * 按条件筛选或判断条目：!tile.removed。
@@ -425,6 +425,6 @@ function selectBombTargets(tiles, random = Math.random) {
         return [];
     }
     const candidates = eligible[Math.floor(random() * eligible.length)].slice();
-    const count = candidates.length >= 6 ? 6 : 3;
+    const count = Math.min(Math.floor(candidates.length / 3) * 3, maxCount);
     return shuffle(candidates, random).slice(0, count);
 }

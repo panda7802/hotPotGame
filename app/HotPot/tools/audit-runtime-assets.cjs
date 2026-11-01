@@ -5,7 +5,7 @@ const build=path.resolve(process.argv[2]||path.join(root,'build/wechatgame-cloud
 const output=path.join(repo,'design/asset-audit-20261030');
 const assets=[];
 function add(file,use){assets.push({file,use})}
-for(const name of ['bgm','match','win','lose'])add(`audio/${name}.mp3`,'HotPotResources: background music or match/win/lose effect');
+for(const name of ['bgm','match','bomb','win','lose'])add(`audio/${name}.mp3`,'HotPotResources: background music or match/bomb/win/lose effect');
 add('data/regions.json','HotPotState + HotPotReferenceCollection: province/city/county data');
 for(const sheet of ['a','b'])add(`ingredients/food-${sheet}.png`,'HotPotResources: 25 ingredients per shared sheet, 50 in total');
 for(const id of ['01','04','08','09']){
@@ -31,15 +31,15 @@ for(const asset of assets){
     asset.packagedFile=path.relative(build,matches[0].file).replaceAll('\\','/');
   }
 }
-assert.strictEqual(native.length,19,'Only 15 used images and 4 audio files should remain in the native resources');
+assert.strictEqual(native.length,20,'Only 15 used images and 5 audio files should remain in the native resources');
 for(const name of ['HotPotRegion.ttf','OFL.txt'])assert(fs.existsSync(path.join(root,'assets/art-archive/unused-region-font',name)),'Keep legacy font and its license together outside runtime resources');
 const baseline=JSON.parse(fs.readFileSync(path.join(repo,'exports/HotPot-screenfit-20261030/build-report.json'),'utf8'));
 const bytes=walk(build).reduce((sum,file)=>sum+fs.statSync(file).size,0);
 const report={build:fs.readFileSync(path.join(root,'assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1],
   auditedBuild:path.relative(repo,build).replaceAll('\\','/'),baselineClientBytes:baseline.totalClientBytes,currentClientBytes:bytes,
-  resourceCount:assets.length,imageCount:15,audioCount:4,dataCount:1,
+  resourceCount:assets.length,imageCount:15,audioCount:5,dataCount:1,
   removedFromRuntime:[{file:'fonts/HotPotRegion.ttf',bytes:31744,reason:'Only the overridden legacy region picker used this font; active pages use system fonts'},
     {file:'fonts/OFL.txt',bytes:4490,reason:'Font and accompanying license are retained together under assets/art-archive/unused-region-font'}],
   otherUnusedRuntimeResources:[],duplicateNativeAssets:[],assets};
 fs.mkdirSync(output,{recursive:true});fs.writeFileSync(path.join(output,'report.json'),JSON.stringify(report,null,2));
-console.log(JSON.stringify({resourceCount:assets.length,imageCount:15,audioCount:4,currentClientBytes:bytes,archivedSourceBytes:36234,unknownOrDuplicateRuntimeAssets:0,report:path.join(output,'report.json')},null,2));
+console.log(JSON.stringify({resourceCount:assets.length,imageCount:15,audioCount:5,currentClientBytes:bytes,archivedSourceBytes:36234,unknownOrDuplicateRuntimeAssets:0,report:path.join(output,'report.json')},null,2));

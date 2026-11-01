@@ -83,6 +83,7 @@ class Node {
      * 节点相对父节点的位置。
      */
     this.position = new Vec3();
+    this.scale = new Vec3(1, 1, 1);
   }
 
   /**
@@ -155,13 +156,14 @@ class Node {
    * 在组件替身中查找或添加指定类型的组件。
    */
   addComponent() {
-    return {};
+    return {circle() {}, fill() {}, stroke() {}, moveTo() {},
+      bezierCurveTo() {}, roundRect() {}};
   }
   /**
    * 更新 setPosition 对应的状态。
    */
   setPosition(x, y, z = 0) {
-    this.position = new Vec3(x, y, z);
+    this.position = typeof x === 'object' ? x.clone() : new Vec3(x, y, z);
   }
   /**
    * 更新 setScale 对应的状态。
@@ -226,6 +228,7 @@ const cc = {
       delay() {
         return chain;
       },
+      set() { return chain; },
       /**
        * 为测试场景提供 call 所需的模拟行为。
        */
@@ -759,7 +762,13 @@ function persistedGame() {
   /**
    * 刷新全部牌的可选状态和外观。
    */
-  game.createTileNode = game.refreshTileStates = () => {};
+  game.refreshTileStates = game.drawTile = () => {};
+  game.createTileNode = (tile) => {
+    const node = new Node(`Tile_${tile.id}`);
+    node.setPosition(tile.x, tile.y, tile.layer);
+    game.board.addChild(node);
+    game.tileNodes.set(tile.id, node);
+  };
   game.remainingTiles = Game.prototype.remainingTiles.bind(game);
   game.loadLevel(1);
   return {game, writes};
@@ -1059,11 +1068,16 @@ for (let i = 0; i < 3; i++) {
 for (let i = 0; i < 3; i++) {
   const before = unlimited.game.remainingTiles();
   unlimited.game.useBombTool();
+  assert(unlimited.game.locked, 'bomb input must lock during the effect');
+  while (completions.length) completions.shift()();
   assert(
     unlimited.game.remainingTiles() < before,
     'bomb must work repeatedly with zero normal uses',
   );
   assert.strictEqual(unlimited.writes.at(-1).toolUses.bomb, 0);
+  assert.strictEqual(unlimited.writes.at(-1).removedIds.length,
+    unlimited.game.levelData.tiles.filter(tile => tile.removed).length,
+    'bomb must save the settled result before its animation finishes');
 }
 for (let i = 0; i < 3; i++) {
   const before = unlimited.writes.length;
@@ -1194,15 +1208,16 @@ for (let repeat = 0; repeat < 3; repeat++) {
   };
   const before = fastBomb.game.remainingTiles();
   fastBomb.game.useBombTool();
+  while (completions.length) completions.shift()();
   const eliminated = before - fastBomb.game.remainingTiles();
-  assert(eliminated === 3 || eliminated === 6);
+  assert(eliminated >= 3 && eliminated <= 18 && eliminated % 3 === 0);
   assert.strictEqual(fastBomb.game.tileNodes.size, before - eliminated);
   let changed = 0;
   for (const [id, node] of previousNodes) {
     const tile = allTiles.get(id);
     if (tile.removed) {
       assert(
-        node.destroyed && !node.parent && !fastBomb.game.tileNodes.has(id),
+        node.parent?.destroyed && !fastBomb.game.tileNodes.has(id),
       );
     } else {
       assert.strictEqual(
@@ -1222,8 +1237,8 @@ for (let repeat = 0; repeat < 3; repeat++) {
   }
   assert.strictEqual(
     redraws.length,
-    changed,
-    'only newly uncovered tiles must be redrawn',
+    changed + eliminated,
+    'only bomb targets and newly uncovered tiles must be redrawn',
   );
   assert(
     redraws.length < previousNodes.size / 4,
@@ -1236,6 +1251,60 @@ console.log(
     'd, indexed blockers and only changed s' +
     'tates redrawn: OK',
 );
+
+// A new round must discard old effects and ignore their delayed completion.
+const staleBomb = persistedGame();
+const staleBombSounds = [];
+staleBomb.game.playEffect = key => staleBombSounds.push(key);
+staleBomb.game.useBombTool();
+const oldBombEffects = staleBomb.game.board.getChildByName('BombEffects');
+assert(oldBombEffects && staleBomb.game.locked);
+staleBomb.game.loadLevel(2);
+assert(oldBombEffects.destroyed && !oldBombEffects.parent);
+staleBomb.game.locked = true;
+while (completions.length) completions.shift()();
+assert(staleBomb.game.locked, 'old bomb must not unlock a new round');
+assert.strictEqual(staleBomb.game.remainingTiles(), 888);
+assert.strictEqual(staleBombSounds.length, 0,
+  'a restarted round must not play the old bomb sound');
+
+const finalBomb = persistedGame();
+const finalType = finalBomb.game.levelData.tiles[0].type;
+finalBomb.game.levelData.tiles.forEach(tile => {
+  tile.removed = tile.type !== finalType;
+});
+const beforeBomb = finalBomb.game.remainingTiles();
+const bombSounds = [];
+finalBomb.game.playEffect = key => bombSounds.push(key);
+finalBomb.game.useBombTool();
+const particles = finalBomb.game.board.getChildByName('BombEffects').children;
+assert.strictEqual(particles.filter(n => n.name.startsWith('BombSmoke_')).length, 8);
+assert.strictEqual(particles.filter(n => n.name.startsWith('BombSpark_')).length, 38);
+assert(particles.some(n => n.name === 'BombFlash'));
+assert.strictEqual(bombSounds.length, 0, 'sound must wait for detonation');
+const removedByBomb = beforeBomb - finalBomb.game.remainingTiles();
+assert(removedByBomb <= 6, 'second-level bomb must retain its six-tile cap');
+assert(finalBomb.game.locked && !finalBomb.game.gameEnded);
+const bombSave = finalBomb.writes.at(-1);
+assert.strictEqual(bombSave.removedIds.length,
+  finalBomb.game.levelData.tiles.filter(tile => tile.removed).length);
+while (completions.length) completions.shift()();
+assert.deepStrictEqual(bombSounds, ['bomb'], 'detonation plays one dedicated clip');
+assert(!finalBomb.game.locked || finalBomb.game.gameEnded);
+console.log('Bomb settlement save, animation lock and restart isolation: OK');
+
+const bombAudio = new Game();
+let soundPlays = 0;
+bombAudio.effectSource = {stop() {}, play() { soundPlays++; }};
+bombAudio.audioClips.set('bomb', {name: 'bomb'});
+bombAudio.soundEnabled = false;
+bombAudio.playEffect('bomb', 0.9);
+assert.strictEqual(soundPlays, 0, 'bomb sound must respect mute');
+bombAudio.soundEnabled = true;
+bombAudio.playEffect('bomb', 0.9);
+assert.strictEqual(soundPlays, 1);
+assert.strictEqual(bombAudio.effectSource.clip.name, 'bomb');
+console.log('Bomb particles, dedicated detonation audio and mute: OK');
 
 // Endgame setup must keep the original tile inventory/geometry and remain
 // saveable.

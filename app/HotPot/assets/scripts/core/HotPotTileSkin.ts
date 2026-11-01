@@ -4,7 +4,7 @@ import {Color,Node, Rect, resources,Size, Sprite, SpriteFrame,
 import {getPageTheme, PageStyle} from '../data/PageTheme';
 import {paintGameArt,preloadGameArt} from './HotPotGameArt';
 
-export const CLIENT_BUILD = '20261031-four-style-game-ui';
+export const CLIENT_BUILD = '20261101-fullscreen-submenus-ranking';
 const CELL_WIDTH = 112;
 const CELL_HEIGHT = 104;
 const frameCache = new Map<PageStyle, SpriteFrame[]>();

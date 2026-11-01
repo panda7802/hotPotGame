@@ -513,6 +513,7 @@ export function getIngredient(type: IngredientType): IngredientConfig {
 export function selectBombTargets(
   tiles: TileData[],
   random: () => number = Math.random,
+  maxCount = 6,
 ): TileData[] {
   const groups = new Map<IngredientType, TileData[]>();
   /**
@@ -538,6 +539,6 @@ export function selectBombTargets(
     return [];
   }
   const candidates = eligible[Math.floor(random() * eligible.length)].slice();
-  const count = candidates.length >= 6 ? 6 : 3;
+  const count = Math.min(Math.floor(candidates.length / 3) * 3, maxCount);
   return shuffle(candidates, random).slice(0, count);
 }

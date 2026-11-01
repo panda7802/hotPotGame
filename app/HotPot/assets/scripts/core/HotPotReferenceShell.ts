@@ -1,4 +1,4 @@
-import {Graphics,Label,Node,screen,UITransform,view} from 'cc';
+import {Graphics,Label,Node,screen,Sprite,UITransform,view} from 'cc';
 import {PageStyle,getPageTheme,setPageTheme} from '../data/PageTheme';
 import {HotPotLegacyGame} from './HotPotLegacyGame';
 import {hit,text} from './HotPotReferenceArt';
@@ -7,6 +7,7 @@ import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotRe
 import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
+import {fitDesignPage} from './HotPotDesignUi';
 
 /** Independent transparent artwork over one full-bleed scene; all gameplay remains live. */
 export abstract class HotPotReferenceShell extends HotPotLegacyGame {
@@ -36,7 +37,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
         if(!overlay.name.endsWith('Overlay'))continue;
         transform(overlay,720,this.viewportHeight);
         const panel=overlay.getChildByName('PlayerPanel')||overlay.getChildByName('ResultPanel');
-        if(panel&&(panel as any).referenceHeight)fitReferenceContent(panel,(panel as any).referenceHeight);
+        if(panel&&(panel as any).designPage)fitDesignPage(panel);
+        else if(panel&&(panel as any).referenceHeight)fitReferenceContent(panel,(panel as any).referenceHeight);
         const backdrop=overlay.getChildByName('FullBleedBackground');if(backdrop)fitReferenceBackdrop(backdrop);
         const scrim=overlay.getChildByName('ModalScrim');
         if(scrim)drawRoundRect(scrim,720,this.viewportHeight,0,(overlay as any).designModal?'#101B19A8':getPageTheme().panel);
@@ -64,6 +66,9 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.refMeter=gameArtNode(this.referenceRoot,'ReferenceProgressMeter');
     const settings=hit(this.referenceRoot,'Button_设置',[0,0,.1,.1],1280,()=>this.showPlayerProfile());
     this.profileButtonLabel=text(settings,'',[0,0,0,0],1280,1);this.profileButtonLabel.node.active=false;
+    const library=hit(this.referenceRoot,'Button_食材图鉴',[0,0,.1,.1],1280,()=>this.showCollection());
+    const libraryLabel=text(library,'图鉴',[-.5,-.5,1,1],24,21,getPageTheme().ink,true);
+    libraryLabel.node.name='LibraryLabel';
     this.board=gameArtNode(this.referenceRoot,'Board');
     this.trayNode=gameArtNode(this.referenceRoot,'Tray');
     this.reserveNode=gameArtNode(this.referenceRoot,'ReviveReserve');this.reserveNode.active=false;
@@ -110,6 +115,13 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.positionArt(this.trayArt,'tray',l.tray,t.id,true);
     this.positionArt(this.giftArt,'gift',[l.meter[0]+l.meter[2]+14,l.meter[1]-22*l.c,54*l.c,52*l.c],t.id,false,true);
     const settings=this.referenceRoot.getChildByName('Button_设置')!;this.positionArt(settings,'settings',l.settings,t.id,false,true);
+    const library=this.referenceRoot.getChildByName('Button_食材图鉴')!;
+    this.positionBox(library,[14,l.settings[1]-8*l.c,92*l.c,104*l.c]);
+    this.paintCollectionBook(library,l.c);
+    const libraryLabel=library.getChildByName('LibraryLabel')!;
+    transform(libraryLabel,72*l.c,26*l.c);libraryLabel.setPosition(0,-36*l.c);
+    libraryLabel.getComponent(Label)!.color=hex(t.ink);
+    libraryLabel.getComponent(Label)!.fontSize=21*l.c;
     this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
     this.levelLabel.fontSize=29*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
     this.positionBox(this.progressLabel.node,l.progress);this.progressLabel.fontSize=24*l.c;this.progressLabel.lineHeight=30*l.c;
@@ -135,11 +147,36 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     }
     this.reserveNode.setPosition(0,l.h/2-l.tray[1]+64);
     (['undo','bomb','shuffle'] as ToolType[]).forEach((type,i)=>{
-      const button=this.toolButtons.get(type)!,b=l.tools[i];this.positionArt(button,type,b,t.id);
-      const label=button.getChildByName('ToolLabel')!;transform(label,b[2]*.5,b[3]*.65);label.setPosition(b[2]*.22,0);
-      const component=label.getComponent(Label)!;component.fontSize=30*l.c;component.lineHeight=40*l.c;component.color=hex(t.id===8||t.id===9?t.ink:'#FFF5D9');
-      const badge=button.getChildByName('UsesBadge')!;transform(badge,38,38);const g=badge.getComponent(Graphics)||badge.addComponent(Graphics);g.clear();g.fillColor=hex('#EA5937');g.strokeColor=hex('#FFE9AF');g.lineWidth=2;g.circle(0,0,18);g.fill();g.stroke();
-      badge.setPosition(b[2]/2-13,b[3]/2-1);const count=badge.getChildByName('Label')!;transform(count,36,36);count.setPosition(0,0);
+      const button=this.toolButtons.get(type)!,b=l.tools[i];
+      let medallion=button.getChildByName('ToolMedallion');
+      let toolPlate=button.getChildByName('ToolPlate');
+      if(t.id===8){
+        this.positionBox(button,b);
+        (button as any).gameArtKey='tool-medallion-8';
+        const sprite=button.getComponent(Sprite);if(sprite)sprite.enabled=false;
+        if(!toolPlate)toolPlate=gameArtNode(button,'ToolPlate');
+        toolPlate.active=true;toolPlate.setSiblingIndex(0);
+        drawRoundRect(toolPlate,b[2],b[3]*.82,b[3]*.41,t.card,t.edge,2);
+        if(!medallion)medallion=gameArtNode(button,'ToolMedallion');
+        medallion.active=true;transform(medallion,b[2]*.60,b[3]*.84);
+        medallion.setPosition(-b[2]*.19,0);paintGameArt(medallion,type,t.id);
+      }else{
+        if(toolPlate)toolPlate.active=false;
+        if(medallion)medallion.active=false;
+        const plate=button.getComponent(Graphics);if(plate)plate.enabled=false;
+        this.positionArt(button,type,b,t.id);
+        const sprite=button.getComponent(Sprite);if(sprite)sprite.enabled=true;
+      }
+      const label=button.getChildByName('ToolLabel')!;
+      // 青瓷按钮的插画占据左半部，文字固定在右侧留白内。
+      const labelWidth=t.id===8?b[2]*.33:b[2]*.5;
+      transform(label,labelWidth,b[3]*.65);
+      label.setPosition(b[2]*(t.id===8?.28:.22),0);
+      const component=label.getComponent(Label)!;component.fontSize=(t.id===8?25:30)*l.c;component.lineHeight=40*l.c;component.overflow=Label.Overflow.SHRINK;component.color=hex(t.id===8||t.id===9?t.ink:'#FFF5D9');
+      const badgeScale=t.id===8?l.c:1;
+      const badge=button.getChildByName('UsesBadge')!;transform(badge,38*badgeScale,38*badgeScale);const g=badge.getComponent(Graphics)||badge.addComponent(Graphics);g.clear();g.fillColor=hex('#EA5937');g.strokeColor=hex('#FFE9AF');g.lineWidth=2*badgeScale;g.circle(0,0,18*badgeScale);g.fill();g.stroke();
+      badge.setPosition(b[2]/2-18*badgeScale,t.id===8?b[3]*.38:b[3]/2-1);const count=badge.getChildByName('Label')!;transform(count,36*badgeScale,36*badgeScale);count.setPosition(0,0);
+      count.getComponent(Label)!.fontSize=25*badgeScale;
     });
     for(const [i,name] of ['Button_重新开始','Button_声音'].entries()){
       const button=this.referenceRoot.getChildByName(name)!,b=l.controls[i];this.positionArt(button,i===0?'restart':'sound',b,t.id);
@@ -147,6 +184,33 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       const component=label.getComponent(Label)!;component.fontSize=27*l.c;component.lineHeight=38*l.c;component.color=hex('#FFF4DF');
     }
     this.firstLevelBottom.active=first;this.toolBar.active=!first;this.updateSoundMark();
+  }
+  /** Illustrated recipe book reuses existing food sprites across all themes. */
+  private paintCollectionBook(parent:Node,scale:number):void{
+    const t=getPageTheme();
+    let book=parent.getChildByName('CollectionBook');
+    if(!book){book=gameArtNode(parent,'CollectionBook');book.setSiblingIndex(0)}
+    transform(book,92,104);book.setScale(scale,scale,1);book.setPosition(0,0);
+    const g=book.getComponent(Graphics)||book.addComponent(Graphics);g.clear();
+    g.fillColor=hex('#986134');g.strokeColor=hex(t.edge);g.lineWidth=2;
+    g.roundRect(-44,-18,88,68,7);g.fill();g.stroke();
+    const page=(direction:number)=>{
+      g.fillColor=hex('#FFF2CB');g.strokeColor=hex('#D9B977');g.lineWidth=1.5;
+      g.moveTo(0,-13);g.bezierCurveTo(direction*12,-5,direction*29,-10,direction*40,-13);
+      g.lineTo(direction*40,46);g.bezierCurveTo(direction*22,51,direction*10,46,0,40);
+      g.close();g.fill();g.stroke();
+      g.strokeColor=hex('#D9C59B');g.lineWidth=1;
+      for(let y=-3;y<=3;y+=6){g.moveTo(direction*8,y);g.lineTo(direction*30,y+2);g.stroke()}
+    };
+    page(-1);page(1);
+    g.fillColor=hex(t.accent);g.moveTo(23,48);g.lineTo(23,25);g.lineTo(28,29);g.lineTo(33,25);g.lineTo(33,48);g.close();g.fill();
+    g.fillColor=hex(t.card);g.strokeColor=hex(t.edge);g.lineWidth=2;
+    g.roundRect(-37,-50,74,28,10);g.fill();g.stroke();
+    for(const [name,type,x] of [['BookShrimp','shrimp',-20],['BookCarrot','carrot',20]] as const){
+      if(!this.ingredientFrames.has(type)||book.getChildByName(name))continue;
+      const food=gameArtNode(book,name);food.setPosition(x,22);
+      this.addIngredientImage(food,type,false,30,30);
+    }
   }
   private updateReferenceMeter():void{
     if(!this.refMeter)return;
