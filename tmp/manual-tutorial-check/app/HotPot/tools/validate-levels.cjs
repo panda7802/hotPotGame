@@ -92,13 +92,16 @@ const bombTiles = (type, count, removed = false) =>
     layer: 0,
     blockedBy: [],
   }));
-for (const count of [0, 1, 2, 3, 4, 5, 6, 7, 12]) {
+for (const count of [0, 1, 2, 3, 4, 5, 6, 7, 12, 17, 18, 19, 30]) {
   const tiles = bombTiles('beef', count);
   /**
    * 为测试提供当前调用所需的回调行为。
    */
   const targets = data.selectBombTargets(tiles, () => 0.25);
   assert.strictEqual(targets.length, count >= 6 ? 6 : count >= 3 ? 3 : 0);
+  const thirdTargets = data.selectBombTargets(tiles, () => 0.25, 18);
+  assert.strictEqual(thirdTargets.length, Math.min(18, Math.floor(count / 3) * 3));
+  assert.strictEqual(new Set(thirdTargets.map(tile => tile.id)).size, thirdTargets.length);
   /**
    * 将当前条目转换为后续处理所需的值。
    */

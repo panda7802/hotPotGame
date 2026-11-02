@@ -7,6 +7,7 @@ exports.validateProgress = validateProgress;
 exports.mergeProgress = mergeProgress;
 exports.validateGameSave = validateGameSave;
 exports.restoreLevel = restoreLevel;
+exports.shouldUpgradeUnstartedLevelThree = shouldUpgradeUnstartedLevelThree;
 exports.validatePlayerState = validatePlayerState;
 const RegionData_1 = require("./RegionData");
 var RegionData_2 = require("./RegionData");
@@ -240,12 +241,14 @@ function validateGameSave(value) {
         && /^[a-z0-9-]{8,80}$/.test(value.runId)), '牌局标识错误');
     (0, PlayerTypes_1.check)(value.layoutSeed === undefined ||
         (value.levelIndex === 2 &&
-            (0, PlayerTypes_1.integer)(value.layoutSeed, 1, GameData_1.RANDOM_LAYOUT_SEED_END)), '牌阵种子错误');
+            (0, PlayerTypes_1.integer)(value.layoutSeed, 1, GameData_1.VARIED_LAYOUT_SEED_END)), '牌阵种子错误');
     (0, PlayerTypes_1.check)(value.ingredientSeed === undefined ||
         (0, PlayerTypes_1.integer)(value.ingredientSeed, 1, GameData_1.INGREDIENT_SEED_MAX), '食材种子错误');
     (0, PlayerTypes_1.check)(value.ingredientPoolVersion === undefined
         || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2, '食材池版本错误');
-    const level = template(value.levelIndex, 0, value.ingredientSeed, value.ingredientPoolVersion);
+    const validationSeed = value.layoutSeed >= GameData_1.VARIED_LAYOUT_SEED_START
+        ? value.layoutSeed : 0;
+    const level = template(value.levelIndex, validationSeed, value.ingredientSeed, value.ingredientPoolVersion);
     (0, PlayerTypes_1.check)(Array.isArray(value.types) && value.types.length === level.total, '食材牌数错误');
     const expected = new Map();
     /**
@@ -393,6 +396,16 @@ function restoreLevel(save) {
         tile.removed = removed.has(tile.id);
     });
     return level;
+}
+/** An untouched old third level can adopt the new layout without losing play. */
+function shouldUpgradeUnstartedLevelThree(save) {
+    return save.levelIndex === 2 && save.status === 'playing'
+        && (save.layoutSeed || 0) < GameData_1.VARIED_LAYOUT_SEED_START
+        && save.removedIds.length === 0 && save.tray.length === 0
+        && save.reserve.length === 0 && !save.reviveUsed
+        && save.rewardedMilestones === 0 && save.lastMove === null
+        && save.toolUses.undo === 1 && save.toolUses.bomb === 1
+        && save.toolUses.shuffle === 1;
 }
 /**
  * 校验玩家地区、对局与永久记录。

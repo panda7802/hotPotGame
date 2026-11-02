@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.INGREDIENT_SEED_MAX = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.INGREDIENTS = void 0;
+exports.INGREDIENT_SEED_MAX = exports.VARIED_LAYOUT_SEED_END = exports.VARIED_LAYOUT_SEED_START = exports.CONNECTED_LAYOUT_SEED_END = exports.CONNECTED_LAYOUT_SEED_START = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.INGREDIENTS = void 0;
 exports.selectLevelIngredients = selectLevelIngredients;
 exports.levelThreeLayoutFamily = levelThreeLayoutFamily;
+exports.buildLevelThreeRoute = buildLevelThreeRoute;
 exports.createLevel = createLevel;
 exports.getIngredient = getIngredient;
 exports.selectBombTargets = selectBombTargets;
@@ -189,6 +190,11 @@ function buildLevelThreePositions(config, layoutSeed) {
 // different formations and randomized ingredient placement, not small offsets.
 exports.RANDOM_LAYOUT_SEED_START = 2147483647;
 exports.RANDOM_LAYOUT_SEED_END = 4294967292;
+// A separate seed range keeps every existing saved board reproducible.
+exports.CONNECTED_LAYOUT_SEED_START = 4294967293;
+exports.CONNECTED_LAYOUT_SEED_END = 6442450938;
+exports.VARIED_LAYOUT_SEED_START = 6442450939;
+exports.VARIED_LAYOUT_SEED_END = 8589934584;
 exports.INGREDIENT_SEED_MAX = 2147483646;
 /**
  * 新局抽取整个食材组合；牛羊肉互斥，翻锅只重排该组合已有的牌。
@@ -223,9 +229,108 @@ function selectLevelIngredients(levelIndex, seed, poolVersion = 2) {
  * 根据种子选取第三关的布局族。
  */
 function levelThreeLayoutFamily(seed = 0) {
+    if (seed >= exports.VARIED_LAYOUT_SEED_START) {
+        return (seed - exports.VARIED_LAYOUT_SEED_START) % 3;
+    }
+    if (seed >= exports.CONNECTED_LAYOUT_SEED_START) {
+        return (seed - exports.CONNECTED_LAYOUT_SEED_START) % 3;
+    }
     return seed < exports.RANDOM_LAYOUT_SEED_START
         ? -1
         : (seed - exports.RANDOM_LAYOUT_SEED_START) % 3;
+}
+/** Compact, connected rows; alternating offsets reveal the lower layer. */
+function buildConnectedLevelThreePositions(config, seed) {
+    const family = levelThreeLayoutFamily(seed);
+    const shortRow = [0, 2, 4][family];
+    return config.layers.map((_, layer) => {
+        const direction = layer % 2 === 0 ? -1 : 1;
+        const positions = [];
+        for (let row = 0; row < 5; row++) {
+            const columns = row === shortRow ? 4 : 5;
+            for (let col = 0; col < columns; col++) {
+                positions.push({
+                    x: (col - (columns - 1) / 2) * 114 + direction * 26,
+                    y: (2 - row) * 96 + direction * 22,
+                });
+            }
+        }
+        return positions;
+    });
+}
+/** Fewer tiles per layer leave room for distinct, full-size silhouettes. */
+function buildVariedLevelThreePositions(config, seed) {
+    const family = levelThreeLayoutFamily(seed);
+    const shapes = [
+        // Diamond, flower and butterfly; all contain eighteen positions.
+        [[0], [-1, 0, 1], [-2, -1, 0, 1, 2],
+            [-2, -1, 0, 1, 2], [-1, 0, 1], [0]],
+        [[-.5, .5], [-2, -1, 0, 1, 2], [-2, -1, 1, 2],
+            [-2, -1, 0, 1, 2], [-.5, .5]],
+        [[-2, -1, 1, 2], [-2, -1, 1, 2], [-.5, .5],
+            [-2, -1, 1, 2], [-2, -1, 1, 2]],
+    ];
+    const rows = shapes[family];
+    const mask = [];
+    rows.forEach((columns, row) => columns.forEach(col => mask.push({
+        x: col * 114, y: ((rows.length - 1) / 2 - row) * 96,
+    })));
+    return config.layers.map((count, layer) => {
+        const direction = layer % 2 === 0 ? -1 : 1;
+        return Array.from({ length: count }, (_, i) => {
+            const point = mask[Math.floor(i * mask.length / count)];
+            return { x: point.x + direction * 26, y: point.y + direction * 22 };
+        });
+    });
+}
+/** Legal removal order, favoring newly exposed deeper tiles. */
+function buildLevelThreeRoute(tiles, seed) {
+    const random = seededRandom(seed);
+    const indices = new Map(tiles.map((tile, i) => [tile.id, i]));
+    const blocked = tiles.map(tile => tile.blockedBy.length);
+    const dependents = tiles.map(() => []);
+    tiles.forEach((tile, i) => tile.blockedBy.forEach(id => {
+        dependents[indices.get(id)].push(i);
+    }));
+    const available = tiles.map((_, i) => i).filter(i => blocked[i] === 0);
+    const route = [];
+    while (available.length) {
+        const lowest = Math.min(...available.map(i => tiles[i].layer));
+        const candidates = available.filter(i => tiles[i].layer === lowest);
+        const index = candidates[Math.floor(random() * candidates.length)];
+        available.splice(available.indexOf(index), 1);
+        route.push(index);
+        for (const lower of dependents[index]) {
+            if (--blocked[lower] === 0)
+                available.push(lower);
+        }
+    }
+    return route;
+}
+/** Preserve the exact food totals, with a six-slot legal route across layers. */
+function distributeConnectedTypes(tiles, seed) {
+    const counts = new Map();
+    tiles.forEach(tile => counts.set(tile.type, (counts.get(tile.type) || 0) + 1));
+    const groups = [];
+    counts.forEach((count, type) => {
+        for (let i = 0; i < count / 3; i++)
+            groups.push(type);
+    });
+    shuffle(groups, seededRandom(seed + 7919));
+    const route = buildLevelThreeRoute(tiles, seed);
+    let cursor = 0;
+    while (groups.length) {
+        const batch = [groups.pop()];
+        while (batch.length < 3 && groups.length) {
+            const different = groups.findIndex(type => !batch.includes(type));
+            batch.push(groups.splice(different < 0 ? 0 : different, 1)[0]);
+        }
+        // A B A C B C A B C reaches six occupied slots, then clears.
+        const pattern = batch.length === 3 ? [0, 1, 0, 2, 1, 2, 0, 1, 2]
+            : batch.length === 2 ? [0, 1, 0, 1, 0, 1] : [0, 0, 0];
+        for (const i of pattern)
+            tiles[route[cursor++]].type = batch[i];
+    }
 }
 /**
  * 根据种子生成第三关的随机布局。
@@ -306,19 +411,24 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed,
     if (layoutSeed === undefined) {
         layoutSeed =
             levelIndex === 2
-                ? exports.RANDOM_LAYOUT_SEED_START + Math.floor(Math.random() * 2147483646)
+                ? exports.VARIED_LAYOUT_SEED_START + Math.floor(Math.random() * 2147483646)
                 : 0;
         if (levelIndex === 2
             && previousLayoutSeed !== undefined &&
             levelThreeLayoutFamily(layoutSeed) ===
                 levelThreeLayoutFamily(previousLayoutSeed)) {
             layoutSeed =
-                layoutSeed === exports.RANDOM_LAYOUT_SEED_END
-                    ? exports.RANDOM_LAYOUT_SEED_START
+                layoutSeed === exports.VARIED_LAYOUT_SEED_END
+                    ? exports.VARIED_LAYOUT_SEED_START
                     : layoutSeed + 1;
         }
     }
-    const config = GameConfig_1.LEVELS[levelIndex];
+    const varied = levelIndex === 2 && layoutSeed >= exports.VARIED_LAYOUT_SEED_START;
+    const connected = levelIndex === 2 && layoutSeed >= exports.CONNECTED_LAYOUT_SEED_START;
+    const config = varied ? { ...GameConfig_1.LEVELS[levelIndex], tileScale: 1,
+        layers: [12, 12, ...Array(48).fill(18)] }
+        : connected ? { ...GameConfig_1.LEVELS[levelIndex], tileScale: 1 }
+            : GameConfig_1.LEVELS[levelIndex];
     const newLayout = config.level === 3 && layoutSeed >= exports.RANDOM_LAYOUT_SEED_START;
     const random = seededRandom(newLayout ? layoutSeed : 20260923 + config.level * 97);
     const pool = ingredientSeed
@@ -327,18 +437,27 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed,
     const tiles = [];
     let id = 0;
     const stackedPositions = config.level === 3
-        ? newLayout
-            ? buildNewLevelThreePositions(config, layoutSeed)
-            : buildLevelThreePositions(config, layoutSeed)
+        ? varied
+            ? buildVariedLevelThreePositions(config, layoutSeed)
+            : connected
+                ? buildConnectedLevelThreePositions(config, layoutSeed)
+                : newLayout
+                    ? buildNewLevelThreePositions(config, layoutSeed)
+                    : buildLevelThreePositions(config, layoutSeed)
         : undefined;
     /**
      * 依次处理集合中的每个条目。
      */
+    // Keep the original food inventory so existing save validation and
+    // collection progress do not depend on how 888 tiles are split into layers.
+    const inventory = varied ? GameConfig_1.LEVELS[levelIndex].layers.flatMap((count, layer) => buildTypes(count, config.typeCount, config.typeOffset || 0, layer, random, pool)) : undefined;
+    let inventoryOffset = 0;
     config.layers.forEach((count, layerIndex) => {
         const positions = stackedPositions
             ? stackedPositions[layerIndex]
             : buildPositions(count, layerIndex, config.rows);
-        const types = buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random, pool);
+        const types = inventory ? inventory.slice(inventoryOffset, inventoryOffset + count) : buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random, pool);
+        inventoryOffset += count;
         for (let i = 0; i < count; i += 1) {
             tiles.push({
                 id: `L${layerIndex}T${id++}`,
@@ -380,6 +499,8 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed,
             }
         }
     }
+    if (connected)
+        distributeConnectedTypes(tiles, layoutSeed);
     return {
         config,
         tiles,

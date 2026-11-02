@@ -218,6 +218,14 @@ for (const seed of [
   data.RANDOM_LAYOUT_SEED_START + 1,
   data.RANDOM_LAYOUT_SEED_START + 2,
   data.RANDOM_LAYOUT_SEED_END,
+  data.CONNECTED_LAYOUT_SEED_START,
+  data.CONNECTED_LAYOUT_SEED_START + 1,
+  data.CONNECTED_LAYOUT_SEED_START + 2,
+  data.CONNECTED_LAYOUT_SEED_END,
+  data.VARIED_LAYOUT_SEED_START,
+  data.VARIED_LAYOUT_SEED_START + 1,
+  data.VARIED_LAYOUT_SEED_START + 2,
+  data.VARIED_LAYOUT_SEED_END,
 ]) {
   const save = freshSave(2, seed);
   const expected = data.createLevel(2, seed);
@@ -254,7 +262,7 @@ for (const layoutSeed of [
   0,
   1.5,
   '123',
-  data.RANDOM_LAYOUT_SEED_END + 1,
+  data.VARIED_LAYOUT_SEED_END + 1,
   Number.MAX_SAFE_INTEGER,
 ]) {
   /**
@@ -273,6 +281,23 @@ assert.deepStrictEqual(
   plain(data.createLevel(2, 0).tiles),
   'legacy third-level saves must retain their original geometry',
 );
+for (const seed of [0, data.RANDOM_LAYOUT_SEED_START,
+  data.CONNECTED_LAYOUT_SEED_START]) {
+  const untouched = freshSave(2, seed, 12345);
+  assert(domain.shouldUpgradeUnstartedLevelThree(untouched));
+  for (const changes of [{removedIds: ['picked']}, {tray: ['corn']},
+    {reserve: ['corn']}, {reviveUsed: true}, {status: 'won'},
+    {rewardedMilestones: 1}, {lastMove: {tray: [], reserve: [], removedIds: []}},
+    ...['undo', 'bomb', 'shuffle'].map(tool => ({toolUses: {
+      ...untouched.toolUses, [tool]: 0}}))]) {
+    assert(!domain.shouldUpgradeUnstartedLevelThree({...untouched, ...changes}),
+      'played or tool-used saves must never be replaced');
+  }
+}
+assert(!domain.shouldUpgradeUnstartedLevelThree(freshSave(0)));
+assert(!domain.shouldUpgradeUnstartedLevelThree(freshSave(1)));
+assert(!domain.shouldUpgradeUnstartedLevelThree(
+  freshSave(2, data.VARIED_LAYOUT_SEED_START)));
 console.log(
   'Random layout saves: exact geometry/co' +
     'verage, pick, shuffle, seed validation' +

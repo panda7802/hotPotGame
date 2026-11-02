@@ -51,6 +51,7 @@ export abstract class HotPotResources extends HotPotState {
     }> = [
       {key: 'bgm', path: 'audio/bgm'},
       {key: 'match', path: 'audio/match'},
+      {key: 'bomb', path: 'audio/bomb'},
       {key: 'win', path: 'audio/win'},
       {key: 'lose', path: 'audio/lose'},
     ];

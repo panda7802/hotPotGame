@@ -14,4 +14,16 @@
 /.codex-work/menu-20261101/
 /app/HotPot/tools/package-private-keys/
 /tmp/build-ui720-20261030/
-/exports/
+/exports/*
+!/exports/README.md
+
+# Historical design renders can be regenerated from retained layout sources.
+/design/all-pages-ninepatch-20261030/png/
+/design/all-pages-ninepatch-20261030/components/
+/design/all-pages-ninepatch-20261030/runtime-cocos/*.png
+/design/all-pages-ninepatch-20261030/*.png
+/design/all-pages-ninepatch-20261030/overview*.html
+
+/tmp/tray-fix-20261102/
+
+/tmp/tray-build-20261102/

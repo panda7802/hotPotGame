@@ -1,16 +1,15 @@
-import {Graphics, Node, tween, Vec3} from 'cc';
+import {Graphics, Node, Tween, tween, Vec3} from 'cc';
 
-import {getIngredient, IngredientType} from '../data/GameData';
+import {IngredientType} from '../data/GameData';
 
 import {
-  drawFoodTile,
   drawTavernPanel,
   hex,
   makeLabel,
   opacity,
   transform,
-  TRAY_IMAGE_HEIGHT,
-  TRAY_IMAGE_WIDTH,
+  TILE_HEIGHT,
+  TILE_WIDTH,
   TRAY_SPACING,
   TRAY_START_X,
 } from './HotPotUi';
@@ -21,16 +20,48 @@ import {HotPotBoardActions} from './HotPotBoardActions';
  * HotPotBoard：棋盘、托盘与消除。
  */
 export abstract class HotPotBoard extends HotPotBoardActions {
+  /** 按逻辑槽位排序；绘制层级不作为食材顺序。 */
+  protected trayItems(): Node[] {
+    return this.trayNode.children
+      .filter((child) => child.name.startsWith('TrayItem_'))
+      .sort((a, b) => Number(a.name.slice(9)) - Number(b.name.slice(9)));
+  }
+
+  protected animateTrayInsertion(index: number): void {
+    for (const item of this.trayItems()) {
+      const oldIndex = Number(item.name.slice(9));
+      const nextIndex = oldIndex >= index ? oldIndex + 1 : oldIndex;
+      item.name = `TrayItem_${nextIndex}`;
+      // 也接续上一轮尚未完成的左移，从当前位置平滑移动，不跳回起点。
+      Tween.stopAllByTarget(item);
+      tween(item).to(0.16, {
+        position: new Vec3(TRAY_START_X + nextIndex * TRAY_SPACING, 0),
+      }, {easing: 'sineInOut'}).start();
+    }
+  }
+
+  /** 外层负责槽位与消除动画，内层一直保留原来的牌面和食材图片。 */
+  protected acceptTrayTile(
+    visual: Node, type: IngredientType, index: number,
+  ): void {
+    const item = new Node(`TrayItem_${index}`);
+    this.trayNode.addChild(item);
+    item.setPosition(TRAY_START_X + index * TRAY_SPACING, 0);
+    transform(item, 82 * 1.2, 84 * 1.2);
+    (item as Node & {trayType?: IngredientType}).trayType = type;
+    visual.off(Node.EventType.TOUCH_END);
+    visual.setParent(item);
+    visual.name = 'FoodVisual';
+    visual.setPosition(Vec3.ZERO);
+    visual.setScale(80 / TILE_WIDTH, 78 / TILE_HEIGHT, 1);
+  }
+
   /**
    * 播放三消和后续托盘收拢动画。
    */
   protected animateMatch(matchStart: number): void {
     this.playEffect('match', 0.82);
-    const trayItems = this.trayNode.children.filter(
-      /**
-       * 按条件筛选或判断条目：child.name.startsWith('TrayItem_')。
-       */ (child) => child.name.startsWith('TrayItem_'),
-    );
+    const trayItems = this.trayItems();
     const matching = trayItems.slice(matchStart, matchStart + 3);
     const effects = new Node('MatchEffects');
     this.trayNode.addChild(effects);
@@ -73,6 +104,8 @@ export abstract class HotPotBoard extends HotPotBoardActions {
        */ (item, followerOffset) => {
         const trayIndex = matchStart + 3 + followerOffset;
         const targetX = TRAY_START_X + (trayIndex - 3) * TRAY_SPACING;
+        item.name = `TrayItem_${trayIndex - 3}`;
+        Tween.stopAllByTarget(item);
         tween(item)
           .to(
             0.78,
@@ -108,6 +141,11 @@ export abstract class HotPotBoard extends HotPotBoardActions {
    * 移除上一轮的匹配特效。
    */
   protected clearMatchEffects(): void {
+    for (const item of this.trayItems()) {
+      Tween.stopAllByTarget(item);
+      item.setPosition(TRAY_START_X
+        + Number(item.name.slice(9)) * TRAY_SPACING, 0);
+    }
     this.board?.children.slice()
       .filter((child) => child.name === 'BombEffects')
       .forEach((child) => {
@@ -194,54 +232,41 @@ export abstract class HotPotBoard extends HotPotBoardActions {
    */
   protected renderTray(): void {
     this.updateProgress();
-    // destroy 在帧末才生效，先移出托盘，确保消除动画只选中本次创建的三个节点。
-    this.trayNode.children.slice().forEach(
-      /**
-       * 依次处理集合中的每个条目。
-       */ (child) => {
-        if (child.name === 'MatchEffects') {
-          return;
+    // 固定槽位和未改变的食材都继续使用原节点，避免每次落槽重建整排。
+    for (const child of this.trayNode.children.slice()) {
+      if (child.name.startsWith('TrayItem_')) {
+        const index = Number(child.name.slice(9));
+        if (index < this.tray.length
+          && (child as Node & {trayType?: IngredientType}).trayType
+            === this.tray[index]) {
+          continue;
         }
-        child.removeFromParent();
-        child.destroy();
-      },
-    );
-
-    // 第一层只绘制固定槽位，补位时边框保持不动。
+        Tween.stopAllByTarget(child);
+      } else if (!child.name.startsWith('TraySlot_')
+        || Number(child.name.slice(9)) < this.levelData.config.traySize) {
+        continue;
+      }
+      child.removeFromParent();
+      child.destroy();
+    }
     for (let i = 0; i < this.levelData.config.traySize; i += 1) {
+      if (this.trayNode.getChildByName(`TraySlot_${i}`)) {
+        continue;
+      }
       const slot = new Node(`TraySlot_${i}`);
       this.trayNode.addChild(slot);
+      slot.setSiblingIndex(i);
       slot.setPosition(TRAY_START_X + i * TRAY_SPACING, 0);
       drawTavernPanel(slot, 86, 94, 'slot');
     }
-
-    // 第二层放真实食材节点；全部位于固定槽位之上，并可直接执行左移动画。
     for (let i = 0; i < this.tray.length; i += 1) {
-      const type = this.tray[i];
-      const item = new Node(`TrayItem_${i}`);
-      this.trayNode.addChild(item);
-      item.setPosition(TRAY_START_X + i * TRAY_SPACING, 0);
-      transform(item, 82 * 1.2, 84 * 1.2);
-      drawFoodTile(item, 80, 78);
-      (
-        item as Node & {
-          /**
-           * trayType 对应的状态或配置。
-           */ trayType?: IngredientType;
-        }
-      ).trayType = type;
-      const ingredient = getIngredient(type);
-      if (this.ingredientFrames.has(type)) {
-        this.addIngredientImage(
-          item,
-          type,
-          false,
-          TRAY_IMAGE_WIDTH,
-          TRAY_IMAGE_HEIGHT,
-        );
-      } else {
-        makeLabel(item, '?', 32, ingredient.dark, Vec3.ZERO, 56, 48);
+      if (this.trayNode.getChildByName(`TrayItem_${i}`)) {
+        continue;
       }
+      const visual = new Node('FoodVisual');
+      transform(visual, TILE_WIDTH, TILE_HEIGHT);
+      this.drawTile(visual, this.tray[i], false);
+      this.acceptTrayTile(visual, this.tray[i], i);
     }
   }
 
@@ -320,7 +345,12 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     const type = this.reserve.splice(index, 1)[0];
     this.insertIntoTray(type);
     this.renderReserve();
-    this.resolveTray();
+    const movingLevel = this.levelData;
+    tween(this.reserveNode).delay(0.18).call(() => {
+      if (this.levelData === movingLevel) {
+        this.resolveTray();
+      }
+    }).start();
   }
 
   /**

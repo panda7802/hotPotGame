@@ -26,7 +26,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     const back = () => {
       saveOffset();
       this.dismissPlayerMenu('CollectionOverlay');
-      this.showPlayerProfile()
+      if(tab==='achievements')this.showPlayerProfile()
     };
     const p = this.designPage('CollectionOverlay', tab === 'ingredients' ? '食材图鉴' : '我的成就', back);
     if (!p) return;
@@ -43,7 +43,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         taps.heading++;
         taps.food = 0
       });
-      const label = p.children.find(n => n.name === 'Text_食材图鉴');
+      const label = p.getChildByName('DesignHeader')?.getChildByName('Text_食材图鉴');
       if (label) {
         label.name = 'Button_食材图鉴';
         designHit(label, () => {
@@ -111,7 +111,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         designText(card, item.unlocked ? '已达成' : '进行中', [540, 145, 80, 38], 21, t.accent, true);
       });
     }
-    designFooter(p, '返回我的', back);
+    designFooter(p, '返回', back);
   }
 
   protected showIngredientDetail(type: IngredientType): void {
@@ -133,7 +133,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     designText(body, known ? item.name : '神秘食材', [40, 490, 560, 74], 48, t.ink, true);
     designText(body, known ? INGREDIENT_STORIES[type].story : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);
     designText(body, known ? '三张相同食材，凑成一口好滋味。' : '每次相遇，都有新的惊喜。', [50, 752, 540, 38], 23, t.muted);
-    designFooter(p, '返回图鉴', back, 'Button_返回图鉴', true);
+    designFooter(p, '返回', back);
   }
 
   protected showRegionPicker(codes: string[], leaderboard = false, _query = ''): void {
@@ -185,7 +185,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     });
     const complete = path.length > 0 && !(path[path.length - 1].children?.length);
     designText(panel, path.length ? path.map(r => r.name).join(' · ') + (complete ? '' : ' · 请继续选择') : '请选择所在地', [20, 692, 600, 62], 23, t.muted, false, true);
-    designButton(p, 'Button_取消', '取消', [52, 1124, 298, 80], back, true);
+    designButton(p, 'Button_返回', '←  返回', [52, 1124, 298, 80], back, true);
     designButton(p, 'Button_保存地区', '✓  保存地区', [370, 1124, 298, 80], () => {
       service.setRegion(selected);
       back();
@@ -194,7 +194,8 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
   }
 
   protected showBackdoor(): void {
-    const back = () => this.dismissPlayerMenu('BackdoorOverlay'),
+    const dismiss = () => this.dismissPlayerMenu('BackdoorOverlay');
+    const back = () => {dismiss();this.showCollection('ingredients')},
       p = this.designPage('BackdoorOverlay', '调试面板', back);
     if (!p) return;
     const t = getPageTheme(),
@@ -202,7 +203,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     designSurface(notice);
     designText(notice, '仅本机即时生效\n选关会开始新的一局', [24, 12, 592, 88], 24, t.muted, false, true);
     for (let i = 0; i < 3; i++) designButton(p, 'Button_进入第' + (i + 1) + '关', '第 ' + (i + 1) + ' 关', [40 + i * 220, 430, 200, 80], () => {
-      back();
+      dismiss();
       this.loadLevel(i);
       this.showBackdoor()
     }, i !== this.levelIndex);
@@ -212,15 +213,15 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
       const button = designButton(p, 'Unlimited_' + type, TOOL_NAMES[type] + ' · ' + (allowed ? (this.unlimitedTools[type] ? '无限使用' : '正常次数') : '第一关无道具'), [40, 606 + i * 110, 640, 82], () => {
         this.unlimitedTools[type] = !this.unlimitedTools[type];
         this.updateToolButtons();
-        back();
+        dismiss();
         this.showBackdoor();
       }, !this.unlimitedTools[type], !allowed);
     });
     designButton(p, 'Button_只留三张', '本关只留 3 个相同食材', [40, 956, 640, 80], () => {
-      back();
+      dismiss();
       this.leaveThreeMatchingTiles()
     }, true);
     designText(p, '无限开关仅本局有效，重开或切关后重置', [40, 1056, 640, 42], 23, designOnBackground());
-    designFooter(p, '返回游戏', back, 'Button_返回游戏', true);
+    designFooter(p, '返回', back);
   }
 }

@@ -372,11 +372,12 @@ export abstract class HotPotBoardActions extends HotPotView {
         /**
          * 在动画到达指定阶段后更新游戏状态。
          */ () => {
-          node.destroy();
           if (this.levelData !== movingLevel) {
+            node.destroy();
             return;
           }
           this.tileNodes.delete(tile.id);
+          this.acceptTrayTile(node, tile.type, targetIndex);
           this.refreshTileStates();
           this.resolveTray();
         },
@@ -397,8 +398,17 @@ export abstract class HotPotBoardActions extends HotPotView {
       }
     }
     this.tray.splice(insertAt, 0, type);
+    this.animateTrayInsertion(insertAt);
     return insertAt;
   }
+
+  /** 在新牌落下前，让托盘中的原有食材移动到插入后的槽位。 */
+  protected abstract animateTrayInsertion(index: number): void;
+
+  /** 直接接收飞入的牌面，落槽时不销毁或替换食材图片。 */
+  protected abstract acceptTrayTile(
+    node: Node, type: IngredientType, index: number,
+  ): void;
 
   /**
    * 检查托盘中的连续三张并触发消除或失败。

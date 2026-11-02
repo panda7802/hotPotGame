@@ -53,6 +53,26 @@ function assertBranch(root, readBranch = readCurrentBranch) {
   }
 }
 
+/** Resolve Mask from task overrides, resolved modules or project settings. */
+function hasMaskModule(root, options) {
+  const override = options.overwriteProjectSettings?.includeModules?.mask;
+  if (override === 'on') return true;
+  if (override === 'off') return false;
+  if (Array.isArray(options.includeModules)) {
+    return options.includeModules.includes('mask');
+  }
+  const file = path.join(root, 'settings/v2/packages/engine.json');
+  if (!fs.existsSync(file)) return false;
+  const settings = readJson(file);
+  const config = settings.modules?.configs?.[
+    options.engineModulesConfigKey || 'defaultConfig'
+  ];
+  if (Array.isArray(config?.includeModules)) {
+    return config.includeModules.includes('mask');
+  }
+  return config?.cache?.mask?._value === true;
+}
+
 /**
  * 校验微信小游戏的构建参数和输出名称。
  */
@@ -93,8 +113,7 @@ function assertBuildOptions(root, options) {
       '请使用导入配置中的正常构建、main 场景、本地小游戏分包及关闭 MD5 设置。',
     );
   }
-  if (!options.includeModules?.includes('mask')
-    && options.overwriteProjectSettings?.includeModules?.mask !== 'on') {
+  if (!hasMaskModule(root, options)) {
     throw new Error('地区滚动需要 Mask 模块，请重新导入云开发构建配置。');
   }
   const wechat = options.packages?.wechatgame;

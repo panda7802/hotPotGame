@@ -108,6 +108,12 @@ export abstract class HotPotBoard extends HotPotBoardActions {
    * 移除上一轮的匹配特效。
    */
   protected clearMatchEffects(): void {
+    this.board?.children.slice()
+      .filter((child) => child.name === 'BombEffects')
+      .forEach((child) => {
+        child.removeFromParent();
+        child.destroy();
+      });
     this.trayNode.children
       .slice()
       .filter(

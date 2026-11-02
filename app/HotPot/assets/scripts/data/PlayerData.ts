@@ -7,7 +7,8 @@ import {
   IngredientType,
   LevelData,
   LEVELS,
-  RANDOM_LAYOUT_SEED_END,
+  VARIED_LAYOUT_SEED_START,
+  VARIED_LAYOUT_SEED_END,
 } from './GameData';
 import {
   SAVE_VERSION,
@@ -321,7 +322,7 @@ export function validateGameSave(value: any): GameSave {
   check(
     value.layoutSeed === undefined ||
       (value.levelIndex === 2 &&
-        integer(value.layoutSeed, 1, RANDOM_LAYOUT_SEED_END)),
+        integer(value.layoutSeed, 1, VARIED_LAYOUT_SEED_END)),
     '牌阵种子错误',
   );
   check(
@@ -332,7 +333,9 @@ export function validateGameSave(value: any): GameSave {
   check(value.ingredientPoolVersion === undefined
     || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2,
   '食材池版本错误');
-  const level = template(value.levelIndex, 0, value.ingredientSeed,
+  const validationSeed = value.layoutSeed >= VARIED_LAYOUT_SEED_START
+    ? value.layoutSeed : 0;
+  const level = template(value.levelIndex, validationSeed, value.ingredientSeed,
     value.ingredientPoolVersion);
   check(
     Array.isArray(value.types) && value.types.length === level.total,
@@ -527,6 +530,17 @@ export function restoreLevel(save: GameSave): LevelData {
     tile.removed = removed.has(tile.id);
   });
   return level;
+}
+
+/** An untouched old third level can adopt the new layout without losing play. */
+export function shouldUpgradeUnstartedLevelThree(save: GameSave): boolean {
+  return save.levelIndex === 2 && save.status === 'playing'
+    && (save.layoutSeed || 0) < VARIED_LAYOUT_SEED_START
+    && save.removedIds.length === 0 && save.tray.length === 0
+    && save.reserve.length === 0 && !save.reviveUsed
+    && save.rewardedMilestones === 0 && save.lastMove === null
+    && save.toolUses.undo === 1 && save.toolUses.bomb === 1
+    && save.toolUses.shuffle === 1;
 }
 /**
  * 校验玩家地区、对局与永久记录。

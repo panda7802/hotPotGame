@@ -1,15 +1,16 @@
 {
-  "date": "2026-10-30",
+  "date": "2026-11-02",
+  "commit": "24d2c13",
   "creator": "3.8.8",
   "note": "云端六个共享 JS 从本教程冻结 TS 转译；未进行任何云部署。文件路径相对于 app/HotPot。",
   "appendices": [
     {
       "name": "01-数据层完整代码.md",
-      "files": 11
+      "files": 13
     },
     {
       "name": "02-客户端完整代码.md",
-      "files": 30
+      "files": 33
     },
     {
       "name": "03-云函数完整代码.md",
@@ -32,14 +33,24 @@
       "sha256": "4f6e0cf7e3dd55ee1f302f971b1e65bb51a9405b4d2f3fd007a3eef20c4be559"
     },
     {
+      "path": "assets/scripts/data/ConfirmedShells.ts",
+      "bytes": 1054,
+      "sha256": "13dfdcdd5d3ac2aea78a57e987af8ac9526f0e0f464f4e7b675879b353b7b9b1"
+    },
+    {
       "path": "assets/scripts/data/GameConfig.ts",
       "bytes": 6933,
       "sha256": "07381b07e47c304683ecaba7808b26d61e25bfa77e0a6ce1be6fcf8d1080c5d8"
     },
     {
       "path": "assets/scripts/data/GameData.ts",
-      "bytes": 15504,
-      "sha256": "c1eaa9077ea8c2db4d869d2d0ed6b2e57c8b069ffa5671e49a1f9c71a4c5729c"
+      "bytes": 15551,
+      "sha256": "8bfdc4c18e6e3b4642846416159abe454c87c13e557362c6e90c97a68c445923"
+    },
+    {
+      "path": "assets/scripts/data/GameInterfaceAssets.ts",
+      "bytes": 3975,
+      "sha256": "294d86aa7904bce79be645cffc9372d5932e94267eb74fc80c0b09471737f551"
     },
     {
       "path": "assets/scripts/data/IngredientArt.ts",
@@ -83,8 +94,8 @@
     },
     {
       "path": "assets/scripts/core/HotPotBoard.ts",
-      "bytes": 10736,
-      "sha256": "95392d378d5490496e4dce337b3bae626355266d2d250977ec6101ca9758bfc6"
+      "bytes": 10927,
+      "sha256": "9363a8ea1b19d80686ed72fbe317a646f99cce50a578abc24716ec8fd5f431b5"
     },
     {
       "path": "assets/scripts/core/HotPotBoardActions.ts",
@@ -93,13 +104,13 @@
     },
     {
       "path": "assets/scripts/core/HotPotDesignCollection.ts",
-      "bytes": 11492,
-      "sha256": "773ed0ce7e6a8edde474381fcabcead06aeb79991ede5e285f1b050953030536"
+      "bytes": 11772,
+      "sha256": "35765f28e14fecf2dd77774c202a225232f6b4bd7f982f503957a7aede4b9d2b"
     },
     {
       "path": "assets/scripts/core/HotPotDesignMenus.ts",
-      "bytes": 9908,
-      "sha256": "1f31cb99f754fda23656b8fa880fe286b36917b3266c7cdd98ae77bbdce72f64"
+      "bytes": 10342,
+      "sha256": "9f5d008e48541e4188dffc0283d6c47a0233b30d54329e7f81f074bc747a631c"
     },
     {
       "path": "assets/scripts/core/HotPotDesignResults.ts",
@@ -108,8 +119,8 @@
     },
     {
       "path": "assets/scripts/core/HotPotDesignUi.ts",
-      "bytes": 7385,
-      "sha256": "1f2b2749f27e345ce004b09918ca38bfb5d81d77ad7386e794221eb9bcb73d82"
+      "bytes": 9105,
+      "sha256": "068ca42813183d57e92e58f4237c034fd63f298d7d58d4a41d61ffa39a516adc"
     },
     {
       "path": "assets/scripts/core/HotPotDialogs.ts",
@@ -125,6 +136,16 @@
       "path": "assets/scripts/core/HotPotGame.ts",
       "bytes": 281,
       "sha256": "05f50c8da3256170ac7d7aaa3533907349629997c381320b0e81e09e6656c279"
+    },
+    {
+      "path": "assets/scripts/core/HotPotGameArt.ts",
+      "bytes": 4448,
+      "sha256": "21928ceeb94d89788bf173b62cf72fc062cc55fd61a0fd003f8d3a58fbe23d48"
+    },
+    {
+      "path": "assets/scripts/core/HotPotGameLayout.ts",
+      "bytes": 1847,
+      "sha256": "c79ed7584cdfbe75da2a0aeacf3e6c3004a11d5436859529324a4adfaaf80b73"
     },
     {
       "path": "assets/scripts/core/HotPotLegacyGame.ts",
@@ -143,8 +164,8 @@
     },
     {
       "path": "assets/scripts/core/HotPotReferenceArt.ts",
-      "bytes": 4364,
-      "sha256": "77a6d35bad1ceeb53ed066864ac89d0485295e013a8f4e6688644509a36bb4b5"
+      "bytes": 4700,
+      "sha256": "b4b0f5805218bcb6e2b2caf532b738e5878f2789ca742b663e49bb8680a35e09"
     },
     {
       "path": "assets/scripts/core/HotPotReferenceCollection.ts",
@@ -153,8 +174,8 @@
     },
     {
       "path": "assets/scripts/core/HotPotReferenceLayout.ts",
-      "bytes": 3959,
-      "sha256": "e307391dd9a0220ade9885d5966836723dd1b7a11f1e8f26612514be92978d91"
+      "bytes": 4217,
+      "sha256": "097ce8d91ba54bb31099035b788070186bf8f5ba9d90b8e486a610202077bce4"
     },
     {
       "path": "assets/scripts/core/HotPotReferenceMenus.ts",
@@ -168,28 +189,28 @@
     },
     {
       "path": "assets/scripts/core/HotPotReferenceShell.ts",
-      "bytes": 12190,
-      "sha256": "6684c2a77fc69a355f96f631dd4f7a4fe290213363fb1253ec68022c564ce93b"
+      "bytes": 17430,
+      "sha256": "b948208f73124d9402cae4effdf8aa581f105ac36c92f96e19d76b691f303719"
     },
     {
       "path": "assets/scripts/core/HotPotResources.ts",
-      "bytes": 4733,
-      "sha256": "3e1de5e9ca0764119a7d47f7c3ade7ec6854b664dcd0030e04caca01f70d265a"
+      "bytes": 4775,
+      "sha256": "99707e86b11161c0b065da5cdbbfeaf9e01826fbf97b044e9a05c3d1ef0a488a"
     },
     {
       "path": "assets/scripts/core/HotPotState.ts",
-      "bytes": 14921,
-      "sha256": "6f47ebdafad3542b5b3787f8b079e38c7c0ccfc92fc06bb737f90be8c5323f17"
+      "bytes": 15449,
+      "sha256": "2f28cb8cd12078def7f4c60e0ea331c339915272ea9d29aa255bfe20051571d7"
     },
     {
       "path": "assets/scripts/core/HotPotTileSkin.ts",
-      "bytes": 4877,
-      "sha256": "cf9b33b35659b0eda7c871933ce8c96b9e983b554872749c56dbe95f3b677d06"
+      "bytes": 4914,
+      "sha256": "2127f824263d83d08d3b78d73c535d26e721f6f4e766a98a75a1ec5d6492f2ff"
     },
     {
       "path": "assets/scripts/core/HotPotToolActions.ts",
-      "bytes": 9927,
-      "sha256": "d9314c9e58cb0a5cef81779911fccfe78a7e4cf2dd5c19c24b120ceca857c748"
+      "bytes": 16616,
+      "sha256": "d80ec316710ec7a3aa628b5fd649314a6298bc580ebab01bf26237303768c8ac"
     },
     {
       "path": "assets/scripts/core/HotPotTools.ts",
@@ -198,8 +219,8 @@
     },
     {
       "path": "assets/scripts/core/HotPotUi.ts",
-      "bytes": 20036,
-      "sha256": "d25c7d6899e46ed8647ecdd9944467d81d532b368fdb4bcaa44cd35a1236800e"
+      "bytes": 20045,
+      "sha256": "9814b2347b4c3a81dab351477ffcb9aaa7f826f4c74580d05ae75a9adee6fb90"
     },
     {
       "path": "assets/scripts/core/HotPotView.ts",
@@ -225,6 +246,11 @@
       "path": "assets/scripts/core/WebCloudBridge.ts",
       "bytes": 2335,
       "sha256": "f8f375a203419d97a6ddfc55399ac2b6efd8edd9c303c45b9f84403066e63e34"
+    },
+    {
+      "path": "assets/scripts/core/WechatShareService.ts",
+      "bytes": 2850,
+      "sha256": "880a1214b05b9af860c2f37415a649cfcbbbfa56dfe71518dcefc1faa1c08189"
     },
     {
       "path": "cloudfunctions/hotpotPlayerDev/index.js",
@@ -283,8 +309,8 @@
     },
     {
       "path": "cloudfunctions/hotpotPlayerDev/GameData.js",
-      "bytes": 15780,
-      "sha256": "5a0c44d009bc7ac73a80161569fea348028c493bacb67f3a93709afd7ff1d447"
+      "bytes": 15821,
+      "sha256": "2b587f7d5a964d60b03651e294a8ddbad578091328a548082315c998d23cdad6"
     },
     {
       "path": "cloudfunctions/hotpotPlayerDev/PlayerTypes.js",
@@ -318,8 +344,8 @@
     },
     {
       "path": "tools/validate-levels.cjs",
-      "bytes": 18895,
-      "sha256": "11d5374f9a0277803a82a69fee8fecf0dceb78a8a7fa074a5e032729a3fc9f9d"
+      "bytes": 19160,
+      "sha256": "0c3e5dedf961ec043c12367f21d7f3c1bfe05e77bc01f6fd49ff8588f1c8866f"
     },
     {
       "path": "tools/validate-player-save.cjs",
@@ -328,8 +354,8 @@
     },
     {
       "path": "tools/validate-tray-animation.cjs",
-      "bytes": 42532,
-      "sha256": "d2c7f0d241887e9781c25af1856b1434c25e927e48beaf18a3cdf17680c070fb"
+      "bytes": 46091,
+      "sha256": "60848b2c7365fc4cbb50c8fde4965c449d9fed342fc05d3bbd804b68524c206b"
     },
     {
       "path": "tools/validate-runtime-config.cjs",
@@ -367,6 +393,11 @@
       "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba"
     },
     {
+      "path": "assets/resources/audio/bomb.mp3",
+      "bytes": 4144,
+      "sha256": "b4b4572ed312f26df7d23957cf24901bb53a92e15a3763a17ff79c46859dfecb"
+    },
+    {
       "path": "assets/resources/audio/lose.mp3",
       "bytes": 12430,
       "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5"
@@ -385,6 +416,46 @@
       "path": "assets/resources/data/regions.json",
       "bytes": 5560,
       "sha256": "640b8e969ce608efcc0b8d948d4a775afd71ffc47fed2d8327123ca1eac9967c"
+    },
+    {
+      "path": "assets/resources/game-ui/bg-01.jpg",
+      "bytes": 80559,
+      "sha256": "6dff7faf84cba59a733341f2d8a933b0c04dce069ada517636fafc3e9258b8c5"
+    },
+    {
+      "path": "assets/resources/game-ui/bg-04.jpg",
+      "bytes": 26336,
+      "sha256": "fb6a2a7c795e8186c91b345ea89111eb67ce8525552633670d65f148a6a90fda"
+    },
+    {
+      "path": "assets/resources/game-ui/bg-08.jpg",
+      "bytes": 65185,
+      "sha256": "afd541481caff2eda6e818c65ec1c79a7c23d02269c9e71910cf3c33c06dcb69"
+    },
+    {
+      "path": "assets/resources/game-ui/bg-09.jpg",
+      "bytes": 96593,
+      "sha256": "a44441b71ab3e15701dd28c895ba8761e651ab621a6feb3a31f500dfb21f3b9b"
+    },
+    {
+      "path": "assets/resources/game-ui/style-01.png",
+      "bytes": 161820,
+      "sha256": "6ceeeddb6271c073a3c4c4c94d62ea602c9c9c1db149d2cabf9b5e0aed31fa8a"
+    },
+    {
+      "path": "assets/resources/game-ui/style-04.png",
+      "bytes": 109333,
+      "sha256": "a8d90af1cd42f72e3dad873e828570b7c0a8326fc05c785bbb29fa88a8cbcb7f"
+    },
+    {
+      "path": "assets/resources/game-ui/style-08.png",
+      "bytes": 175177,
+      "sha256": "a82a3c3df5b0f7cf6bfd6f54defb0c1c6b3ca70a872ecb5e4dfb0564e3e7f49c"
+    },
+    {
+      "path": "assets/resources/game-ui/style-09.png",
+      "bytes": 190067,
+      "sha256": "c396b0c3ccb6dd72ad01dd178c925dab017cebe12aa986002eaefe4e126440fb"
     },
     {
       "path": "assets/resources/ingredients/food-a.png",
@@ -418,28 +489,28 @@
     },
     {
       "path": "assets/resources/reference/shell-01.jpg",
-      "bytes": 129672,
-      "sha256": "7ab5b223822f19501e8cec8c4962ad37d1b8c11da89df200d496d9b6685fe9df"
+      "bytes": 120617,
+      "sha256": "771c93b399f29367b12b6e72f9262715c9d483ea5ca55ef6fe03cc35bb4387f7"
     },
     {
       "path": "assets/resources/reference/shell-04.jpg",
-      "bytes": 63273,
-      "sha256": "9aad0866fee0ca7b5d4098359f46189859504f3a7ddb025d5dd46c39c840ebc3"
+      "bytes": 72034,
+      "sha256": "5d0dcbe73a478060c651f53d9b5ceda2ceb0bbfad6dc39eb32a076ec7a87f452"
     },
     {
       "path": "assets/resources/reference/shell-08.jpg",
-      "bytes": 95842,
-      "sha256": "957d91c3a2cb0eefec92bd11d6947e7a917f6055b2ff26be2f0bc5fedab55be8"
+      "bytes": 87869,
+      "sha256": "73ccf0f611fa8f1554ecbe086c1cc0772a7aa8958b839f3848fe9088bf5a7962"
     },
     {
       "path": "assets/resources/reference/shell-09.jpg",
-      "bytes": 109016,
-      "sha256": "5f79f6be4670ded477d72e798fe85a520583af2f84c6f46e5a0ed36caf70d2a1"
+      "bytes": 93117,
+      "sha256": "b385cb9e403bfe7be84afec805da850f9596b22e4735caa1ab1096a2f8786e43"
     },
     {
       "path": "assets/resources/reference/tiles.png",
-      "bytes": 21376,
-      "sha256": "6c176ac5af536610b728f2efc70a23b9693efc5b6e7b77a21b76a843351f283e"
+      "bytes": 37613,
+      "sha256": "dd8e9b723ba97c97df1b6b1b13ed69217485e33a814af15ba114cf603d8c9b81"
     }
   ]
 }
