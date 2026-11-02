@@ -26,6 +26,12 @@ function verifyCloudBuild({
     'utf8',
   );
   const engine = fs.readFileSync(path.join(build, 'cocos-js', 'cc.js'), 'utf8');
+  const skin = fs.readFileSync(path.join(root,
+    'assets/scripts/core/HotPotTileSkin.ts'), 'utf8');
+  const clientBuild = skin.match(/CLIENT_BUILD\s*=\s*'([^']+)'/)?.[1];
+  if (!clientBuild || !main.includes(clientBuild)) {
+    throw new Error('微信构建仍为旧代码，请重新完整构建后再导入。');
+  }
   for (const component of ['Mask', 'ScrollView']) {
     if (!new RegExp(`\\b${component}\\s*:`).test(engine)) {
       throw new Error(
@@ -67,7 +73,9 @@ function verifyCloudBuild({
   const source = fs
     .readFileSync(entry, 'utf8')
     .replace(/^\/\/ HotPot cloud target\r?\nconsole\.info\([^\n]+\);\r?\n/, '');
-  const target = {environment: settings.environmentId, build: hash};
+  const target = {environment: settings.environmentId, build: hash, clientBuild};
+  fs.writeFileSync(path.join(build, 'hotpot-build.json'),
+    JSON.stringify(target, null, 2) + '\n');
   fs.writeFileSync(
     entry,
     "// HotPot cloud target\nconsole.info('[" +

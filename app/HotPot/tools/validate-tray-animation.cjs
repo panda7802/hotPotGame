@@ -38,6 +38,7 @@ assert.strictEqual(compiled.diagnostics.length, 0);
 // Keep tween completion pending so multiple matches can run concurrently.
 const completions = [];
 const animatedTargets = [];
+const movements = [];
 
 /**
  * 测试中模拟 Vec3 的最小行为。
@@ -67,6 +68,7 @@ Vec3.ONE = new Vec3(1, 1, 1);
  * 测试中模拟 Node 的最小行为。
  */
 class Node {
+  off() {}
   /**
    * 初始化实例的内部状态和依赖。
    */
@@ -182,6 +184,7 @@ class Node {
     return this.children.find((child) => child.name === name);
   }
 }
+Node.EventType = {TOUCH_END: 'touch-end'};
 
 const cc = {
   /**
@@ -203,6 +206,7 @@ const cc = {
      */
   },
   Node,
+  Tween: {stopAllByTarget() {}},
   Vec3,
   Color: class {
     fromHEX() {
@@ -219,7 +223,8 @@ const cc = {
       /**
        * 为测试场景提供 to 所需的模拟行为。
        */
-      to() {
+      to(duration, properties) {
+        movements.push({target, duration, properties});
         return chain;
         /**
          * 为测试场景提供 delay 所需的模拟行为。
@@ -523,6 +528,7 @@ assert.strictEqual(
   'double click must not grant another revive',
 );
 revival.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 assert.strictEqual(revival.reserve.length, 2);
 assert.strictEqual(revival.tray.length, 5);
 revival.levelIndex = 1;
@@ -565,8 +571,11 @@ assert.strictEqual(
   'reserved tiles must prevent early victory',
 );
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 assert.strictEqual(reserveFinish.result, true);
 assert.strictEqual(reserveFinish.reserve.length, 0);
 assert.strictEqual(reserveFinish.tray.length, 0);
@@ -1440,6 +1449,26 @@ console.log(
     ' and final triple wins: OK',
 );
 
+for (const seed of [0, actualData.RANDOM_LAYOUT_SEED_START,
+  actualData.CONNECTED_LAYOUT_SEED_START]) {
+  const {game: upgraded, writes} = persistedGame();
+  upgraded.loadLevel(2, false, actualData.createLevel(2, seed, undefined, 12345));
+  upgraded.checkpointGame();
+  const untouched = writes.at(-1), before = writes.length;
+  upgraded.restoreGame(untouched);
+  assert.strictEqual(upgraded.levelData.config.layers.length, 50);
+  assert.strictEqual(upgraded.levelData.total, 888);
+  assert(upgraded.levelData.layoutSeed >= actualData.VARIED_LAYOUT_SEED_START);
+  assert.strictEqual(writes.length, before + 1,
+    'upgrade must persist the new board once');
+  assert.strictEqual(writes.at(-1).removedIds.length, 0);
+  upgraded.restoreGame(writes.at(-1));
+  assert.strictEqual(writes.length, before + 1,
+    'the upgraded save must not be repeatedly replaced');
+}
+console.log('Untouched legacy third levels upgrade once; current and '
+  + 'progressed saves are retained: OK');
+
 // Exercise the real visibility refresh with the full logical inventory.
 for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
   const {game: g, writes} = persistedGame();
@@ -1466,6 +1495,8 @@ for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
     assert.strictEqual(draws, 48, 'new layouts have 48 distinct positions');
   }
   const initialDraws = draws;
+  // A used tool makes this a progressed legacy game, which must stay intact.
+  g.toolUses.undo = 0;
   g.checkpointGame();
   const checkpoint = writes.at(-1);
   // Count every node creation across restore, including temporary boards.

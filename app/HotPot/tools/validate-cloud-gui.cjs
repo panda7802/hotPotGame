@@ -106,6 +106,32 @@ try {
      */
     assert.throws(() => assertBuildOptions(root, invalid));
   }
+
+  // New Builder UI omits unchanged module overrides and inherits the project.
+  const projectEngineFile = path.join(root, 'settings/v2/packages/engine.json');
+  const inherited = clone(config);
+  delete inherited.overwriteProjectSettings.includeModules.mask;
+  const projectEngine = {modules: {configs: {
+    defaultConfig: {includeModules: ['2d', 'mask', 'ui']},
+    withoutMask: {includeModules: ['2d', 'ui']},
+  }}};
+  write(projectEngineFile, JSON.stringify(projectEngine));
+  assertBuildOptions(root, inherited);
+  assert.strictEqual(fieldRule(true, inherited), true);
+  inherited.overwriteProjectSettings.includeModules.mask =
+    'inherit-project-setting';
+  assertBuildOptions(root, inherited);
+  inherited.overwriteProjectSettings.includeModules.mask = 'off';
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  delete inherited.overwriteProjectSettings.includeModules.mask;
+  inherited.engineModulesConfigKey = 'withoutMask';
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  inherited.engineModulesConfigKey = 'defaultConfig';
+  inherited.includeModules = ['ui'];
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  inherited.includeModules = ['ui', 'mask'];
+  assertBuildOptions(root, inherited);
+  console.log('Inherited Mask, explicit overrides and resolved modules: OK');
   /**
    * 验证非法输入会被正确拒绝。
    */
@@ -206,7 +232,11 @@ try {
       },
     }),
   );
+  copy(path.join(project, 'assets/scripts/core/HotPotTileSkin.ts'),
+    path.join(root, 'assets/scripts/core/HotPotTileSkin.ts'));
   const result = finalizeCloudBuild({root, build});
+  assert.strictEqual(readJson(path.join(build, 'hotpot-build.json')).clientBuild,
+    result.clientBuild);
   assert.strictEqual(result.environment, prepared.environmentId);
   assert.strictEqual(readJson(path.join(build, 'game.json')).cloud, true);
   assert.strictEqual(
@@ -247,6 +277,9 @@ try {
   );
   const mainFile = path.join(build, 'subpackages/main/game.js');
   const main = fs.readFileSync(mainFile, 'utf8');
+  write(mainFile, main.replaceAll(result.clientBuild, 'obsolete-client'));
+  assert.throws(() => finalizeCloudBuild({root, build}), /旧代码/);
+  write(mainFile, main);
   write(mainFile, main.replaceAll(prepared.environmentId, 'wrong-environment'));
   /**
    * 验证非法输入会被正确拒绝。

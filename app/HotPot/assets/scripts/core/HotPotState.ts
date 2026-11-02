@@ -16,8 +16,9 @@ import {
   GameSave,
   RegionNode,
   restoreLevel,
+  shouldUpgradeUnstartedLevelThree,
 } from '../data/PlayerData';
-import {LevelData} from '../data/GameData';
+import {createLevel, LevelData} from '../data/GameData';
 
 import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
@@ -323,6 +324,11 @@ export abstract class HotPotState extends HotPotFields {
    */
   protected restoreGame(save: GameSave): void {
     const restored = restoreLevel(save);
+    if (shouldUpgradeUnstartedLevelThree(save)) {
+      this.loadLevel(2, true, createLevel(2, undefined, save.layoutSeed,
+        save.ingredientSeed || 0, save.ingredientPoolVersion || 1));
+      return;
+    }
     this.restoringSave = true;
     try {
       this.loadLevel(save.levelIndex, false, restored);
