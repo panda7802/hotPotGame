@@ -346,11 +346,13 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     this.insertIntoTray(type);
     this.renderReserve();
     const movingLevel = this.levelData;
-    tween(this.reserveNode).delay(0.18).call(() => {
+    // Taking the last tile hides reserveNode and pauses its node tweens.
+    // Settle on the game component so the click lock can still be released.
+    this.scheduleOnce(() => {
       if (this.levelData === movingLevel) {
         this.resolveTray();
       }
-    }).start();
+    }, 0.18);
   }
 
   /**

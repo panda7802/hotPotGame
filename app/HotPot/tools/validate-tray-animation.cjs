@@ -198,6 +198,9 @@ const cc = {
    */
   _decorator: {ccclass: () => (klass) => klass},
   Component: class {
+    scheduleOnce(callback) {
+      completions.push(callback);
+    }
     /**
      * 测试中模拟 匿名组件 的最小行为。
      */
@@ -245,7 +248,10 @@ const cc = {
        * 创建并清空小游戏的 WebGL 启动画布。
        */
       start() {
-        completions.push(...callbacks);
+        // Match Cocos: hiding a target node pauses its tween callbacks.
+        completions.push(...callbacks.map(callback => () => {
+          if (!(target instanceof Node) || target.active !== false) callback();
+        }));
         return chain;
       },
     };
@@ -584,6 +590,53 @@ console.log(
     'duplicate requests, reserve undo and f' +
     'inal match: OK',
 );
+
+// Use the real renderer when returning the last reserved tile, so the reserve
+// node is actually hidden rather than bypassed by the normal rendering stub.
+function takeLastReserved(tray, type, remaining = 20) {
+  const game = makeGame(tray);
+  game.levelData.tiles = [];
+  game.board = new Node('Board');
+  game.reserveNode = new Node('Reserve');
+  game.reserveNode.active = true;
+  game.reserve = [type];
+  game.remainingTiles = () => remaining;
+  game.renderReserve = Game.prototype.renderReserve;
+  game.takeReservedTile(0);
+  assert.strictEqual(game.reserveNode.active, false, 'last return hides reserve');
+  assert.strictEqual(game.locked, true, 'settlement is still pending');
+  return game;
+}
+
+const lastUnmatched = takeLastReserved(['corn'], 'beef');
+lastUnmatched.takeReservedTile(0);
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastUnmatched.locked, false, 'last return must unlock input');
+assert.strictEqual(lastUnmatched.tray.length, 2, 'repeat input cannot duplicate food');
+pick(lastUnmatched, 'shrimp');
+assert.strictEqual(lastUnmatched.tray.length, 3, 'next move must still work');
+
+const lastMatched = takeLastReserved(['beef', 'beef'], 'beef');
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastMatched.locked, false);
+assert.strictEqual(lastMatched.tray.length, 0, 'last reserved tile must match');
+
+const lastWinning = takeLastReserved(['beef', 'beef'], 'beef', 0);
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastWinning.result, true, 'last reserved match must win');
+
+const lastFull = takeLastReserved(
+  ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn'], 'fish');
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastFull.result, false, 'last return into full tray must lose');
+
+const lastStale = takeLastReserved([], 'beef');
+lastStale.levelData = {config: {traySize: 7}};
+let staleSettlements = 0;
+lastStale.resolveTray = () => { staleSettlements += 1; };
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(staleSettlements, 0, 'old return must not settle a new level');
+console.log('Last reserved tile: input, match, victory, defeat and stale callback OK');
 
 const stages = makeGame([]);
 stages.levelData = {total: 888, config: {level: 3, traySize: 7}};
