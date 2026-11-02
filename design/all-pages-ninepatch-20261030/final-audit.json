@@ -5,5 +5,13 @@
   "layoutErrors": 0,
   "browserErrors": 0,
   "shareEntryAndWebFeedback": true,
-  "standaloneAfterOldDraftCleanup": true
+  "standaloneAfterOldDraftCleanup": true,
+  "artifactRetention": {
+    "date": "2026-11-02",
+    "historicalValidationRecord": true,
+    "bulkScreenPngsPresent": false,
+    "dialogExportsPresent": false,
+    "legacyRuntimeScreenshotsPresent": false,
+    "retainedPurpose": "Layout sources, original art, shared runtime helpers; current design is indexed in design/README.md"
+  }
 }

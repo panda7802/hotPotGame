@@ -50,7 +50,7 @@ fs.writeFileSync(path.join(checkRoot,'doc/res/regions.json'),regions);
 fs.mkdirSync(dest,{recursive:true});
 function appendix(name,title,filter) {
   const entries=[...frozen].filter(([rel])=>filter(rel));
-  const text=['# '+title,'','本附录是 2026-10-30 手动教程的固定参考代码。每个二级标题是相对于新建 Cocos 工程 `app/HotPot` 的保存路径。','',
+  const text=['# '+title,'','本附录是 2026-11-02 手动教程的固定参考代码，基于提交 24d2c13。每个二级标题是相对于新建 Cocos 工程 `app/HotPot` 的保存路径。','',
   '在 VS Code 中逐个创建同名文件，只复制代码围栏内部的内容，不复制围栏和标题。内容完整，不需要让 AI 补全。脚本 `.meta` 由新工程的 Creator 自动生成。','',
   ...entries.flatMap(([rel,bytes])=>['## '+rel,'','````'+(rel.endsWith('.json')?'json':rel.endsWith('.ts')?'typescript':'javascript'),bytes.toString('utf8').replace(/\r\n/g,'\n').replace(/\n$/,''),'````',''])].join('\n');
   fs.writeFileSync(path.join(dest,name),text,'utf8');
@@ -62,5 +62,5 @@ const results=[
   appendix('03-云函数完整代码.md','云函数完整代码',r=>r.startsWith('cloudfunctions/')),
   appendix('04-校验工具与工程设置.md','校验工具与工程设置',r=>r.startsWith('tools/')||r.startsWith('settings/')||r==='tsconfig.json'),
 ];
-fs.writeFileSync(path.join(dest,'文件清单.json'),JSON.stringify({date:'2026-10-30',creator:'3.8.8',note:'云端六个共享 JS 从本教程冻结 TS 转译；未进行任何云部署。文件路径相对于 app/HotPot。',appendices:results,files:manifest},null,2)+'\n');
+fs.writeFileSync(path.join(dest,'文件清单.json'),JSON.stringify({date:'2026-11-02',commit:'24d2c13',creator:'3.8.8',note:'云端六个共享 JS 从本教程冻结 TS 转译；未进行任何云部署。文件路径相对于 app/HotPot。',appendices:results,files:manifest},null,2)+'\n');
 console.log(JSON.stringify({appendices:results,files:manifest.length,checkRoot},null,2));

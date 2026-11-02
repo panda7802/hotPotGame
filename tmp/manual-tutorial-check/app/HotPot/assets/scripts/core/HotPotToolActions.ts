@@ -1,6 +1,6 @@
-import {Graphics, Label, Node, Vec3} from 'cc';
+import {Graphics, Label, Node, tween, Vec3} from 'cc';
 
-import {getIngredient, selectBombTargets} from '../data/GameData';
+import {getIngredient, selectBombTargets, TileData} from '../data/GameData';
 
 import {
   BOIL_STAGES,
@@ -285,28 +285,22 @@ export abstract class HotPotToolActions extends HotPotBoard {
   }
 
   /**
-   * 移除符合规则的一组三张或六张牌。
+   * 同类食材按三张一组移除，第二关最多六张，第三关最多十八张。
    */
   protected useBombTool(): void {
     if (!this.canUseTool('bomb')) {
       return;
     }
-    const targets = selectBombTargets(this.levelData.tiles);
+    const targets = selectBombTargets(this.levelData.tiles, Math.random,
+      this.levelData.config.level === 3 ? 18 : 6);
     if (targets.length === 0) {
       this.showToast('棋盘上没有满 3 张的同类食材', '#8A4B34');
       return;
     }
-    targets.forEach(
-      /**
-       * 依次处理集合中的每个条目。
-       */ (tile) => {
-        tile.removed = true;
-        const node = this.tileNodes.get(tile.id);
-        node?.removeFromParent();
-        node?.destroy();
-        this.tileNodes.delete(tile.id);
-      },
-    );
+    const bombLevel = this.levelData;
+    const bombRun = this.runId;
+    const effects = this.animateBomb(targets);
+    targets.forEach((tile) => { tile.removed = true; });
     // 清空旧撤回快照，防止撤回拿牌时复活已经炸掉的牌。
     this.lastMoveSnapshot = null;
     if (!this.unlimitedTools.bomb) {
@@ -314,19 +308,168 @@ export abstract class HotPotToolActions extends HotPotBoard {
     }
     // 复用其余牌及图片节点，只重画遮挡状态发生变化的牌。
     this.refreshTileStates();
+    effects.setSiblingIndex(this.board.children.length - 1);
     const reward = this.grantBoilRewards();
     this.updateProgress();
     this.updateToolButtons();
-    this.playEffect('match', 0.82);
     this.showToast(
       reward ||
         `炸掉 ${targets.length} 张${getIngredient(targets[0].type).name}`,
       '#A14425',
     );
-    if (this.isBoardCleared()) {
-      this.endGame(true);
-    } else {
-      this.checkpointGame();
+    // 先保存结算结果，退出或重开时不依赖动画回调修改牌数。
+    this.checkpointGame();
+    this.locked = true;
+    tween(effects).delay(1.32).call(() => {
+      effects.destroy();
+      if (this.levelData !== bombLevel || this.runId !== bombRun) return;
+      this.locked = false;
+      if (this.isBoardCleared()) this.endGame(true);
+    }).start();
+  }
+
+  /** 落弹蓄力、双层冲击波和食材弹散，共用矢量绘制，无新增图片。 */
+  protected animateBomb(targets: TileData[]): Node {
+    const effects = new Node('BombEffects');
+    // 目标牌稍后转入特效层，深层牌也能在爆炸时清楚呈现。
+    const faces = targets.map((tile) => {
+      if (!this.tileNodes.has(tile.id)) this.createTileNode(tile);
+      const face = this.tileNodes.get(tile.id)!;
+      face.active = true;
+      (face as Node & {selectableState?: boolean}).selectableState = true;
+      this.drawTile(face, tile.type, false);
+      this.tileNodes.delete(tile.id);
+      return face;
+    });
+    this.board.addChild(effects);
+    const center = new Vec3(
+      targets.reduce((sum, tile) => sum + tile.x, 0) / targets.length,
+      targets.reduce((sum, tile) => sum + tile.y, 0) / targets.length,
+    );
+    this.createBombParticles(effects, center);
+    const bomb = new Node('BombDrop');
+    effects.addChild(bomb);
+    bomb.setPosition(center.x, center.y + 160);
+    transform(bomb, 96, 96);
+    const g = bomb.addComponent(Graphics);
+    g.fillColor = hex('#292D35');
+    g.strokeColor = hex('#FFE6AE');
+    g.lineWidth = 4;
+    g.circle(0, 0, 34); g.fill(); g.stroke();
+    g.strokeColor = hex('#FFF5DA');
+    g.moveTo(-22, 0); g.bezierCurveTo(-22, 15, -13, 22, -3, 22); g.stroke();
+    g.strokeColor = hex('#FFAE4D');
+    g.moveTo(12, 31); g.bezierCurveTo(12, 53, 34, 34, 34, 52); g.stroke();
+    g.fillColor = hex('#FFE692');
+    g.circle(34, 52, 7); g.fill();
+    tween(bomb).to(0.24, {position: center}, {easing: 'quadIn'})
+      .to(0.08, {scale: new Vec3(1.24, 0.8, 1)})
+      .to(0.1, {scale: new Vec3(1.36, 1.36, 1)})
+      .call(() => {
+        if (effects.parent === this.board) this.playEffect('bomb', 0.9);
+      })
+      .to(0.08, {scale: new Vec3(0, 0, 1)}).start();
+    for (let i = 0; i < 2; i++) {
+      const ring = new Node(`BombShockwave_${i}`);
+      effects.addChild(ring);
+      ring.setPosition(center);
+      ring.setScale(0, 0, 1);
+      transform(ring, 160, 160);
+      const wave = ring.addComponent(Graphics);
+      wave.strokeColor = hex(i ? '#FFAA4D' : '#FFE9A6');
+      wave.lineWidth = i ? 5 : 9;
+      wave.circle(0, 0, 70); wave.stroke();
+      tween(ring).delay(0.42 + i * 0.06)
+        .to(0.42, {scale: new Vec3(4.5, 4.5, 1)}, {easing: 'quadOut'}).start();
+      tween(opacity(ring)).delay(0.42 + i * 0.06).to(0.4, {opacity: 0}).start();
+    }
+    faces.forEach((face, index) => {
+      face.setParent(effects);
+      const start = face.position.clone();
+      const scale = face.scale.clone();
+      const angle = Math.PI * 2 * index / faces.length;
+      tween(face).delay(0.42)
+        .to(0.12, {scale: new Vec3(scale.x * 1.18, scale.y * 1.18, 1)})
+        .to(0.38, {
+          position: new Vec3(start.x + Math.cos(angle) * 70,
+            start.y + 70 + Math.sin(angle) * 40, start.z),
+          scale: new Vec3(0.05, 0.05, 1),
+          angle: index % 2 ? 28 : -28,
+        }, {easing: 'quadOut'}).start();
+      tween(opacity(face)).delay(0.58).to(0.32, {opacity: 0}).start();
+    });
+    return effects;
+  }
+
+  /** 固定数量的烟团、闪光、火星和碎屑，全部随特效根节点回收。 */
+  protected createBombParticles(effects: Node, center: Vec3): void {
+    // 暖灰烟团先膨胀再上浮，错开大小和位置，保留食材的辨识度。
+    for (let i = 0; i < 8; i++) {
+      const smoke = new Node(`BombSmoke_${i}`);
+      effects.addChild(smoke);
+      smoke.setPosition(center);
+      smoke.setScale(0, 0, 1);
+      transform(smoke, 90, 90);
+      const cloud = smoke.addComponent(Graphics);
+      cloud.fillColor = hex(i % 2 ? '#766B64' : '#B9A394');
+      cloud.circle(0, 0, 24); cloud.fill();
+      cloud.circle(-15, 8, 16); cloud.fill();
+      cloud.circle(14, 12, 18); cloud.fill();
+      const angle = Math.PI * 2 * i / 8;
+      const spread = 45 + i % 3 * 24;
+      const end = new Vec3(center.x + Math.cos(angle) * spread,
+        center.y + 65 + Math.sin(angle) * spread * 0.6);
+      const size = 1.4 + i % 3 * 0.25;
+      tween(smoke).delay(0.46 + i % 3 * 0.02)
+        .to(0.7, {position: end, scale: new Vec3(size, size, 1)},
+          {easing: 'quadOut'}).start();
+      tween(opacity(smoke, 0)).delay(0.46)
+        .to(0.1, {opacity: 110}).to(0.66, {opacity: 0}).start();
+    }
+    const flash = new Node('BombFlash');
+    effects.addChild(flash);
+    flash.setPosition(center);
+    flash.setScale(0, 0, 1);
+    transform(flash, 120, 120);
+    const glow = flash.addComponent(Graphics);
+    glow.fillColor = hex('#FF9E36');
+    glow.circle(0, 0, 55); glow.fill();
+    glow.fillColor = hex('#FFF1BA');
+    glow.circle(0, 0, 36); glow.fill();
+    tween(flash).delay(0.42)
+      .to(0.08, {scale: new Vec3(2, 2, 1)})
+      .to(0.18, {scale: new Vec3(2.8, 2.8, 1)}).start();
+    tween(opacity(flash)).delay(0.47).to(0.21, {opacity: 0}).start();
+
+    // 拉长的炽热火星径向喷射；短碎屑随后向下坠落。
+    for (let i = 0; i < 38; i++) {
+      const debris = i >= 28;
+      const spark = new Node(`BombSpark_${i}`);
+      effects.addChild(spark);
+      spark.setPosition(center);
+      spark.setScale(0, 0, 1);
+      transform(spark, 32, 16);
+      const fire = spark.addComponent(Graphics);
+      fire.fillColor = hex(debris ? '#655044'
+        : i % 2 ? '#FF8A30' : '#FFE9A6');
+      fire.roundRect(-8, -2.5, debris ? 9 : 20 + i % 3 * 4,
+        debris ? 8 : 5, 2); fire.fill();
+      const angle = Math.PI * 2 * i / 38 + i % 3 * 0.13;
+      const distance = debris ? 80 + i % 4 * 22 : 110 + i % 5 * 30;
+      spark.angle = angle * 180 / Math.PI;
+      const burst = new Vec3(center.x + Math.cos(angle) * distance,
+        center.y + Math.sin(angle) * distance * 0.8);
+      tween(spark).delay(0.42 + i % 3 * 0.015)
+        .set({scale: Vec3.ONE})
+        .to(0.22, {position: burst}, {easing: 'quadOut'})
+        .to(debris ? 0.45 : 0.3, {
+          position: new Vec3(burst.x + Math.cos(angle) * 25,
+            burst.y - (debris ? 100 : 35)),
+          scale: new Vec3(0.1, 0.1, 1),
+          angle: spark.angle + (debris ? 150 : 0),
+        }, {easing: 'quadIn'}).start();
+      tween(opacity(spark)).delay(debris ? 0.8 : 0.65)
+        .to(0.28, {opacity: 0}).start();
     }
   }
 }
