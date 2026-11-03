@@ -226,7 +226,7 @@ export abstract class HotPotTools extends HotPotToolActions {
     overlay.addChild(panel);
     drawLacquerPanel(panel, 600, 560, reviewLayout);
     makePanelHeading(panel, '重新开一锅？', 175);
-    makeBodyLabel(panel, '本关进度和道具次数将重新开始', 25,
+    makeBodyLabel(panel, this.gameEnded ? '本局已结束，重新抽取食材开锅' : '保留本关食材，只重排布局并重置进度', 25,
       '#775145', new Vec3(0, 69), 520, 58, true);
     makeBodyLabel(panel, '图鉴、成就和地区会继续保留', 23,
       '#94735D', new Vec3(0, 0), 520, 46);

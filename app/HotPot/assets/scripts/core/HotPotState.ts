@@ -23,6 +23,8 @@ import {createLevel, LevelData} from '../data/GameData';
 import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
 import {WechatShareService} from './WechatShareService';
+import {WechatGameClubService} from './WechatGameClubService';
+import {GAME_CLUB_OPENLINK} from '../data/GameClubConfig';
 
 import {
   achievementEntries,
@@ -38,6 +40,28 @@ import {readPageStyle, setPageTheme} from '../data/PageTheme';
 export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
   private readonly wechatSharing = new WechatShareService();
+  private readonly wechatGameClub = new WechatGameClubService();
+  private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
+
+  protected unbindGameClubEntry(): void {
+    this.wechatGameClub.dispose();
+  }
+
+  protected async openGameClub(): Promise<void> {
+    const menu = this.node.getChildByName('PlayerOverlay');
+    if (!menu || !this.enabledInHierarchy) return;
+    const result = await this.wechatGameClub.open(this.gameClubOpenlink);
+    if (!this.node.isValid || !menu.isValid || menu.parent !== this.node) return;
+    const message = result.status === 'unsupported'
+      ? '请在新版微信小游戏中打开游戏圈'
+      : result.status === 'unconfigured'
+        ? '游戏圈入口尚未配置，请稍后再试'
+        : result.status === 'busy' ? '正在打开游戏圈，请稍候'
+          : result.status === 'failed' ? result.message : '';
+    if (message) this.showToast(message, '#A24A3C');
+  }
+
+  onDisable(): void { this.wechatGameClub.dispose(); }
 
   protected shareGame(): void {
     const result = this.wechatSharing.share();
@@ -110,6 +134,7 @@ export abstract class HotPotState extends HotPotFields {
    */
   onDestroy(): void {
     this.wechatSharing.dispose();
+    this.unbindGameClubEntry();
     this.releasePageBackdrop();
     this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
     this.bgmSource?.stop();

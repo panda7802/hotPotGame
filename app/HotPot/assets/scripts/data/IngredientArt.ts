@@ -16,4 +16,9 @@ export const INGREDIENT_ART: IngredientType[][] = [
     'kingoyster', 'radish', 'carrot', 'pumpkin', 'bambooshoot',
     'celtuce', 'broccoli', 'cauliflower', 'taro', 'vermicelli',
   ],
+  // 第三张图集仍使用 5×5 格，前两行是隐藏珍藏，后三行透明。
+  [
+    'kingcrab', 'bluelobster', 'coralgrouper', 'geoduck', 'seacucumber',
+    'fishmaw', 'matsutake', 'morel', 'blacktruffle', 'caviar',
+  ],
 ];

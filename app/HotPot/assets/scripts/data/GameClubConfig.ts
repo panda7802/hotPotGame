@@ -1,0 +1,2 @@
+/** Copy the home openlink from this AppID's MP → 游戏圈 → 基础设置. */
+export const GAME_CLUB_OPENLINK = '-SSEykJvFV3pORt5kTNpS45J54YqkiBvQNKMBPLmjypATOuZaWeVXNPxjfnvAPtVd1rfZ9xvwDEHNx9sxFC0I4oTFGY--mNbcm1zo4gkAmXD9c9YE_qZnQmLGkV_9WFxK1oAgmCD-vaG8AnmQ4KmkqhdLjZph0oLdZyxUvCSWttVcubC4Mk4Bq5Vh8fsMmVjQVu6s7TnPAA-_Z9663wv2Ys8NYmUn-SHh_qFyHrK9_3XkcbbJmuQsDoJRNK8Xx4lDXjxWUsi3F_wKr-Q8Q1D8QwPBLTauMpRWk2ywbp-ikugFpAX3urX3d46IHTnUrythqblli21VlCWrJjMIIhpMA';

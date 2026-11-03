@@ -837,6 +837,28 @@ function service(
  * 为测试提供当前调用所需的回调行为。
  */
 (async () => {
+  const unlockServer = backend();
+  const unlockCache = storage();
+  const unlockClient = service(unlockServer, unlockCache);
+  await unlockClient.initialize();
+  unlockClient.beginDailySession(new Date(2026, 10, 3, 12));
+  unlockClient.setSave(freshSave(1, 0, 12345));
+  const beforeUnlock = plain(unlockClient.state);
+  unlockClient.unlockAllIngredients();
+  assert.strictEqual(unlockClient.state.progress.discovered.length, 60);
+  assert.deepStrictEqual(plain(unlockClient.state.save), beforeUnlock.save);
+  assert.deepStrictEqual(plain(unlockClient.state.progress.completedLevels), beforeUnlock.progress.completedLevels);
+  const firstMutation = unlockClient.local.mutationId;
+  unlockClient.unlockAllIngredients();
+  assert.strictEqual(unlockClient.local.mutationId, firstMutation, 'Unlock all must be idempotent');
+  await unlockClient.flush();
+  const unlockReopened = service(unlockServer, unlockCache);
+  await unlockReopened.initialize();
+  assert.strictEqual(unlockReopened.state.progress.discovered.length, 60);
+  unlockReopened.beginDailySession(new Date(2026, 10, 4, 12));
+  assert.strictEqual(unlockReopened.state.save, null);
+  assert.strictEqual(unlockReopened.state.progress.discovered.length, 60);
+  console.log('Unlock all collection: 60 discoveries, unchanged board, idempotency, cloud/reopen and daily retention: OK');
   const rankingServer = backend();
   const rankingCache = storage();
   const rankingOptions = {};

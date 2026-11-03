@@ -282,7 +282,7 @@ function template(
   index: number,
   layoutSeed = 0,
   ingredientSeed = 0,
-  ingredientPoolVersion: 1 | 2 = 1,
+  ingredientPoolVersion: 1 | 2 | 3 | 4 = 1,
 ): LevelData {
   if (layoutSeed === 0 && ingredientSeed === 0) {
     if (!templates.has(index)) {
@@ -331,7 +331,8 @@ export function validateGameSave(value: any): GameSave {
     '食材种子错误',
   );
   check(value.ingredientPoolVersion === undefined
-    || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2,
+    || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2
+    || value.ingredientPoolVersion === 3 || value.ingredientPoolVersion === 4,
   '食材池版本错误');
   const validationSeed = value.layoutSeed >= VARIED_LAYOUT_SEED_START
     ? value.layoutSeed : 0;

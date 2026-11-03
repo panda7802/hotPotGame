@@ -245,7 +245,8 @@ function validateGameSave(value) {
     (0, PlayerTypes_1.check)(value.ingredientSeed === undefined ||
         (0, PlayerTypes_1.integer)(value.ingredientSeed, 1, GameData_1.INGREDIENT_SEED_MAX), '食材种子错误');
     (0, PlayerTypes_1.check)(value.ingredientPoolVersion === undefined
-        || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2, '食材池版本错误');
+        || value.ingredientPoolVersion === 1 || value.ingredientPoolVersion === 2
+        || value.ingredientPoolVersion === 3 || value.ingredientPoolVersion === 4, '食材池版本错误');
     const validationSeed = value.layoutSeed >= GameData_1.VARIED_LAYOUT_SEED_START
         ? value.layoutSeed : 0;
     const level = template(value.levelIndex, validationSeed, value.ingredientSeed, value.ingredientPoolVersion);

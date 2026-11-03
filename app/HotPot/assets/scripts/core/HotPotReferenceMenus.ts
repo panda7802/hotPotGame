@@ -3,6 +3,7 @@ import {REFERENCE_CLEAN_STYLES,REFERENCE_PATCH_COLORS} from '../data/ReferenceAs
 import {PageStyle,getPageTheme} from '../data/PageTheme';
 import {regionPath} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
+import {INGREDIENTS} from '../data/GameConfig';
 import {HotPotReferenceShell} from './HotPotReferenceShell';
 import {ArtPage,Box,art,blendField,fullOverlay,hit,patch,text,pageHeight} from './HotPotReferenceArt';
 import {referenceHeight} from './HotPotReferenceLayout';
@@ -80,7 +81,7 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
       this.referenceField(p,'profile',[.40,.266,.39,.055],'本机玩家',29,true);
       this.referenceField(p,'profile',[.40,.326,.39,.045],address,22,true);
       this.referenceField(p,'profile',[.24,.435,.15,.04],String(stats.total),34);
-      this.referenceField(p,'profile',[.58,.435,.21,.04],found+'/50',32);
+      this.referenceField(p,'profile',[.58,.435,.21,.04],found+'/'+INGREDIENTS.length,32);
       hit(p,'Button_声音',[.27,.89,.50,.08],h,()=>this.toggleSound());
     }else if(id===4){
       this.referenceField(p,'profile',[.25,.447,.09,.036],String(this.levelIndex+1),30);

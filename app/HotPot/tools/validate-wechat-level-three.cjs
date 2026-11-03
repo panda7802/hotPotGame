@@ -92,7 +92,7 @@ for (const seed of [0, data.RANDOM_LAYOUT_SEED_START,
   assert(!domain.shouldUpgradeUnstartedLevelThree(progressed));
   assert.strictEqual(domain.restoreLevel(progressed).config.layers.length, 37);
 }
-const out = path.resolve(root, '../../tmp/level3-wechat-fix-20261102');
+const out = process.env.HOTPOT_WECHAT_DOMAIN_OUTPUT || path.resolve(root, '../../tmp/level3-wechat-fix-20261102');
 fs.mkdirSync(out, {recursive: true});
 fs.writeFileSync(path.join(out, 'wechat-domain-verification.json'),
   JSON.stringify({build: marker, package: build, checks,

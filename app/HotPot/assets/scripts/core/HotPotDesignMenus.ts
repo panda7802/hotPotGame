@@ -2,6 +2,7 @@ import {Label,Node,sys} from 'cc';
 import {getPageTheme,PageStyle,PAGE_THEMES} from '../data/PageTheme';
 import {regionPath} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
+import {INGREDIENTS} from '../data/GameConfig';
 import {HotPotReferenceShell} from './HotPotReferenceShell';
 import {designButton,designFooter,designHeader,designHit,designIcon,designImage,designNode,designOnBackground,designOverlay,designScroll,designSurface,designText} from './HotPotDesignUi';
 
@@ -43,7 +44,7 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     designText(card,'一锅烟火，收藏日常好滋味',[146,138,456,30],23,t.muted,false,true);
     const stats=designNode(p,'ProfileStats',[40,494,640,124]);designSurface(stats);
     const open=(action:()=>void)=>{close();action()};
-    const values=[String(this.designStats().total),state.progress.discovered.length+' / 50',String(achievementEntries(state).filter(a=>a.unlocked).length)];
+    const values=[String(this.designStats().total),state.progress.discovered.length+' / '+INGREDIENTS.length,String(achievementEntries(state).filter(a=>a.unlocked).length)];
     ['累计通关','食材发现','已获成就'].forEach((caption,i)=>{
       designText(stats,values[i],[i*213+8,12,197,54],38,t.accent,true);
       designText(stats,caption,[i*213+8,70,197,38],23,t.muted);
@@ -54,6 +55,12 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
       const circle=designNode(row,'IconCircle',[28,6,56,56]);designSurface(circle,t.panel,28,'',false);designIcon(circle,icon,[10,10,36,36]);
       designText(row,caption,[116,2,420,64],30,t.ink,true,true);designIcon(row,'arrow',[584,21,26,26],t.muted);
     });
+    const club=designNode(p,'Button_游戏圈',[40,950,640,68]);designSurface(club);
+    designHit(club,()=>{void this.openGameClub()});
+    const clubIcon=designNode(club,'IconCircle',[28,6,56,56]);designSurface(clubIcon,t.panel,28,'',false);
+    designIcon(clubIcon,'community',[10,10,36,36]);
+    designText(club,'游戏圈',[116,2,420,64],30,t.ink,true,true);
+    designIcon(club,'arrow',[584,21,26,26],t.muted);
     designFooter(p,'←  返回游戏',close,'Button_继续游戏',true);
   }
   protected showPageStyles():void {

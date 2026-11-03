@@ -580,7 +580,7 @@ console.log(
     'nd full solutions OK',
 );
 
-assert.strictEqual(data.INGREDIENTS.length, 50);
+assert.strictEqual(data.INGREDIENTS.length, 60);
 /**
  * 将当前条目转换为后续处理所需的值。
  */
@@ -635,7 +635,7 @@ data.INGREDIENTS.forEach((ingredient) => {
 });
 
 console.log(
-  '50 ingredient pool: 3000 draws, beef/l' +
+  '60 ingredient pool: 3000 draws, beef/l' +
     'amb exclusion, per-level variety and c' +
     'omplete randomized-board solutions: OK',
 );

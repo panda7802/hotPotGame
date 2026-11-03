@@ -174,7 +174,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           }
           const name = makeLabel(
             card,
-            known ? ingredient.name : '神秘食材',
+            known ? ingredient.name : ingredient.hidden ? '隐藏珍藏' : '神秘食材',
             28,
             known ? '#744329' : '#9D8B77',
             new Vec3(0, -40),
@@ -184,7 +184,7 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
           name.isBold = known;
           const tag = makeLabel(
             card,
-            known ? INGREDIENT_STORIES[ingredient.id].tag : '拿取点亮',
+            known ? INGREDIENT_STORIES[ingredient.id].tag : ingredient.hidden ? '第三关稀有邂逅' : '拿取点亮',
             22,
             '#94735D',
             new Vec3(0, -79),

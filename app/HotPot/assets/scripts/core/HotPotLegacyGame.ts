@@ -1,6 +1,6 @@
 import {_decorator, EditBox, Graphics, Label, Mask, Node, ScrollView, Vec3} from 'cc';
 
-import {LEVELS} from '../data/GameData';
+import {createRestartLevel, LEVELS} from '../data/GameData';
 
 import {GameSave, RegionNode} from '../data/PlayerData';
 import {getPageTheme} from '../data/PageTheme';
@@ -381,7 +381,16 @@ export abstract class HotPotLegacyGame extends HotPotDialogs {
    * 重新开始当前关卡。
    */
   protected restartLevel(): void {
-    this.loadLevel(this.levelIndex);
+    if (this.playerService?.beginDailySession()) {
+      this.loadLevel(0);
+      this.showToast('新的一天，从第一关开始', '#D86A3B');
+      return;
+    }
+    if (this.gameEnded || !this.levelData) {
+      this.loadLevel(this.levelIndex);
+    } else {
+      this.loadLevel(this.levelIndex, true, createRestartLevel(this.levelData));
+    }
   }
 
   /**

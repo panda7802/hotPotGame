@@ -127,13 +127,12 @@ export abstract class HotPotResources extends HotPotState {
   }
 
   /**
-   * Both transparent sheets are shared by every theme. Run completion once,
-   * after all 50 frame rectangles have been created.
+   * Transparent sheets are shared by every theme. Complete after all frames.
    */
   protected loadIngredientImages(done: () => void): void {
     let pending = INGREDIENT_ART.length;
     INGREDIENT_ART.forEach((types, sheet) => {
-      const path = 'ingredients/food-' + (sheet ? 'b' : 'a') + '/texture';
+      const path = 'ingredients/food-' + String.fromCharCode(97 + sheet) + '/texture';
       resources.load(path, Texture2D, (error, texture) => {
         if (!this.node.isValid) return;
         if (!error && texture && texture.width >= 5 && texture.height >= 5

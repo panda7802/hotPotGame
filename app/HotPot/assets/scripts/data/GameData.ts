@@ -5,6 +5,10 @@ import {
   TileData,
   LevelData,
   INGREDIENTS,
+  NORMAL_INGREDIENTS,
+  HIDDEN_INGREDIENTS,
+  HIDDEN_ENCOUNTER_CHANCE,
+  HIDDEN_INGREDIENT_WEIGHT,
   LEVELS,
 } from './GameConfig';
 export {INGREDIENTS, LEVELS} from './GameConfig';
@@ -260,7 +264,7 @@ export const INGREDIENT_SEED_MAX = 2147483646;
 export function selectLevelIngredients(
   levelIndex: number,
   seed: number,
-  poolVersion: 1 | 2 = 2,
+  poolVersion: 1 | 2 | 3 | 4 = 4,
 ): IngredientType[] {
   const config = LEVELS[levelIndex];
   /**
@@ -275,8 +279,27 @@ export function selectLevelIngredients(
   /**
    * 将当前条目转换为后续处理所需的值。
    */
+  if (poolVersion === 4 && levelIndex === 2) {
+    const random = seededRandom(seed);
+    const selected: IngredientType[] = [];
+    let available = INGREDIENTS.slice();
+    while (selected.length < config.typeCount) {
+      const weight = (item: IngredientConfig) => item.hidden ? HIDDEN_INGREDIENT_WEIGHT : 1;
+      let ticket = random() * available.reduce((sum, item) => sum + weight(item), 0);
+      let chosen = available[available.length - 1];
+      for (const item of available) {
+        ticket -= weight(item);
+        if (ticket < 0) {chosen = item; break;}
+      }
+      selected.push(chosen.id);
+      available = available.filter(item => item.id !== chosen.id
+        && !(chosen.id === 'beef' && item.id === 'lamb')
+        && !(chosen.id === 'lamb' && item.id === 'beef'));
+    }
+    return selected;
+  }
   const shuffled = shuffle(
-    (poolVersion === 1 ? INGREDIENTS.slice(0, 23) : INGREDIENTS)
+    (poolVersion === 1 ? INGREDIENTS.slice(0, 23) : NORMAL_INGREDIENTS)
       .map((item) => item.id),
     seededRandom(seed),
   );
@@ -289,6 +312,14 @@ export function selectLevelIngredients(
     selected.push(type);
     if (selected.length === config.typeCount) {
       break;
+    }
+  }
+  // 独立随机源不改变 v1/v2 的历史抽取顺序，翻锅/恢复沿用本局种子。
+  if (poolVersion === 3 && levelIndex === 2) {
+    const rareRandom = seededRandom((seed + 104729) % INGREDIENT_SEED_MAX);
+    if (rareRandom() < HIDDEN_ENCOUNTER_CHANCE) {
+      selected[selected.length - 1] = HIDDEN_INGREDIENTS[
+        Math.floor(rareRandom() * HIDDEN_INGREDIENTS.length)].id;
     }
   }
   return selected;
@@ -495,7 +526,7 @@ export function createLevel(
   layoutSeed?: number,
   previousLayoutSeed?: number,
   ingredientSeed?: number,
-  ingredientPoolVersion: 1 | 2 = 2,
+  ingredientPoolVersion: 1 | 2 | 3 | 4 = 4,
 ): LevelData {
   // 显式传入牌阵种子但未传食材种子时，保持旧版本的食材配比与顺序。
   if (ingredientSeed === undefined) {
@@ -616,10 +647,29 @@ export function createLevel(
     tiles,
     total: tiles.length,
     ...(ingredientSeed ? {ingredientSeed} : {}),
-    ...(ingredientSeed && ingredientPoolVersion === 2
+    ...(ingredientSeed && ingredientPoolVersion >= 2
       ? {ingredientPoolVersion} : {}),
     ...(config.level === 3 && layoutSeed !== 0 ? {layoutSeed} : {}),
   };
+}
+
+/** 手动重开只重排，保留食材种子、食材池版本及完整食材数量。 */
+export function createRestartLevel(current: LevelData): LevelData {
+  const index = current.config.level - 1;
+  const restarted = createLevel(index, undefined, current.layoutSeed,
+    current.ingredientSeed || 0, current.ingredientPoolVersion || 1);
+  // 第一、二关沿用既有牌位，在各层内重排食材，维持每层三张成组。
+  if (index < 2) {
+    const random = seededRandom(1 + Math.floor(Math.random() * INGREDIENT_SEED_MAX));
+    for (let layer = 0; layer < restarted.config.layers.length; layer++) {
+      const tiles = restarted.tiles.filter(tile => tile.layer === layer);
+      const types = shuffle(tiles.map(tile => tile.type), random);
+      const previous = current.tiles.filter(tile => tile.layer === layer);
+      if (types.every((type, i) => type === previous[i].type)) types.push(types.shift()!);
+      tiles.forEach((tile, i) => {tile.type = types[i];});
+    }
+  }
+  return restarted;
 }
 
 /**

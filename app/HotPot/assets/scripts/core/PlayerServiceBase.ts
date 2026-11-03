@@ -1,4 +1,5 @@
 import {CLOUD_CONFIG} from '../data/CloudConfig';
+import {INGREDIENTS} from '../data/GameConfig';
 import {DEFAULT_RUNTIME_CONFIG, RuntimeConfig} from '../data/RuntimeConfig';
 import {
   clone,
@@ -207,6 +208,12 @@ export abstract class PlayerServiceBase {
    */
   setSave(save: GameSave): void {
     this.setState({...this.local.state, save});
+  }
+
+  /** 后门图鉴全开：通过正常存档流程持久化全部发现记录。 */
+  unlockAllIngredients(): void {
+    this.setState({...this.local.state, progress: {...this.local.state.progress,
+      discovered: INGREDIENTS.map(item => item.id)}});
   }
 
   /**

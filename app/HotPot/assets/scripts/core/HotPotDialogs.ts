@@ -37,7 +37,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
       return;
     }
     makePanelHeading(panel, '调试面板', 410, 440);
-    makeBodyLabel(panel, '仅本机即时生效 · 选关会开始新的一局', 24,
+    makeBodyLabel(panel, '同关重开保留食材 · 图鉴全开会保存记录', 24,
       '#94735D', new Vec3(0, 335), 560, 46);
     LEVELS.forEach(
       /**
@@ -55,7 +55,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
            * 在当前操作完成后更新相关游戏状态。
            */ () => {
             this.dismissPlayerMenu('BackdoorOverlay');
-            this.loadLevel(index);
+            if (index === this.levelIndex) this.restartLevel(); else this.loadLevel(index);
             this.showBackdoor();
           },
         );
@@ -126,7 +126,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
     makeButton(
       panel,
       '本关只留3个相同食材',
-      new Vec3(0, -310),
+      new Vec3(0, -280),
       540,
       76,
       '#B88261',
@@ -137,19 +137,23 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
         this.leaveThreeMatchingTiles();
       },
     );
+    makeButton(panel, '图鉴全开', new Vec3(0, -365), 540, 68, '#B88261', () => {
+      this.playerService!.unlockAllIngredients();
+      this.showToast('60 种食材图鉴已全部点亮', '#477345');
+    });
     makeBodyLabel(
       panel,
       '无限开关仅本局有效，重开或切关后重置',
       21,
       '#94735D',
-      new Vec3(0, -377),
+      new Vec3(0, -415),
       570,
       32,
     );
     makeButton(
       panel,
       '返回游戏',
-      new Vec3(0, -444),
+      new Vec3(0, -475),
       540,
       78,
       '#A3613B',
@@ -251,7 +255,7 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
     }
     makeBodyLabel(
       panel,
-      known ? INGREDIENT_STORIES[type].tag : '食材还藏在锅里',
+      known ? INGREDIENT_STORIES[type].tag : ingredient.hidden ? '隐藏珍藏 · 第三关稀有邂逅' : '食材还藏在锅里',
       27,
       '#A3613B',
       new Vec3(0, 29),

@@ -1,5 +1,6 @@
 import {INGREDIENTS, IngredientType} from './GameData';
 import {PlayerState} from './PlayerData';
+import {NORMAL_INGREDIENTS} from './GameConfig';
 
 /**
  * 图鉴复用游戏中的食材 SpriteFrame，不增加图片资源。
@@ -136,6 +137,16 @@ export const INGREDIENT_STORIES: Record<
   cauliflower: {tag: '奶白小树', story: '奶白花菜和绿色西兰花，是各有颜色的伙伴。'},
   taro: {tag: '紫点方块', story: '芋头切面里藏着紫色细点，方方正正地等你发现。'},
   vermicelli: {tag: '细丝小团', story: '红薯粉盘成细丝团，和扁平的宽粉各有模样。'},
+  kingcrab: {tag: '隐藏 · 深海冠冕', story: '朱红蟹壳与雪白蟹肉，盛在金边碧玉盘里。第三关偶遇的深海珍藏，值得为它留一席。'},
+  bluelobster: {tag: '隐藏 · 蓝海瑰宝', story: '宝石蓝的双螯像把海光捧进小馆。这位稀有来客，只在第三关静候一次相遇。'},
+  coralgrouper: {tag: '隐藏 · 赤玉星斑', story: '朱红鱼身点缀细小蓝星，薄切鱼片晶莹如玉。第三关的珍藏席上，藏着这一抹海色。'},
+  geoduck: {tag: '隐藏 · 白玉海珍', story: '贝壳托起象牙白的蚌肉，薄片映着温润光泽。第三关偶遇它，便为图鉴添上一份珍藏。'},
+  seacucumber: {tag: '隐藏 · 墨玉海参', story: '深褐参身泛着琥珀光，起伏的小刺是它的记号。第三关的层层食材中，偶尔藏着这位贵客。'},
+  fishmaw: {tag: '隐藏 · 金珀花胶', story: '金黄花胶卷起通透的琥珀色泽，像一小片凝住的暖光。在第三关与它相遇，点亮珍藏。'},
+  matsutake: {tag: '隐藏 · 山林雅珍', story: '棕色鳞纹菌帽与象牙白菌柄，把山林气息藏进金边盘。第三关偶遇的山珍，静静等你发现。'},
+  morel: {tag: '隐藏 · 金笠山珍', story: '蜂巢般的菌帽一眼就能认出，层层纹理像一顶金棕小冠。在第三关寻找这份山野珍藏。'},
+  blacktruffle: {tag: '隐藏 · 黑金松露', story: '深黑外皮里藏着细密白色纹路，切面宛如天然大理石。第三关偶遇的黑金来客，为小馆添一份雅趣。'},
+  caviar: {tag: '隐藏 · 玄珠珍藏', story: '一颗颗乌亮鱼籽盛在金边小盏里，珍珠母贝匙映出柔光。第三关的稀有邂逅，藏着这盏玄珠。'},
 };
 
 /**
@@ -209,9 +220,9 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
   add(
     'full-menu',
     '满汉小馆',
-    `点亮全部${INGREDIENTS.length}种食材图鉴`,
-    p.discovered.length,
-    INGREDIENTS.length,
+    `点亮全部${NORMAL_INGREDIENTS.length}种普通食材图鉴`,
+    p.discovered.filter(id => !INGREDIENTS.find(item => item.id === id)!.hidden).length,
+    NORMAL_INGREDIENTS.length,
   );
   add('clear-30', '热锅熟手', '在一局中消除至少30份食材', best, 30);
   add('clear-100', '百味入锅', '在一局中消除至少100份食材', best, 100);

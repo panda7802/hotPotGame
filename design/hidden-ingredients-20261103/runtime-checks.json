@@ -1,0 +1,128 @@
+{
+  "build": "20261103-hidden-weight-restart",
+  "checks": [
+    {
+      "style": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "cards": 60,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    }
+  ],
+  "picked": {
+    "correctFrame": true,
+    "tray": true
+  },
+  "restarts": [
+    {
+      "index": 0,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "index": 1,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "index": 2,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "event": "failure",
+      "refreshed": true
+    },
+    {
+      "event": "win",
+      "refreshed": true
+    },
+    {
+      "event": "daily",
+      "resetToFirst": true
+    }
+  ],
+  "errors": [],
+  "missing": []
+}

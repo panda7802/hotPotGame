@@ -48,7 +48,9 @@ export type IngredientType =
   | 'broccoli'
   | 'cauliflower'
   | 'taro'
-  | 'vermicelli';
+  | 'vermicelli'
+  | 'kingcrab' | 'bluelobster' | 'coralgrouper' | 'geoduck' | 'seacucumber'
+  | 'fishmaw' | 'matsutake' | 'morel' | 'blacktruffle' | 'caviar';
 
 /**
  * IngredientConfig 的数据结构；字段说明见各成员。
@@ -70,6 +72,8 @@ export interface IngredientConfig {
    * 食材的深色。
    */
   dark: string;
+  /** 隐藏珍藏食材，仅在第三关稀有邂逅。 */
+  hidden?: boolean;
 }
 
 /**
@@ -168,7 +172,7 @@ export interface LevelData {
    * 重现食材分布的随机种子。
    */
   ingredientSeed?: number;
-  ingredientPoolVersion?: 1 | 2;
+  ingredientPoolVersion?: 1 | 2 | 3 | 4;
 }
 
 export const INGREDIENTS: IngredientConfig[] = [
@@ -222,7 +226,24 @@ export const INGREDIENTS: IngredientConfig[] = [
   {id: 'cauliflower', name: '花菜', color: '#E8DDB6', dark: '#AA9C74'},
   {id: 'taro', name: '芋头', color: '#D9C4C0', dark: '#A68A8A'},
   {id: 'vermicelli', name: '红薯粉', color: '#D6C4AA', dark: '#A18D6B'},
+  {id: 'kingcrab', name: '帝王蟹', color: '#DE6549', dark: '#8F362A', hidden: true},
+  {id: 'bluelobster', name: '蓝龙虾', color: '#428EA9', dark: '#204D6B', hidden: true},
+  {id: 'coralgrouper', name: '东星斑', color: '#E56B5D', dark: '#9B3839', hidden: true},
+  {id: 'geoduck', name: '象拔蚌', color: '#E2C39C', dark: '#927050', hidden: true},
+  {id: 'seacucumber', name: '海参', color: '#705545', dark: '#382C28', hidden: true},
+  {id: 'fishmaw', name: '花胶', color: '#DEB052', dark: '#997135', hidden: true},
+  {id: 'matsutake', name: '松茸', color: '#BA936A', dark: '#70513A', hidden: true},
+  {id: 'morel', name: '羊肚菌', color: '#AF8B50', dark: '#6A4D2C', hidden: true},
+  {id: 'blacktruffle', name: '黑松露', color: '#625047', dark: '#302825', hidden: true},
+  {id: 'caviar', name: '鱼子酱', color: '#46544F', dark: '#222C29', hidden: true},
 ];
+
+export const NORMAL_INGREDIENTS = INGREDIENTS.filter(item => !item.hidden);
+export const HIDDEN_INGREDIENTS = INGREDIENTS.filter(item => item.hidden);
+/** 仅供版本 3 旧存档重现抽取。 */
+export const HIDDEN_ENCOUNTER_CHANCE = 0.12;
+/** 普通食材权重为 1，每种珍藏食材权重为普通食材的 10%。 */
+export const HIDDEN_INGREDIENT_WEIGHT = 0.1;
 
 // Each layer is made from complete triples. A top-to-bottom solution always
 // exists, while imperfect choices can still fill the seven-slot tray.

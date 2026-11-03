@@ -51,7 +51,7 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
     const cancel=()=>this.dismissRestartConfirmation();designButton(body,'MenuClose','×',[526,16,64,64],cancel,true);
     const circle=designNode(body,'RestartCircle',[238,38,132,132]);designSurface(circle,t.panel,66);designIcon(circle,'refresh',[30,30,72,72]);
     designText(body,'重新开锅？',[42,188,524,70],44,t.ink,true);
-    designText(body,'重新开始后，本关进度将清空，\n道具次数和免费复活机会将重置。',[42,272,524,94],27,t.muted);
+    designText(body,this.gameEnded?'本局已结束，重新抽取食材开锅。\n道具次数和免费复活机会将重置。':'保留本关食材，只重新排列布局。\n本关进度、道具和复活机会将重置。',[42,272,524,94],27,t.muted);
     designText(body,'当前关卡   第 '+(this.levelIndex+1)+' 关 · '+this.levelData.config.title,[42,382,524,44],25,t.ink,true);
     designButton(body,'Button_继续当前游戏','继续当前游戏',[42,448,524,80],cancel);
     designButton(body,'Button_确定重新开始','↻  确定重新开始',[42,550,524,80],()=>{cancel();this.dismissOverlay();this.restartLevel()},true);

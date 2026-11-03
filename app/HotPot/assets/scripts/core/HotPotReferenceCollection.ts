@@ -70,8 +70,8 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
     const change=(next:'ingredients'|'achievements')=>{saveOffset();this.dismissPlayerMenu('CollectionOverlay');this.showCollection(next)};
     if(tab==='ingredients'){
       const counter=(id===4?[.34,.215,.40,.045]:[.26,.205,.48,.045]) as Box;this.paper(p,counter);
-      text(p,'已发现 '+state.progress.discovered.length+' / 50',counter,h,27,t.ink,true);
-      const content=this.scroll(p,'CollectionViewport',[.055,top,.89,bottom-top],Math.ceil(50/3)*236,this.referenceScroll.ingredients);
+      text(p,'已发现 '+state.progress.discovered.length+' / '+INGREDIENTS.length,counter,h,27,t.ink,true);
+      const content=this.scroll(p,'CollectionViewport',[.055,top,.89,bottom-top],Math.ceil(INGREDIENTS.length/3)*236,this.referenceScroll.ingredients);
       INGREDIENTS.forEach((item,i)=>{
         const known=state.progress.discovered.includes(item.id),card=new Node('IngredientCard_'+item.id);content.addChild(card);
         card.setPosition((i%3-1)*214,-120-Math.floor(i/3)*236);transform(card,204,226);
@@ -79,7 +79,7 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
         const icon=new Node('CollectionIngredient');card.addChild(icon);icon.setPosition(0,32);
         if(known)this.addIngredientImage(icon,item.id,false,178,155);
         else text(icon,'?',[-.5,-.5,1,1],140,64,t.muted).node.setPosition(0,0);
-        const label=text(card,known?item.name:'未发现',[-.45,-.15,.9,.25],100,28,t.ink,true);label.node.setPosition(0,-79);
+        const label=text(card,known?item.name:item.hidden?'隐藏珍藏':'未发现',[-.45,-.15,.9,.25],100,28,item.hidden?'#A7792D':t.ink,true);label.node.setPosition(0,-79);
         card.on(Node.EventType.TOUCH_END,()=>{saveOffset();this.dismissPlayerMenu('CollectionOverlay');this.showIngredientDetail(item.id)});
       });
       hit(p,'Button_食材图鉴',[.1,.1,.8,.08],h,()=>{
@@ -112,12 +112,12 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
       hit(p,'Button_返回图鉴',[.08,.885,.84,.09],h,back);hit(p,'MenuClose',[0,0,.18,.13],h,back);return;
     }
     this.paper(p,[.08,.16,.84,.72]);
-    text(p,known?'已发现':'尚未发现',[.27,.17,.46,.055],h,28,t.accent,true);
+    text(p,item.hidden?(known?'隐藏 · 珍藏已点亮':'隐藏 · 尚未发现'):(known?'已发现':'尚未发现'),[.27,.17,.46,.055],h,28,item.hidden?'#A7792D':t.accent,true);
     const icon=new Node('IngredientPortrait');p.addChild(icon);place(icon,[.16,.245,.68,.35],h);
     drawFoodTile(icon,410,.32*h);
     if(known)this.addIngredientImage(icon,type,false,390,.30*h);else text(icon,'?',[-.5,-.5,1,1],180,100,t.muted).node.setPosition(0,0);
     text(p,known?item.name:'神秘食材',[.18,.61,.64,.06],h,38,t.ink,true);
-    text(p,known?INGREDIENT_STORIES[type].story:'在游戏中拿取这份食材即可点亮。',[.13,.70,.74,.14],h,27,t.ink);
+    text(p,known?INGREDIENT_STORIES[type].story:item.hidden?'第三关偶有珍贵食材到访，遇见并拿取即可点亮珍藏。':'在游戏中拿取这份食材即可点亮。',[.13,.70,.74,.14],h,27,t.ink);
     this.referenceButton(p,'Button_返回图鉴','返回图鉴',[.12,.895,.76,.065],back);hit(p,'MenuClose',[0,0,.18,.13],h,back);
   }
 

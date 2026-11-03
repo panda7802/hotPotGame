@@ -231,5 +231,8 @@ module.exports = {
 };
 if (require.main === module) {
   assertBranch(path.resolve(__dirname, '..'));
-  finalizeCloudBuild();
+  require('./optimize-wechat-lossless.cjs').optimizeWechatBuild()
+    .then(() => finalizeCloudBuild()).catch(error => {
+      console.error(error);process.exitCode = 1;
+    });
 }

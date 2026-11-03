@@ -1,6 +1,7 @@
 'use strict';
 const path = require('path');
 const {prepareCloud} = require('../../tools/prepare-cloud.cjs');
+const {optimizeWechatBuild} = require('../../tools/optimize-wechat-lossless.cjs');
 const {
   assertBranch,
   assertBuildOptions,
@@ -38,5 +39,6 @@ exports.onAfterBuild = async function (options, result) {
   assertBuildOptions(root, options);
   assertBranch(root);
   assertDestination(root, result?.dest);
+  await optimizeWechatBuild({root, build: result?.dest});
   finalizeCloudBuild({root, build: result?.dest});
 };

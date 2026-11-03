@@ -313,7 +313,9 @@ function load(filename) {
   });
   return exports;
 }
-const {HotPotGame} = load(path.join(root, 'assets/scripts/core/HotPotGame'));
+// This mock harness exercises the legacy UI; the current design UI is checked
+// in a real Cocos browser by verify-hidden-ingredients-runtime.cjs.
+const {HotPotLegacyGame: HotPotGame} = load(path.join(root, 'assets/scripts/core/HotPotLegacyGame'));
 const {emptyPlayerState} = load(
   path.join(root, 'assets/scripts/data/PlayerData'),
 );
@@ -352,6 +354,10 @@ function createGame() {
     },
     refreshLeaderboard: () => Promise.resolve(),
     refreshRuntimeConfig: () => Promise.resolve(),
+    unlockAllIngredients() {
+      this.state.progress.discovered = load(path.join(root,
+        'assets/scripts/data/GameConfig')).INGREDIENTS.map(item => item.id);
+    },
     regions: JSON.parse(
       fs.readFileSync(
         path.join(root, 'assets/resources/data/regions.json'),
@@ -402,7 +408,7 @@ game.dismissPlayerMenu('RegionOverlay');
  */
 assert.doesNotThrow(() => game.showCollection());
 let collection = scrollOf(game, 'CollectionOverlay', 'CollectionViewport');
-assert.strictEqual(collection.scroll.content.children.length, 50);
+assert.strictEqual(collection.scroll.content.children.length, 60);
 collection.panel
   .getChildByName('Button_我的成就')
   .emit(Node.EventType.TOUCH_END);
@@ -423,7 +429,7 @@ game.showRegionPicker([]);
 scrollOf(game, 'RegionOverlay', 'RegionViewport');
 game.dismissPlayerMenu('RegionOverlay');
 console.log(
-  'Collection UI: preview Mask enabled, 5' +
+  'Collection UI: preview Mask enabled, 6' +
     '0 cards, 14 achievements, tab/detail n' +
     'avigation and clipped vertical region ' +
     'scrolling: OK',
@@ -522,6 +528,11 @@ assert(
 hidden.dismissPlayerMenu('BackdoorOverlay');
 hidden.levelIndex = 1;
 hidden.showBackdoor();
+const debugBoardBeforeUnlock = JSON.stringify(hidden.levelData);
+panelOf(hidden, 'BackdoorOverlay').getChildByName('Button_图鉴全开')
+  .emit(Node.EventType.TOUCH_END);
+assert.strictEqual(hidden.playerService.state.progress.discovered.length, 60);
+assert.strictEqual(JSON.stringify(hidden.levelData), debugBoardBeforeUnlock);
 for (const type of ['undo', 'bomb', 'shuffle']) {
   const button = panelOf(hidden, 'BackdoorOverlay').getChildByName(
     `Unlimited_${type}`,
@@ -639,7 +650,8 @@ cc.Rect = class {
 /**
  * 测试中模拟 匿名组件 的最小行为。
  */
-cc.SpriteFrame = class {};
+cc.Size = class {constructor(width, height) {Object.assign(this, {width, height});}};
+cc.SpriteFrame = class {addRef() {return this;}};
 cc.Sprite = class {};
 cc.Sprite.Type = {SLICED: 1};
 cc.Sprite.SizeMode = {CUSTOM: 1};
@@ -681,7 +693,7 @@ assert.strictEqual(
   1,
   'initialization must wait for all atlases exactly once',
 );
-assert.strictEqual(loaded.ingredientFrames.size, 50);
+assert.strictEqual(loaded.ingredientFrames.size, 60);
 for (const frame of loaded.ingredientFrames.values()) {
   if (!frame.rect) {
     continue;
@@ -692,11 +704,14 @@ for (const frame of loaded.ingredientFrames.values()) {
     x + width <= frame.texture.width && y + height <= frame.texture.height,
   );
 }
-assert.strictEqual(loaded.ingredientFrames.get('lamb').rect.width, 160);
-assert.strictEqual(loaded.ingredientFrames.get('yam').rect.x, 320);
-assert.strictEqual(loaded.ingredientFrames.get('kelp').rect.y, 480);
+assert.strictEqual(loaded.ingredientFrames.get('lamb').rect.width,
+  loaded.ingredientFrames.get('lamb').texture.width / 5);
+assert.strictEqual(loaded.ingredientFrames.get('yam').rect.x,
+  loaded.ingredientFrames.get('yam').texture.width / 5 * 2);
+assert.strictEqual(loaded.ingredientFrames.get('kelp').rect.y,
+  loaded.ingredientFrames.get('kelp').texture.height / 5 * 3);
 console.log(
-  'Production food art: all 50 frames loa' +
+  'Production food art: all 60 frames loa' +
     'd, atlas crops stay within bounds and' +
     ' complete once: OK',
 );

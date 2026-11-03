@@ -55,7 +55,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
           }
         })
       }
-      designText(p, '已发现 ' + state.progress.discovered.length + ' / 50', [330, 290, 350, 44], 28, designOnBackground(), true);
+      designText(p, '已发现 ' + state.progress.discovered.length + ' / ' + INGREDIENTS.length, [330, 290, 350, 44], 28, designOnBackground(), true);
       const height = Math.ceil(INGREDIENTS.length / 3) * 230 + 6;
       const {
         content,
@@ -67,12 +67,13 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
       INGREDIENTS.forEach((food, i) => {
         const known = state.progress.discovered.includes(food.id),
           card = designNode(content, 'IngredientCard_' + food.id, [i % 3 * 218, Math.floor(i / 3) * 230, 204, 212]);
-        designSurface(card, known ? t.card : t.panel);
+        designSurface(card, known ? t.card : t.panel, undefined, food.hidden ? '#B58A42' : t.edge);
         if (known) {
           const icon = designNode(card, 'CollectionIngredient', [31, 12, 142, 142]);
           this.addIngredientImage(icon, food.id, false, 142, 142)
         } else designText(card, '?', [18, 6, 168, 150], 82, t.muted, true);
-        designText(card, known ? food.name : '未发现', [8, 164, 188, 38], 27, t.ink, true);
+        designText(card, known ? food.name : food.hidden ? '隐藏珍藏' : '未发现', [8, 164, 188, 38], 27, t.ink, true);
+        if (food.hidden) designText(card, '珍藏', [144, 8, 52, 26], 16, '#A7792D', true);
         designHit(card, () => {
           saveOffset();
           this.dismissPlayerMenu('CollectionOverlay');
@@ -127,11 +128,11 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     designSurface(body);
     const tag = designNode(body, 'DiscoveryTag', [170, 54, 300, 52]);
     designSurface(tag, t.panel, 26);
-    designText(tag, known ? INGREDIENT_STORIES[type].tag : '尚未发现', [12, 4, 276, 44], 25, t.accent);
+    designText(tag, known ? INGREDIENT_STORIES[type].tag : item.hidden ? '隐藏 · 尚未发现' : '尚未发现', [12, 4, 276, 44], 25, item.hidden ? '#A7792D' : t.accent);
     const portrait = designNode(body, 'IngredientPortrait', [140, 142, 360, 330]);
     if (known) this.addIngredientImage(portrait, type, false, 270, 270); else designText(portrait, '?', [0, 0, 360, 330], 170, t.muted);
     designText(body, known ? item.name : '神秘食材', [40, 490, 560, 74], 48, t.ink, true);
-    designText(body, known ? INGREDIENT_STORIES[type].story : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);
+    designText(body, known ? INGREDIENT_STORIES[type].story : item.hidden ? '第三关偶有珍贵食材到访。\n遇见并拿取，即可点亮珍藏。' : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);
     designText(body, known ? '三张相同食材，凑成一口好滋味。' : '每次相遇，都有新的惊喜。', [50, 752, 540, 38], 23, t.muted);
     designFooter(p, '返回', back);
   }
@@ -201,27 +202,31 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     const t = getPageTheme(),
       notice = designNode(p, 'DebugNotice', [40, 290, 640, 112]);
     designSurface(notice);
-    designText(notice, '仅本机即时生效\n选关会开始新的一局', [24, 12, 592, 88], 24, t.muted, false, true);
+    designText(notice, '选关可切换关卡，同关重开保留食材\n图鉴全开会保存全部珍藏记录', [24, 12, 592, 88], 24, t.muted, false, true);
     for (let i = 0; i < 3; i++) designButton(p, 'Button_进入第' + (i + 1) + '关', '第 ' + (i + 1) + ' 关', [40 + i * 220, 430, 200, 80], () => {
       dismiss();
-      this.loadLevel(i);
+      if (i === this.levelIndex) this.restartLevel(); else this.loadLevel(i);
       this.showBackdoor()
     }, i !== this.levelIndex);
     designText(p, '当前第 ' + (this.levelIndex + 1) + ' 关 · 无限道具', [50, 534, 620, 46], 24, designOnBackground());
     (['undo', 'bomb', 'shuffle'] as ToolType[]).forEach((type, i) => {
       const allowed = this.levelIndex > 0;
-      const button = designButton(p, 'Unlimited_' + type, TOOL_NAMES[type] + ' · ' + (allowed ? (this.unlimitedTools[type] ? '无限使用' : '正常次数') : '第一关无道具'), [40, 606 + i * 110, 640, 82], () => {
+      const button = designButton(p, 'Unlimited_' + type, TOOL_NAMES[type] + ' · ' + (allowed ? (this.unlimitedTools[type] ? '无限使用' : '正常次数') : '第一关无道具'), [40, 586 + i * 100, 640, 76], () => {
         this.unlimitedTools[type] = !this.unlimitedTools[type];
         this.updateToolButtons();
         dismiss();
         this.showBackdoor();
       }, !this.unlimitedTools[type], !allowed);
     });
-    designButton(p, 'Button_只留三张', '本关只留 3 个相同食材', [40, 956, 640, 80], () => {
+    designButton(p, 'Button_只留三张', '本关只留 3 个相同食材', [40, 900, 640, 76], () => {
       dismiss();
       this.leaveThreeMatchingTiles()
     }, true);
-    designText(p, '无限开关仅本局有效，重开或切关后重置', [40, 1056, 640, 42], 23, designOnBackground());
+    designButton(p, 'Button_图鉴全开', '图鉴全开', [40, 992, 640, 76], () => {
+      this.playerService!.unlockAllIngredients();
+      this.showToast('60 种食材图鉴已全部点亮', t.success);
+    }, true);
+    designText(p, '无限开关仅本局有效，重开或切关后重置', [40, 1080, 640, 30], 20, designOnBackground());
     designFooter(p, '返回', back);
   }
 }
