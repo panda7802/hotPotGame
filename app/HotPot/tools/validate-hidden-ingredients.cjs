@@ -31,10 +31,11 @@ assert(!collection.achievementEntries(fullMenuState).find(item => item.id === 'f
 
 // Compare the actual previous algorithm, including complete saved boards.
 const oldModules = {};
+const compatibilityRevision = '98d0f650e79d4fb672967340e7c6815529c8a56c';
 function previous(name) {
   if (oldModules[name]) return oldModules[name];
   const source = execFileSync('git', ['show',
-    `HEAD:app/HotPot/assets/scripts/data/${name}.ts`], {cwd: repo, encoding: 'utf8'});
+    `${compatibilityRevision}:app/HotPot/assets/scripts/data/${name}.ts`], {cwd: repo, encoding: 'utf8'});
   const compiled = ts.transpileModule(source, {compilerOptions: {
     module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019}}).outputText;
   const exports = {};
@@ -43,7 +44,7 @@ function previous(name) {
   return exports;
 }
 const old = previous('GameData');
-for (const version of [1, 2]) {
+for (const version of [1, 2, 3, 4]) {
   for (let i = 0; i < 3; i++) {
     for (const seed of [0, 1, 42, 12345, 76543, 10000019, data.INGREDIENT_SEED_MAX]) {
       assert.deepStrictEqual(plain(data.selectLevelIngredients(i, seed, version)),
@@ -83,6 +84,22 @@ assert(multipleHidden, 'Weighted draws must not impose the old one-hidden-per-bo
 assert.strictEqual(seen.size, 10, 'All hidden ingredients must be reachable');
 
 const regions = domain.validateRegions(require(path.join(cloud, 'regions.json')));
+const firstVisitKinds = new Set();
+for (const start of [1, 42, data.INGREDIENT_SEED_MAX, ...Array.from({length: 1000}, (_, i) => 1 + i * 123457)]) {
+  const seed = data.firstThirdLevelIngredientSeed(start);
+  const selected = data.selectLevelIngredients(2, seed);
+  assert(selected.some(id => rare.has(id)), 'First third-level entry must contain a hidden ingredient');
+  selected.filter(id => rare.has(id)).forEach(id => firstVisitKinds.add(id));
+  if (data.selectLevelIngredients(2, start).some(id => rare.has(id))) assert.strictEqual(seed, start);
+}
+assert.strictEqual(firstVisitKinds.size, 10, 'First visit must not be fixed to one premium ingredient');
+const legacyProgress = plain(domain.emptyProgress());
+delete legacyProgress.thirdLevelEntered;
+assert.strictEqual(domain.validateProgress(legacyProgress).thirdLevelEntered, false);
+assert.throws(() => domain.validateProgress({...legacyProgress, thirdLevelEntered: 'yes'}));
+legacyProgress.bestCleared[2] = 3;
+assert.strictEqual(domain.validateProgress(legacyProgress).thirdLevelEntered, true);
+console.log('First third-level ingredient seed: 1003 starting seeds guaranteed; all 10 premium kinds reachable; legacy progress migration: OK');
 for (const [id, seed] of seen) {
   let level;
   for (let offset = 0; offset < 64; offset++) {
@@ -97,6 +114,17 @@ for (const [id, seed] of seen) {
   assert.strictEqual(level.ingredientPoolVersion, 4);
   assert.deepStrictEqual(domain.validateGameSave(plain(save)), save);
   assert.deepStrictEqual(plain(domain.restoreLevel(save)), plain(level));
+  const entered = domain.validatePlayerState({...domain.emptyPlayerState(), save}, regions);
+  assert.strictEqual(entered.progress.thirdLevelEntered, true);
+  assert.strictEqual(entered.progress.discovered.length, 0, 'Entering alone must not discover ingredients');
+  assert.deepStrictEqual(entered.save.types, save.types, 'Existing third-level board must remain unchanged');
+  const nextDay = domain.enterPlayDay(entered, '2026-11-05');
+  assert.strictEqual(nextDay.save, null);
+  assert.strictEqual(nextDay.progress.thirdLevelEntered, true);
+  const mergedEntry = domain.mergeProgress(domain.emptyProgress(), entered.progress);
+  assert.strictEqual(mergedEntry.thirdLevelEntered, true);
+  assert.strictEqual(domain.mergeProgress(entered.progress, domain.emptyProgress()).thirdLevelEntered, true);
+  assert.strictEqual(domain.validatePlayerState(JSON.parse(JSON.stringify(nextDay)), regions).progress.thirdLevelEntered, true);
   const counts = new Map();
   save.types.forEach(type => counts.set(type, (counts.get(type) || 0) + 1));
   assert([...counts.values()].every(count => count % 3 === 0));
@@ -130,7 +158,7 @@ if (process.argv.includes('--art')) {
 }
 console.log(`Hidden ingredients: ${encounters}/10000 third-level encounters, all 10 reachable; ` +
   `first-draw per-kind hidden/normal ratio ${observedWeightRatio.toFixed(4)}; ` +
-  'old v1/v2 boards unchanged, restore/shuffle/discovery/cloud merge validated.');
+  'old v1-v4 boards unchanged, restore/shuffle/discovery/cloud merge validated.');
 
 const inventory = level => JSON.stringify(level.tiles.map(tile => tile.type).sort());
 for (const version of [1, 2, 3, 4]) {

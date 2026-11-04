@@ -132,6 +132,8 @@ export interface CollectionProgress {
    * 是否已经选择过地区。
    */
   regionChosen: boolean;
+  /** 是否已进入过第三关；永久保留，避免重复触发首次珍藏保底。 */
+  thirdLevelEntered?: boolean;
 }
 /**
  * PlayerState 的数据结构；字段说明见各成员。
@@ -224,6 +226,7 @@ export function emptyProgress(): CollectionProgress {
     completedLevels: [],
     cleanWins: [],
     regionChosen: false,
+    thirdLevelEntered: false,
   };
 }
 /**

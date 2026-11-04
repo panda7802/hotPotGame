@@ -4,7 +4,7 @@ const assert = require('assert');
 const {chromium, launchOptions} = require('./browser-runtime.cjs');
 const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
 const web = path.join(repo, 'tmp/hidden-ingredients-build-20261103/app/HotPot/build/web-hidden-ingredients');
-const out = path.join(repo, 'tmp/hidden-ingredients-verification-20261103');
+const out = process.env.HOTPOT_COLLECTION_OUT || path.join(repo, 'tmp/collection-first-rare-20261104');
 const data = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/GameData'));
 const domain = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData'));
 const {HIDDEN_INGREDIENTS} = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/GameConfig'));
@@ -109,7 +109,7 @@ async function click(page, name) {
       window.g = find(cc.director.getScene());
       return g?.ingredientFrames.size === 60 && g?.playerService && g?.levelData;
     }, null, {timeout: 90000});
-    await page.evaluate(() => {g.checkpointGame = () => {}; g.setSoundEnabled?.(false);});
+    await page.evaluate(() => {window.realCheckpointGame = g.checkpointGame.bind(g); g.checkpointGame = () => {}; g.setSoundEnabled?.(false);});
     for (const size of [{width: 390, height: 844}, {width: 360, height: 640}]) {
       await page.setViewportSize(size);
       for (const style of [1, 4, 8, 9]) {
@@ -117,20 +117,29 @@ async function click(page, name) {
           g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
           g.selectPageStyle(style);
           g.playerService.local.state.progress.discovered = [];
+          g.designIngredientGroup = 'ingredients';
           g.showCollection();
           const panel = findNode(g.node, 'CollectionOverlay');
           const cards = panel.getComponentsInChildren(cc.UITransform)
             .map(component => component.node).filter(node => node.name.startsWith('IngredientCard_'));
-          const locked = hiddenIds.every(id => {
+          const ordinaryOnly = cards.length === 50 && hiddenIds.every(id => !findNode(panel, 'IngredientCard_' + id));
+          return {cards: cards.length, ordinaryOnly};
+        }, {style, hiddenIds});
+        assert.strictEqual(result.cards, 50);assert(result.ordinaryOnly);
+        await page.waitForTimeout(180);
+        await page.screenshot({path: path.join(out, `${style}-${size.width}-normal.png`)});
+        await click(page, 'IngredientGroup_hidden');
+        const locked = await page.evaluate(hiddenIds => {
+          const panel = findNode(g.node, 'CollectionOverlay');
+          const cards = panel.getComponentsInChildren(cc.UITransform)
+            .map(component => component.node).filter(node => node.name.startsWith('IngredientCard_'));
+          return cards.length === 10 && hiddenIds.every(id => {
             const card = findNode(panel, 'IngredientCard_' + id);
             return card && !findNode(card, 'IngredientImage')
               && card.getComponentsInChildren(cc.Label).some(label => label.string === '隐藏珍藏');
           });
-          const scroll = findNode(panel, 'CollectionViewport').getComponent(cc.ScrollView);
-          scroll.scrollToBottom(0);
-          return {cards: cards.length, locked};
-        }, {style, hiddenIds});
-        assert.strictEqual(result.cards, 60);assert(result.locked);
+        }, hiddenIds);
+        assert(locked);
         await page.waitForTimeout(250);
         await page.screenshot({path: path.join(out, `${style}-${size.width}-locked.png`)});
         const unlocked = await page.evaluate(hiddenIds => {
@@ -138,7 +147,6 @@ async function click(page, name) {
           g.playerService.local.state.progress.discovered = hiddenIds;
           g.showCollection();
           const panel = findNode(g.node, 'CollectionOverlay');
-          findNode(panel, 'CollectionViewport').getComponent(cc.ScrollView).scrollToBottom(0);
           return hiddenIds.every(id => !!findNode(findNode(panel, 'IngredientCard_' + id), 'IngredientImage'));
         }, hiddenIds);
         assert(unlocked);
@@ -155,19 +163,33 @@ async function click(page, name) {
         const allOpen = await page.evaluate(() => g.playerService.state.progress.discovered.length === 60);
         assert(allOpen);
         await page.evaluate(() => g.dismissPlayerMenu('BackdoorOverlay'));
-        checks.push({style, size, cards: result.cards, locked: result.locked, unlocked, allOpen});
+        checks.push({style, size, ordinaryCards: result.cards, premiumCards: 10, locked, unlocked, allOpen});
       }
     }
     await page.setViewportSize({width: 390, height: 844});
     await page.evaluate(() => {
-      g.dismissPlayerMenu('CollectionOverlay');g.showIngredientDetail('caviar');
+      g.dismissPlayerMenu('CollectionOverlay');g.showCollection();
+      findNode(g.node, 'CollectionViewport').getComponent(cc.ScrollView).scrollToBottom(0);
     });
+    await page.waitForTimeout(100);
+    const premiumOffset = await page.evaluate(() => findNode(g.node, 'CollectionViewport').getComponent(cc.ScrollView).getScrollOffset().y);
+    await click(page, 'IngredientGroup_ingredients');
+    await page.evaluate(() => findNode(g.node, 'CollectionViewport').getComponent(cc.ScrollView).scrollToBottom(0));
+    await page.waitForTimeout(100);
+    await click(page, 'IngredientGroup_hidden');
+    const tabOffset = await page.evaluate(() => findNode(g.node, 'CollectionViewport').getComponent(cc.ScrollView).getScrollOffset().y);
+    assert(Math.abs(tabOffset - premiumOffset) < 1, 'Each tab must keep its own scroll offset');
+    await click(page, 'IngredientCard_caviar');
     await page.waitForTimeout(200);
     assert(await page.evaluate(() => findNode(g.node, 'CollectionDetailOverlay')
       .getComponentsInChildren(cc.Label).some(label => label.string === '鱼子酱')));
     await page.screenshot({path: path.join(out, 'caviar-detail.png')});
+    await click(page, 'Button_返回');
+    const detailReturn = await page.evaluate(() => g.designIngredientGroup === 'hidden'
+      && !!findNode(g.node, 'IngredientCard_caviar') && !findNode(g.node, 'IngredientCard_beef'));
+    assert(detailReturn, 'Returning from detail must keep the premium tab');
     const picked = await page.evaluate(save => {
-      g.dismissPlayerMenu('CollectionDetailOverlay');g.restoreGame(save);
+      g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');g.restoreGame(save);
       const tile = g.levelData.tiles.find(tile => tile.type === 'caviar' && g.isTileSelectable(tile));
       const node = g.tileNodes.get(tile.id);
       const frame = findNode(node, 'IngredientImage').getComponent(cc.Sprite).spriteFrame;
@@ -201,8 +223,35 @@ async function click(page, name) {
     }, save);
     assert(restarts.slice(0, 3).every(item => item.preserved && item.layoutChanged));
     assert(restarts[3].refreshed && restarts[4].refreshed && restarts[5].resetToFirst);
+    let ordinarySeed = 1;
+    while (data.selectLevelIngredients(2, ordinarySeed).some(id => hiddenIds.includes(id))) ordinarySeed++;
+    const firstVisit = await page.evaluate(({state, ordinarySeed, max, hiddenIds}) => {
+      g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
+      g.playerService.local.state = state;
+      g.checkpointGame = window.realCheckpointGame;
+      const random = Math.random;
+      Math.random = () => (ordinarySeed - 0.5) / max;
+      try {
+        const hasRare = () => g.levelData.tiles.some(tile => hiddenIds.includes(tile.type));
+        g.loadLevel(0);const firstClean = !hasRare();
+        g.loadLevel(1);const secondClean = !hasRare();
+        g.nextLevel();
+        const guaranteed = hasRare(), recorded = g.playerService.state.progress.thirdLevelEntered;
+        const discovered = g.playerService.state.progress.discovered.length;
+        const inventory = JSON.stringify(g.levelData.tiles.map(tile => tile.type).sort());
+        g.restartLevel();
+        const restartPreserved = inventory === JSON.stringify(g.levelData.tiles.map(tile => tile.type).sort());
+        g.loadLevel(0);g.loadLevel(2);
+        return {firstClean, secondClean, guaranteed, recorded, discovered, restartPreserved,
+          laterUsesNormalDraw: !hasRare() && g.levelData.ingredientSeed === ordinarySeed};
+      } finally {Math.random = random;}
+    }, {state: {...domain.emptyPlayerState(), playDate: domain.localPlayDate()}, ordinarySeed,
+      max: data.INGREDIENT_SEED_MAX, hiddenIds});
+    assert(firstVisit.firstClean && firstVisit.secondClean && firstVisit.guaranteed && firstVisit.recorded);
+    assert.strictEqual(firstVisit.discovered, 0);
+    assert(firstVisit.restartPreserved && firstVisit.laterUsesNormalDraw);
     assert.deepStrictEqual(errors, []);assert.deepStrictEqual(missing, []);assert.deepStrictEqual(shaderErrors, []);
-    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, picked, restarts, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
-    console.log('Real Cocos runtime: 8 theme/viewport combinations, unlock-all button, manual restarts, failure/win/daily refresh, 60 frames, detail and board/tray: OK');
+    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, detailReturn, picked, restarts, firstVisit, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
+    console.log('Real Cocos runtime: 8 theme/viewport combinations, 50/10 ingredient tabs, independent scrolling, detail return, first-third-level guarantee, one-time checkpoint, manual restarts and normal later draws: OK');
   } finally {await browser.close();server.close();}
 })().catch(error => {console.error(error);server.close();process.exitCode = 1;});

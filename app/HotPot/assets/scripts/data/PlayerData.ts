@@ -92,6 +92,7 @@ export function validateProgress(value: any): CollectionProgress {
   } // 兼容旧存档。
   check(value && value.version === PROGRESS_VERSION, '图鉴成就版本不兼容');
   check(typeof value.regionChosen === 'boolean', '地区成就记录错误');
+  check(value.thirdLevelEntered === undefined || typeof value.thirdLevelEntered === 'boolean', '第三关首次记录错误');
   /**
    * 将当前条目转换为后续处理所需的值。
    */
@@ -175,6 +176,7 @@ export function validateProgress(value: any): CollectionProgress {
     completedLevels,
     cleanWins,
     regionChosen: value.regionChosen,
+    thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
   };
 }
 /**
@@ -221,6 +223,7 @@ export function mergeProgress(
       (i) => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0,
     ),
     regionChosen: a.regionChosen || b.regionChosen,
+    thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
   };
 }
 /**
@@ -234,6 +237,7 @@ function recordProgress(
   if (!save) {
     return next;
   }
+  if (save.levelIndex === 2) next.thirdLevelEntered = true;
   const removed = new Set(save.removedIds);
   const seen = new Set<IngredientType>([
     ...next.discovered,

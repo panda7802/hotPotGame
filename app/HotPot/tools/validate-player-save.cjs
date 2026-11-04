@@ -859,6 +859,33 @@ function service(
   assert.strictEqual(unlockReopened.state.save, null);
   assert.strictEqual(unlockReopened.state.progress.discovered.length, 60);
   console.log('Unlock all collection: 60 discoveries, unchanged board, idempotency, cloud/reopen and daily retention: OK');
+  const firstServer = backend(), firstCache = storage();
+  const firstClient = service(firstServer, firstCache);
+  await firstClient.initialize();
+  firstClient.beginDailySession(new Date(2026, 10, 4, 12));
+  assert.strictEqual(firstClient.state.progress.thirdLevelEntered, false);
+  const guaranteed = freshSave(2, data.VARIED_LAYOUT_SEED_START,
+    data.firstThirdLevelIngredientSeed(12345));
+  firstClient.setSave(guaranteed);
+  assert.strictEqual(firstClient.state.progress.thirdLevelEntered, true);
+  assert.strictEqual(firstClient.state.progress.discovered.length, 0);
+  await firstClient.flush();
+  for (const cache of [firstCache, storage()]) {
+    const reopened = service(firstServer, cache);
+    await reopened.initialize();
+    assert.strictEqual(reopened.state.progress.thirdLevelEntered, true);
+    assert.deepStrictEqual(plain(reopened.state.save), plain(guaranteed));
+  }
+  firstClient.beginDailySession(new Date(2026, 10, 5, 12));
+  firstClient.setSave(freshSave(0));
+  await firstClient.flush();
+  const oldState = plain(firstClient.state);
+  delete oldState.progress.thirdLevelEntered;
+  const legacyEntryWrite = await firstServer.handler({action: 'save',
+    expectedRevision: firstClient.revision, mutationId: 'legacy-first-entry-0001', state: oldState});
+  assert.strictEqual(legacyEntryWrite.ok, true);
+  assert.strictEqual(legacyEntryWrite.player.state.progress.thirdLevelEntered, true);
+  console.log('First third-level entry: checkpoint, local/cloud reopen, new device, daily reset and legacy client writes retain the one-time flag: OK');
   const rankingServer = backend();
   const rankingCache = storage();
   const rankingOptions = {};
@@ -1066,8 +1093,8 @@ function service(
   dayClient.beginDailySession(new Date(2026, 9, 22, 23, 59));
   dayClient.setRegion(['OVERSEAS']);
   dayClient.setSave(legacy);
-  const beforeMidnightProgress = plain(dayClient.state.progress);
   dayClient.setSave(freshSave(2));
+  const beforeMidnightProgress = plain(dayClient.state.progress);
   await dayClient.flush();
   const dayDevice = service(dayServer, storage());
   await dayDevice.initialize();

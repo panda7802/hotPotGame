@@ -79,6 +79,13 @@ assert.strictEqual(config.INGREDIENTS.length, 60);
 assert.strictEqual(config.HIDDEN_INGREDIENT_WEIGHT, .1);
 assert.strictEqual(domain.PLAY_SESSION_VERSION, 7);
 const hidden = new Set(Array.from(config.HIDDEN_INGREDIENTS, item => item.id));
+for (const start of [1, 42, 12345, data.INGREDIENT_SEED_MAX]) {
+  const seed = data.firstThirdLevelIngredientSeed(start);
+  assert(Array.from(data.selectLevelIngredients(2, seed)).some(id => hidden.has(id)));
+}
+assert.strictEqual(domain.emptyProgress().thirdLevelEntered, false);
+assert.strictEqual(domain.mergeProgress(domain.emptyProgress(),
+  {...domain.emptyProgress(), thirdLevelEntered: true}).thirdLevelEntered, true);
 const inventory = board => JSON.stringify(Array.from(board.tiles, tile => tile.type).sort());
 const discovered = new Set();
 for (let seed = 1; seed < 2000; seed++) {
@@ -101,6 +108,7 @@ const report = {build: fs.readFileSync(path.join(root, 'assets/scripts/core/HotP
   mediaByteIdentical: true, unchangedMedia, retiredTextureExcluded: true,
   allJsParses: true, bundledIngredients: 60, hiddenWeight: .1, protocol: 7,
   allHiddenReachable: true, manualRestartKeepsInventory: true,
+  firstThirdLevelGuarantee: true, firstEntryFlagCloudMerge: true,
   mainSha256: hash(fs.readFileSync(path.join(build, 'subpackages/main/game.js')))};
 fs.mkdirSync(path.dirname(reportFile), {recursive: true});
 fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));

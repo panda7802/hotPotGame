@@ -1,5 +1,5 @@
 import {getPageTheme} from '../data/PageTheme';
-import {getIngredient, INGREDIENTS, IngredientType} from '../data/GameData';
+import {getIngredient, INGREDIENTS, NORMAL_INGREDIENTS, HIDDEN_INGREDIENTS, IngredientType} from '../data/GameData';
 import {achievementEntries, INGREDIENT_STORIES} from '../data/CollectionData';
 import {RegionNode} from '../data/PlayerData';
 import {hex, TOOL_NAMES, ToolType} from './HotPotUi';
@@ -17,7 +17,8 @@ import {
 } from './HotPotDesignUi';
 
 export abstract class HotPotDesignCollection extends HotPotDesignMenus {
-  private designOffsets = {ingredients: 0, achievements: 0};
+  private designOffsets = {ingredients: 0, hidden: 0, achievements: 0};
+  private designIngredientGroup: 'ingredients' | 'hidden' = 'ingredients';
   private designCollectionTab: 'ingredients' | 'achievements' = 'ingredients';
 
   protected showCollection(tab: 'ingredients' | 'achievements' = 'ingredients', entry?: any): void {
@@ -56,15 +57,33 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         })
       }
       designText(p, '已发现 ' + state.progress.discovered.length + ' / ' + INGREDIENTS.length, [330, 290, 350, 44], 28, designOnBackground(), true);
-      const height = Math.ceil(INGREDIENTS.length / 3) * 230 + 6;
+      const group = this.designIngredientGroup;
+      const foods = group === 'hidden' ? HIDDEN_INGREDIENTS : NORMAL_INGREDIENTS;
+      const switchGroup = (next: 'ingredients' | 'hidden') => {
+        saveOffset();
+        this.designIngredientGroup = next;
+        this.dismissPlayerMenu('CollectionOverlay');
+        this.showCollection('ingredients', {headingTaps: taps.heading, ingredientTaps: taps.food});
+      };
+      for (const [key, title, pool, x] of [
+        ['ingredients', '普通食材', NORMAL_INGREDIENTS, 40],
+        ['hidden', '珍藏食材', HIDDEN_INGREDIENTS, 368],
+      ] as const) {
+        const count = pool.filter(food => state.progress.discovered.includes(food.id)).length;
+        designButton(p, 'IngredientGroup_' + key, title + '  ' + count + '/' + pool.length,
+          [x, 352, 312, 64], () => switchGroup(key), group !== key);
+      }
+      designText(p, group === 'hidden' ? '仅第三关出没 · 首次进入必遇珍藏' : '烟火百味，收集每一份好滋味',
+        [40, 426, 640, 32], 21, designOnBackground());
+      const height = Math.ceil(foods.length / 3) * 230 + 6;
       const {
         content,
         view
-      } = designScroll(p, 'CollectionViewport', [40, 354, 640, 722], height, this.designOffsets.ingredients);
+      } = designScroll(p, 'CollectionViewport', [40, 474, 640, 602], height, this.designOffsets[group]);
       saveOffset = () => {
-        this.designOffsets.ingredients = Math.max(0, view.getScrollOffset().y)
+        this.designOffsets[group] = Math.max(0, view.getScrollOffset().y)
       };
-      INGREDIENTS.forEach((food, i) => {
+      foods.forEach((food, i) => {
         const known = state.progress.discovered.includes(food.id),
           card = designNode(content, 'IngredientCard_' + food.id, [i % 3 * 218, Math.floor(i / 3) * 230, 204, 212]);
         designSurface(card, known ? t.card : t.panel, undefined, food.hidden ? '#B58A42' : t.edge);

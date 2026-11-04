@@ -11,7 +11,7 @@ import {
   HIDDEN_INGREDIENT_WEIGHT,
   LEVELS,
 } from './GameConfig';
-export {INGREDIENTS, LEVELS} from './GameConfig';
+export {INGREDIENTS, NORMAL_INGREDIENTS, HIDDEN_INGREDIENTS, LEVELS} from './GameConfig';
 export type {
   IngredientType,
   IngredientConfig,
@@ -515,6 +515,17 @@ function buildNewLevelThreePositions(
     });
     return positions;
   });
+}
+
+/** 首次进入第三关使用含珍藏的种子，存档仍按原 v4 算法重现。 */
+export function firstThirdLevelIngredientSeed(start = 1 + Math.floor(Math.random() * INGREDIENT_SEED_MAX)): number {
+  let seed = start;
+  // Search only the small ingredient pool, never rebuild boards while searching.
+  do {
+    if (selectLevelIngredients(2, seed).some(id => HIDDEN_INGREDIENTS.some(food => food.id === id))) return seed;
+    seed = seed === INGREDIENT_SEED_MAX ? 1 : seed + 1;
+  } while (seed !== start);
+  throw new Error('无法生成首次第三关珍藏食材');
 }
 
 // Explicit seeds restore exactly; retries request a different formation family.

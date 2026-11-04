@@ -1,9 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.INGREDIENT_SEED_MAX = exports.VARIED_LAYOUT_SEED_END = exports.VARIED_LAYOUT_SEED_START = exports.CONNECTED_LAYOUT_SEED_END = exports.CONNECTED_LAYOUT_SEED_START = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.INGREDIENTS = void 0;
+exports.INGREDIENT_SEED_MAX = exports.VARIED_LAYOUT_SEED_END = exports.VARIED_LAYOUT_SEED_START = exports.CONNECTED_LAYOUT_SEED_END = exports.CONNECTED_LAYOUT_SEED_START = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.HIDDEN_INGREDIENTS = exports.NORMAL_INGREDIENTS = exports.INGREDIENTS = void 0;
 exports.selectLevelIngredients = selectLevelIngredients;
 exports.levelThreeLayoutFamily = levelThreeLayoutFamily;
 exports.buildLevelThreeRoute = buildLevelThreeRoute;
+exports.firstThirdLevelIngredientSeed = firstThirdLevelIngredientSeed;
 exports.createLevel = createLevel;
 exports.createRestartLevel = createRestartLevel;
 exports.getIngredient = getIngredient;
@@ -11,6 +12,8 @@ exports.selectBombTargets = selectBombTargets;
 const GameConfig_1 = require("./GameConfig");
 var GameConfig_2 = require("./GameConfig");
 Object.defineProperty(exports, "INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.INGREDIENTS; } });
+Object.defineProperty(exports, "NORMAL_INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.NORMAL_INGREDIENTS; } });
+Object.defineProperty(exports, "HIDDEN_INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.HIDDEN_INGREDIENTS; } });
 Object.defineProperty(exports, "LEVELS", { enumerable: true, get: function () { return GameConfig_2.LEVELS; } });
 /**
  * 由整数种子生成可重现的伪随机数。
@@ -425,6 +428,17 @@ function buildNewLevelThreePositions(config, seed) {
         });
         return positions;
     });
+}
+/** 首次进入第三关使用含珍藏的种子，存档仍按原 v4 算法重现。 */
+function firstThirdLevelIngredientSeed(start = 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX)) {
+    let seed = start;
+    // Search only the small ingredient pool, never rebuild boards while searching.
+    do {
+        if (selectLevelIngredients(2, seed).some(id => GameConfig_1.HIDDEN_INGREDIENTS.some(food => food.id === id)))
+            return seed;
+        seed = seed === exports.INGREDIENT_SEED_MAX ? 1 : seed + 1;
+    } while (seed !== start);
+    throw new Error('无法生成首次第三关珍藏食材');
 }
 // Explicit seeds restore exactly; retries request a different formation family.
 /**

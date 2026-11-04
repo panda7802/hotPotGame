@@ -67,6 +67,7 @@ function validateProgress(value) {
     } // 兼容旧存档。
     (0, PlayerTypes_1.check)(value && value.version === PlayerTypes_1.PROGRESS_VERSION, '图鉴成就版本不兼容');
     (0, PlayerTypes_1.check)(typeof value.regionChosen === 'boolean', '地区成就记录错误');
+    (0, PlayerTypes_1.check)(value.thirdLevelEntered === undefined || typeof value.thirdLevelEntered === 'boolean', '第三关首次记录错误');
     /**
      * 将当前条目转换为后续处理所需的值。
      */
@@ -129,6 +130,7 @@ function validateProgress(value) {
         completedLevels,
         cleanWins,
         regionChosen: value.regionChosen,
+        thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
     };
 }
 /**
@@ -163,6 +165,7 @@ function mergeProgress(a, b) {
          */
         cleanWins: GameData_1.LEVELS.map((_, i) => i).filter((i) => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
         regionChosen: a.regionChosen || b.regionChosen,
+        thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
     };
 }
 /**
@@ -173,6 +176,8 @@ function recordProgress(progress, save) {
     if (!save) {
         return next;
     }
+    if (save.levelIndex === 2)
+        next.thirdLevelEntered = true;
     const removed = new Set(save.removedIds);
     const seen = new Set([
         ...next.discovered,

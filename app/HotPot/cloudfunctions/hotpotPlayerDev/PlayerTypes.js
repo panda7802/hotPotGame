@@ -47,6 +47,7 @@ function emptyProgress() {
         completedLevels: [],
         cleanWins: [],
         regionChosen: false,
+        thirdLevelEntered: false,
     };
 }
 /**
