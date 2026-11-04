@@ -4,7 +4,7 @@ import {HotPotLegacyGame} from './HotPotLegacyGame';
 import {hit,text} from './HotPotReferenceArt';
 import {drawRoundRect,hex,opacity,refreshPageMaterials,ToolType,transform} from './HotPotUi';
 import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotReferenceLayout';
-import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
+import {gameArtNode,paintGameArt,paintGameBackdrop,paintCollectionArt,COLLECTION_ART_SCALE,GameArtRole} from './HotPotGameArt';
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
 import {fitDesignPage} from './HotPotDesignUi';
@@ -116,12 +116,12 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.positionArt(this.giftArt,'gift',[l.meter[0]+l.meter[2]+14,l.meter[1]-22*l.c,54*l.c,52*l.c],t.id,false,true);
     const settings=this.referenceRoot.getChildByName('Button_设置')!;this.positionArt(settings,'settings',l.settings,t.id,false,true);
     const library=this.referenceRoot.getChildByName('Button_食材图鉴')!;
-    this.positionBox(library,[14,l.settings[1]-8*l.c,92*l.c,104*l.c]);
-    this.paintCollectionBook(library,l.c);
+    this.positionBox(library,l.collection);
     const libraryLabel=library.getChildByName('LibraryLabel')!;
-    transform(libraryLabel,72*l.c,26*l.c);libraryLabel.setPosition(0,-36*l.c);
+    transform(libraryLabel,112*l.c,32*l.c);libraryLabel.setPosition(0,-33*l.c);
     libraryLabel.getComponent(Label)!.color=hex(t.ink);
-    libraryLabel.getComponent(Label)!.fontSize=21*l.c;
+    libraryLabel.getComponent(Label)!.fontSize=26*l.c;
+    this.paintCollectionBook(library);
     this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
     this.levelLabel.fontSize=29*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
     this.positionBox(this.progressLabel.node,l.progress);this.progressLabel.fontSize=24*l.c;this.progressLabel.lineHeight=30*l.c;
@@ -185,32 +185,17 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     }
     this.firstLevelBottom.active=first;this.toolBar.active=!first;this.updateSoundMark();
   }
-  /** Illustrated recipe book reuses existing food sprites across all themes. */
-  private paintCollectionBook(parent:Node,scale:number):void{
-    const t=getPageTheme();
+  /** The approved book, premium hotpot food and title are one compact image. */
+  private paintCollectionBook(parent:Node):void{
     let book=parent.getChildByName('CollectionBook');
     if(!book){book=gameArtNode(parent,'CollectionBook');book.setSiblingIndex(0)}
-    transform(book,92,104);book.setScale(scale,scale,1);book.setPosition(0,0);
-    const g=book.getComponent(Graphics)||book.addComponent(Graphics);g.clear();
-    g.fillColor=hex('#986134');g.strokeColor=hex(t.edge);g.lineWidth=2;
-    g.roundRect(-44,-18,88,68,7);g.fill();g.stroke();
-    const page=(direction:number)=>{
-      g.fillColor=hex('#FFF2CB');g.strokeColor=hex('#D9B977');g.lineWidth=1.5;
-      g.moveTo(0,-13);g.bezierCurveTo(direction*12,-5,direction*29,-10,direction*40,-13);
-      g.lineTo(direction*40,46);g.bezierCurveTo(direction*22,51,direction*10,46,0,40);
-      g.close();g.fill();g.stroke();
-      g.strokeColor=hex('#D9C59B');g.lineWidth=1;
-      for(let y=-3;y<=3;y+=6){g.moveTo(direction*8,y);g.lineTo(direction*30,y+2);g.stroke()}
-    };
-    page(-1);page(1);
-    g.fillColor=hex(t.accent);g.moveTo(23,48);g.lineTo(23,25);g.lineTo(28,29);g.lineTo(33,25);g.lineTo(33,48);g.close();g.fill();
-    g.fillColor=hex(t.card);g.strokeColor=hex(t.edge);g.lineWidth=2;
-    g.roundRect(-37,-50,74,28,10);g.fill();g.stroke();
-    for(const [name,type,x] of [['BookShrimp','shrimp',-20],['BookCarrot','carrot',20]] as const){
-      if(!this.ingredientFrames.has(type)||book.getChildByName(name))continue;
-      const food=gameArtNode(book,name);food.setPosition(x,22);
-      this.addIngredientImage(food,type,false,30,30);
-    }
+    book.setScale(1,1,1);book.setPosition(0,0);
+    const bounds=parent.getComponent(UITransform)!;
+    const texture=book.getComponent(Sprite)?.spriteFrame?.texture;
+    const ratio=texture?texture.width/texture.height:1;
+    const width=Math.min(bounds.width,bounds.height*ratio)*COLLECTION_ART_SCALE;
+    transform(book,width,width/ratio);
+    paintCollectionArt(book,getPageTheme().id,parent.getChildByName('LibraryLabel')!);
   }
   private updateReferenceMeter():void{
     if(!this.refMeter)return;

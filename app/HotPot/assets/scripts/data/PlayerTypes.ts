@@ -132,7 +132,7 @@ export interface CollectionProgress {
    * 是否已经选择过地区。
    */
   regionChosen: boolean;
-  /** 是否已进入过第三关；永久保留，避免重复触发首次珍藏保底。 */
+  /** 兼容早期版本的第三关经历记录；珍藏保底现在只看 discovered。 */
   thirdLevelEntered?: boolean;
 }
 /**

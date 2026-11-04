@@ -1,0 +1,299 @@
+{
+  "build": "20261104-collection-icons",
+  "bytes": 4920437,
+  "mainBytes": 1485006,
+  "packages": [
+    {
+      "name": "internal",
+      "root": "subpackages/internal/",
+      "bytes": 152179
+    },
+    {
+      "name": "resources",
+      "root": "subpackages/resources/",
+      "bytes": 2359452
+    },
+    {
+      "name": "victory-01",
+      "root": "subpackages/victory-01/",
+      "bytes": 189569
+    },
+    {
+      "name": "victory-04",
+      "root": "subpackages/victory-04/",
+      "bytes": 144385
+    },
+    {
+      "name": "victory-08",
+      "root": "subpackages/victory-08/",
+      "bytes": 157151
+    },
+    {
+      "name": "victory-09",
+      "root": "subpackages/victory-09/",
+      "bytes": 202432
+    },
+    {
+      "name": "main",
+      "root": "subpackages/main/",
+      "bytes": 230263
+    }
+  ],
+  "packageBudget": {
+    "mode": "subpackage",
+    "bytes": 4920437,
+    "mainBytes": 1485006,
+    "subpackageBytes": 3435431,
+    "packages": [
+      {
+        "name": "internal",
+        "root": "subpackages/internal/",
+        "bytes": 152179
+      },
+      {
+        "name": "resources",
+        "root": "subpackages/resources/",
+        "bytes": 2359452
+      },
+      {
+        "name": "victory-01",
+        "root": "subpackages/victory-01/",
+        "bytes": 189569
+      },
+      {
+        "name": "victory-04",
+        "root": "subpackages/victory-04/",
+        "bytes": 144385
+      },
+      {
+        "name": "victory-08",
+        "root": "subpackages/victory-08/",
+        "bytes": 157151
+      },
+      {
+        "name": "victory-09",
+        "root": "subpackages/victory-09/",
+        "bytes": 202432
+      },
+      {
+        "name": "main",
+        "root": "subpackages/main/",
+        "bytes": 230263
+      }
+    ],
+    "mainLimitBytes": 4000000,
+    "totalLimitBytes": 30000000,
+    "mainRemainingBytes": 2514994,
+    "totalRemainingBytes": 25079563
+  },
+  "mediaByteIdentical": true,
+  "unchangedMedia": [
+    {
+      "source": "assets/resources/audio/bgm.mp3",
+      "packaged": "subpackages/resources/native/ce/ce858f88-73d9-4163-8a1f-261475f8606b.mp3",
+      "bytes": 299269,
+      "sha256": "41ca9647bc3cf62aeea89fccdd8a005555ba3d63b87f1ebb69de6b60133402ba"
+    },
+    {
+      "source": "assets/resources/audio/bomb.mp3",
+      "packaged": "subpackages/resources/native/69/697783fc-be50-46e0-80f2-c16c99204644.mp3",
+      "bytes": 4144,
+      "sha256": "b4b4572ed312f26df7d23957cf24901bb53a92e15a3763a17ff79c46859dfecb"
+    },
+    {
+      "source": "assets/resources/audio/lose.mp3",
+      "packaged": "subpackages/resources/native/11/11a04a49-c0fc-42f3-ae9e-e3eb9b095c61.mp3",
+      "bytes": 12430,
+      "sha256": "b821535cf8d2349ee28e2bc84191f8be554ba3c32d6cff96908d43e010a629f5"
+    },
+    {
+      "source": "assets/resources/audio/match.mp3",
+      "packaged": "subpackages/resources/native/33/3352dd6a-4b90-4ddb-9c8b-ec1459b67c94.mp3",
+      "bytes": 5511,
+      "sha256": "56a1441d44f24e23e91fb09f784706f6d509ffcc1005ef59d3ec1bb038937679"
+    },
+    {
+      "source": "assets/resources/audio/win.mp3",
+      "packaged": "subpackages/resources/native/2d/2dfbfd97-b0a3-4b30-850d-cf72bdfa2253.mp3",
+      "bytes": 23626,
+      "sha256": "4fb2795f1f48f7ad63456aae207e3f307f59fbf22b8136acb8d26ea35f8ae617"
+    },
+    {
+      "source": "assets/resources/collection-icons/style-01.png",
+      "packaged": "subpackages/resources/native/7b/7b6c46ef-ab26-4cff-89aa-4331f6bc7929.png",
+      "bytes": 56327,
+      "sha256": "ef4244bb3ed06a2c36ff6e832dd00a869d71b526d2fed70637a56e63c1824249"
+    },
+    {
+      "source": "assets/resources/collection-icons/style-04.png",
+      "packaged": "subpackages/resources/native/5e/5e82dede-7210-4db4-8451-7411aa5d313c.png",
+      "bytes": 53539,
+      "sha256": "45cbb1ec47b9ed642b526ca71d10dd6b3ed9d6c10fb8aff8dfbcb92055763465"
+    },
+    {
+      "source": "assets/resources/collection-icons/style-08.png",
+      "packaged": "subpackages/resources/native/59/596e035a-fb28-494c-9468-82c435a294da.png",
+      "bytes": 53663,
+      "sha256": "7a3bb17668fcb7174cb473d5134e862cf3fa22dbdea58fb02785cbd0492a3f6a"
+    },
+    {
+      "source": "assets/resources/collection-icons/style-09.png",
+      "packaged": "subpackages/resources/native/69/6943a4d9-43de-405e-a705-da23654afbc7.png",
+      "bytes": 60658,
+      "sha256": "bb2113ff8018789f5dc848c22b1f3fe31a8971b33cc9f5b2474b77bed142a334"
+    },
+    {
+      "source": "assets/resources/game-ui/bg-01.jpg",
+      "packaged": "subpackages/resources/native/7d/7dbcebdd-c413-4aa5-8fb4-c8ed3087be25.jpg",
+      "bytes": 80559,
+      "sha256": "6dff7faf84cba59a733341f2d8a933b0c04dce069ada517636fafc3e9258b8c5"
+    },
+    {
+      "source": "assets/resources/game-ui/bg-04.jpg",
+      "packaged": "subpackages/resources/native/38/3864ed4b-676e-4efc-b935-42945aab286c.jpg",
+      "bytes": 26336,
+      "sha256": "fb6a2a7c795e8186c91b345ea89111eb67ce8525552633670d65f148a6a90fda"
+    },
+    {
+      "source": "assets/resources/game-ui/bg-08.jpg",
+      "packaged": "subpackages/resources/native/d9/d99e7796-8c16-4af5-8bb1-5bd643437473.jpg",
+      "bytes": 65185,
+      "sha256": "afd541481caff2eda6e818c65ec1c79a7c23d02269c9e71910cf3c33c06dcb69"
+    },
+    {
+      "source": "assets/resources/game-ui/bg-09.jpg",
+      "packaged": "subpackages/resources/native/ce/ce333bf8-7c72-4678-9440-056f8c775f83.jpg",
+      "bytes": 96593,
+      "sha256": "a44441b71ab3e15701dd28c895ba8761e651ab621a6feb3a31f500dfb21f3b9b"
+    },
+    {
+      "source": "assets/resources/game-ui/style-01.png",
+      "packaged": "subpackages/resources/native/21/2156a76f-a053-469a-86d2-d731776f8251.png",
+      "bytes": 161820,
+      "sha256": "6ceeeddb6271c073a3c4c4c94d62ea602c9c9c1db149d2cabf9b5e0aed31fa8a"
+    },
+    {
+      "source": "assets/resources/game-ui/style-04.png",
+      "packaged": "subpackages/resources/native/c4/c4619a82-6d6c-4201-aeaa-142ddbd85dae.png",
+      "bytes": 109333,
+      "sha256": "a8d90af1cd42f72e3dad873e828570b7c0a8326fc05c785bbb29fa88a8cbcb7f"
+    },
+    {
+      "source": "assets/resources/game-ui/style-08.png",
+      "packaged": "subpackages/resources/native/a4/a4922bed-44ca-4bd6-9367-f2316d011fbf.png",
+      "bytes": 175177,
+      "sha256": "a82a3c3df5b0f7cf6bfd6f54defb0c1c6b3ca70a872ecb5e4dfb0564e3e7f49c"
+    },
+    {
+      "source": "assets/resources/game-ui/style-09.png",
+      "packaged": "subpackages/resources/native/60/60818da9-dd21-4cc1-be33-e63ed9fb8b61.png",
+      "bytes": 190067,
+      "sha256": "c396b0c3ccb6dd72ad01dd178c925dab017cebe12aa986002eaefe4e126440fb"
+    },
+    {
+      "source": "assets/resources/ingredients/food-a.png",
+      "packaged": "subpackages/resources/native/f8/f809b9b7-ecc2-448d-a19a-b2e9e4a558d4.png",
+      "bytes": 117374,
+      "sha256": "718754eb3084840a714ca178a6cb84ff3ac4972dbaff22e92d61a755b662e24b"
+    },
+    {
+      "source": "assets/resources/ingredients/food-b.png",
+      "packaged": "subpackages/resources/native/5a/5a5e2f57-7bcf-4405-b3f4-0e1590e7769c.png",
+      "bytes": 115488,
+      "sha256": "b08eba917853d2f7346fc12054e64d0f779d481356ea6dcc997eee813adf18dc"
+    },
+    {
+      "source": "assets/resources/ingredients/food-c.png",
+      "packaged": "subpackages/resources/native/ab/abeb49f7-c04c-4c42-a950-b942cc81a255.png",
+      "bytes": 117433,
+      "sha256": "b6ebb2e9c25ac0b0cce0607c1d70281e302b675cf01d267be4f9f86e51699848"
+    },
+    {
+      "source": "assets/resources/reference/bg-01.jpg",
+      "packaged": "subpackages/resources/native/f5/f5fd4f77-6835-4293-8948-16ad32f182c0.jpg",
+      "bytes": 37002,
+      "sha256": "cb96c72e7b61d41a9a55e584ca9bd5a3f9b157253b154f4815076d0931a2d2a0"
+    },
+    {
+      "source": "assets/resources/reference/bg-04.jpg",
+      "packaged": "subpackages/resources/native/a0/a033631e-c51c-4d1c-a664-5971b6afb45d.jpg",
+      "bytes": 5952,
+      "sha256": "a346f082fe9f1d59cb9e3dd21ac22fda207b38d7b6de965c776becd9aea0a10e"
+    },
+    {
+      "source": "assets/resources/reference/bg-08.jpg",
+      "packaged": "subpackages/resources/native/07/079dff7e-bd2d-4bd3-99ff-47e849b596fb.jpg",
+      "bytes": 59450,
+      "sha256": "a46809c3883ee807577426fda7ad1d0b09a5ed8b9471c46a6952a0fe953bd576"
+    },
+    {
+      "source": "assets/resources/reference/bg-09.jpg",
+      "packaged": "subpackages/resources/native/b4/b49abfac-aaf6-4dd1-b811-6fc1ffa72a32.jpg",
+      "bytes": 45733,
+      "sha256": "e4d038010cc92c2d5a3436e4e0b77f01dbdfe2b6002b630f1950bd86e72ec59f"
+    },
+    {
+      "source": "assets/resources/reference/shell-01.jpg",
+      "packaged": "subpackages/resources/native/8b/8b60c0b7-a05e-48a2-9cfc-4e050f855450.jpg",
+      "bytes": 120617,
+      "sha256": "771c93b399f29367b12b6e72f9262715c9d483ea5ca55ef6fe03cc35bb4387f7"
+    },
+    {
+      "source": "assets/resources/reference/shell-04.jpg",
+      "packaged": "subpackages/resources/native/71/71422f84-1fbd-4ddc-91fa-b634f06c8917.jpg",
+      "bytes": 72034,
+      "sha256": "5d0dcbe73a478060c651f53d9b5ceda2ceb0bbfad6dc39eb32a076ec7a87f452"
+    },
+    {
+      "source": "assets/resources/reference/shell-08.jpg",
+      "packaged": "subpackages/resources/native/0e/0e3be11f-d5e5-4fb6-8711-71f802dc64c2.jpg",
+      "bytes": 87869,
+      "sha256": "73ccf0f611fa8f1554ecbe086c1cc0772a7aa8958b839f3848fe9088bf5a7962"
+    },
+    {
+      "source": "assets/resources/reference/shell-09.jpg",
+      "packaged": "subpackages/resources/native/26/26b300a1-b0a4-4f46-8fbc-c89e632e24d0.jpg",
+      "bytes": 93117,
+      "sha256": "b385cb9e403bfe7be84afec805da850f9596b22e4735caa1ab1096a2f8786e43"
+    },
+    {
+      "source": "assets/victory/style-01/win.jpg",
+      "packaged": "subpackages/victory-01/native/24/240cb7c8-01a2-40e4-ba6b-ba572928edb6.jpg",
+      "bytes": 188349,
+      "sha256": "b9a33e4680fea837d3f80b1acafec4fe093cf614d33dced62fc4ae4362e2ec91"
+    },
+    {
+      "source": "assets/victory/style-04/win.jpg",
+      "packaged": "subpackages/victory-04/native/3e/3e6eb1e3-f8ea-44fb-8e23-434c20f92db8.jpg",
+      "bytes": 143165,
+      "sha256": "205b520977b48beba4c936af7506eb7915e102a7e84012274bbf421208e4c98f"
+    },
+    {
+      "source": "assets/victory/style-08/win.jpg",
+      "packaged": "subpackages/victory-08/native/6d/6d23a9b7-c503-42c3-a43b-669f688e279f.jpg",
+      "bytes": 155931,
+      "sha256": "d3cf39d46e1dc58199ad21eb8c7b70c70e3890b6130e68e34e5ca1b52d7489d6"
+    },
+    {
+      "source": "assets/victory/style-09/win.jpg",
+      "packaged": "subpackages/victory-09/native/4f/4f041a97-d8db-413c-ba45-ed4ad752ee1f.jpg",
+      "bytes": 201212,
+      "sha256": "8cb5fa76fab8806622b220772b39481d0a17fa654a72b6de914efa57175c5018"
+    }
+  ],
+  "retiredTextureExcluded": true,
+  "allJsParses": true,
+  "bundledIngredients": 60,
+  "hiddenWeight": 0.1,
+  "protocol": 7,
+  "allHiddenReachable": true,
+  "manualRestartKeepsInventory": true,
+  "uncollectedHiddenGuarantee": true,
+  "firstEntryFlagCloudMerge": true,
+  "collectionIcons": {
+    "count": 4,
+    "width": 192,
+    "totalBytes": 224187
+  },
+  "mainSha256": "98a5e49d6fdd67311d396ef29e907fee6559b32b286e551ca2b1c2ab9f7d8e4e"
+}

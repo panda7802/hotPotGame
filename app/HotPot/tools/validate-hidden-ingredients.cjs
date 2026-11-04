@@ -85,10 +85,16 @@ assert.strictEqual(seen.size, 10, 'All hidden ingredients must be reachable');
 
 const regions = domain.validateRegions(require(path.join(cloud, 'regions.json')));
 const firstVisitKinds = new Set();
+assert(data.needsHiddenIngredientGuarantee([]));
+assert(data.needsHiddenIngredientGuarantee(config.NORMAL_INGREDIENTS.map(food => food.id)));
+for (const id of rare) {
+  assert(!data.needsHiddenIngredientGuarantee([id]));
+  assert(!data.needsHiddenIngredientGuarantee(['beef', id]));
+}
 for (const start of [1, 42, data.INGREDIENT_SEED_MAX, ...Array.from({length: 1000}, (_, i) => 1 + i * 123457)]) {
-  const seed = data.firstThirdLevelIngredientSeed(start);
+  const seed = data.guaranteedHiddenIngredientSeed(start);
   const selected = data.selectLevelIngredients(2, seed);
-  assert(selected.some(id => rare.has(id)), 'First third-level entry must contain a hidden ingredient');
+  assert(selected.some(id => rare.has(id)), 'Guaranteed third-level entry must contain a hidden ingredient');
   selected.filter(id => rare.has(id)).forEach(id => firstVisitKinds.add(id));
   if (data.selectLevelIngredients(2, start).some(id => rare.has(id))) assert.strictEqual(seed, start);
 }
@@ -99,7 +105,7 @@ assert.strictEqual(domain.validateProgress(legacyProgress).thirdLevelEntered, fa
 assert.throws(() => domain.validateProgress({...legacyProgress, thirdLevelEntered: 'yes'}));
 legacyProgress.bestCleared[2] = 3;
 assert.strictEqual(domain.validateProgress(legacyProgress).thirdLevelEntered, true);
-console.log('First third-level ingredient seed: 1003 starting seeds guaranteed; all 10 premium kinds reachable; legacy progress migration: OK');
+console.log('Uncollected premium ingredient guarantee: empty/ordinary-only collection eligible, any of 10 collected premium kinds ineligible; 1003 starting seeds guaranteed; legacy progress migration: OK');
 for (const [id, seed] of seen) {
   let level;
   for (let offset = 0; offset < 64; offset++) {

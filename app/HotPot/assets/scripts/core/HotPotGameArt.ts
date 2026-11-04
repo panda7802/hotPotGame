@@ -50,6 +50,45 @@ export function gameArtNode(parent:Node,name:string):Node{
   const node=new Node(name);parent.addChild(node);node.addComponent(UITransform);return node;
 }
 
+const collectionTextures=new Map<PageStyle,Promise<Texture2D>>();
+/** Keep a little touch padding around the visible collection illustration. */
+export const COLLECTION_ART_SCALE=8/9;
+/** Load only the current theme's small collection icon; ignore stale callbacks. */
+export function paintCollectionArt(node:Node,style:PageStyle,fallback:Node):void{
+  const key='collection:'+style;
+  if((node as any).gameArtKey===key)return;
+  (node as any).gameArtKey=key;
+  const sprite=node.getComponent(Sprite)||node.addComponent(Sprite);
+  sprite.sizeMode=Sprite.SizeMode.CUSTOM;sprite.spriteFrame=null;
+  fallback.active=true;
+  let pending=collectionTextures.get(style);
+  if(!pending){
+    pending=new Promise((resolve,reject)=>resources.load('collection-icons/style-0'+style+'/texture',Texture2D,
+      (error,value)=>error?reject(error):resolve(value)));
+    collectionTextures.set(style,pending);
+  }
+  pending.then(image=>{
+    if(!node.isValid||(node as any).gameArtKey!==key)return;
+    let frame=frames.get(key);
+    if(!frame){
+      frame=new SpriteFrame();frame.texture=image;
+      // Dynamic atlases replace frame.texture with a large square sheet.
+      // Keep this tiny standalone image stable for responsive aspect fitting.
+      frame.packable=false;frame.name='collection-style-0'+style;
+      frame.addRef();frames.set(key,frame);
+    }
+    const bounds=node.parent!.getComponent(UITransform)!;
+    const scale=Math.min(bounds.width/image.width,bounds.height/image.height)*COLLECTION_ART_SCALE;
+    node.getComponent(UITransform)!.setContentSize(image.width*scale,image.height*scale);
+    sprite.spriteFrame=frame;fallback.active=false;
+  }).catch(error=>{
+    collectionTextures.delete(style);
+    if(!node.isValid||(node as any).gameArtKey!==key)return;
+    (node as any).gameArtKey='';
+    console.warn('[Collection icon] Load failed; using text entry',error);
+  });
+}
+
 const backdrops=new Map<PageStyle,Promise<Texture2D>>();
 /** A single unbroken scene, covering the viewport with its original aspect ratio. */
 export function paintGameBackdrop(node:Node,style:PageStyle):void{

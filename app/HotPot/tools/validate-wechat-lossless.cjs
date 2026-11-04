@@ -51,6 +51,16 @@ const retired = fs.readFileSync(path.join(root, 'art-source/retired-tiles-202611
 assert(!mediaHashes.some(item => item.hash === hash(retired)), 'Retired undrawn texture was packaged');
 const resourceConfig = JSON.parse(fs.readFileSync(path.join(build, 'subpackages/resources/config.json')));
 assert(!Object.values(resourceConfig.paths).some(item => item[0].startsWith('reference/tiles')));
+const collectionIcons = [];
+for (const style of ['01', '04', '08', '09']) {
+  const source = `assets/resources/collection-icons/style-${style}.png`;
+  const icon = unchangedMedia.find(item => item.source === source);
+  assert(icon && icon.packaged.startsWith('subpackages/resources/'), 'Collection icon must stay in resources');
+  const bytes = fs.readFileSync(path.join(root, source));
+  assert.strictEqual(bytes.readUInt32BE(16), 224, 'Use the mobile runtime icon');
+  assert(icon.bytes < 110000, 'Do not ship the full-size design');
+  collectionIcons.push(icon);
+}
 
 const records = new Map(), loaded = new Map();
 const context = {System: {register(name, dependencies, declare) {
@@ -80,9 +90,12 @@ assert.strictEqual(config.HIDDEN_INGREDIENT_WEIGHT, .1);
 assert.strictEqual(domain.PLAY_SESSION_VERSION, 7);
 const hidden = new Set(Array.from(config.HIDDEN_INGREDIENTS, item => item.id));
 for (const start of [1, 42, 12345, data.INGREDIENT_SEED_MAX]) {
-  const seed = data.firstThirdLevelIngredientSeed(start);
+  const seed = data.guaranteedHiddenIngredientSeed(start);
   assert(Array.from(data.selectLevelIngredients(2, seed)).some(id => hidden.has(id)));
 }
+assert(data.needsHiddenIngredientGuarantee([]));
+assert(data.needsHiddenIngredientGuarantee(Array.from(config.NORMAL_INGREDIENTS, item => item.id)));
+for (const id of hidden) assert(!data.needsHiddenIngredientGuarantee([id]));
 assert.strictEqual(domain.emptyProgress().thirdLevelEntered, false);
 assert.strictEqual(domain.mergeProgress(domain.emptyProgress(),
   {...domain.emptyProgress(), thirdLevelEntered: true}).thirdLevelEntered, true);
@@ -108,7 +121,9 @@ const report = {build: fs.readFileSync(path.join(root, 'assets/scripts/core/HotP
   mediaByteIdentical: true, unchangedMedia, retiredTextureExcluded: true,
   allJsParses: true, bundledIngredients: 60, hiddenWeight: .1, protocol: 7,
   allHiddenReachable: true, manualRestartKeepsInventory: true,
-  firstThirdLevelGuarantee: true, firstEntryFlagCloudMerge: true,
+  uncollectedHiddenGuarantee: true, firstEntryFlagCloudMerge: true,
+  collectionIcons: {count: collectionIcons.length, width: 224,
+    totalBytes: collectionIcons.reduce((sum, item) => sum + item.bytes, 0)},
   mainSha256: hash(fs.readFileSync(path.join(build, 'subpackages/main/game.js')))};
 fs.mkdirSync(path.dirname(reportFile), {recursive: true});
 fs.writeFileSync(reportFile, JSON.stringify(report, null, 2));

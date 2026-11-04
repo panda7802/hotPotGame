@@ -117,7 +117,7 @@ export abstract class HotPotReferenceCollection extends HotPotReferenceMenus {
     drawFoodTile(icon,410,.32*h);
     if(known)this.addIngredientImage(icon,type,false,390,.30*h);else text(icon,'?',[-.5,-.5,1,1],180,100,t.muted).node.setPosition(0,0);
     text(p,known?item.name:'神秘食材',[.18,.61,.64,.06],h,38,t.ink,true);
-    text(p,known?INGREDIENT_STORIES[type].story:item.hidden?'第三关偶有珍贵食材到访，遇见并拿取即可点亮珍藏。':'在游戏中拿取这份食材即可点亮。',[.13,.70,.74,.14],h,27,t.ink);
+    text(p,known?INGREDIENT_STORIES[type].story:item.hidden?'珍贵滋味，静候与你相遇。遇见并拿取即可点亮珍藏。':'在游戏中拿取这份食材即可点亮。',[.13,.70,.74,.14],h,27,t.ink);
     this.referenceButton(p,'Button_返回图鉴','返回图鉴',[.12,.895,.76,.065],back);hit(p,'MenuClose',[0,0,.18,.13],h,back);
   }
 

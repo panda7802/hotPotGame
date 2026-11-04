@@ -865,7 +865,7 @@ function service(
   firstClient.beginDailySession(new Date(2026, 10, 4, 12));
   assert.strictEqual(firstClient.state.progress.thirdLevelEntered, false);
   const guaranteed = freshSave(2, data.VARIED_LAYOUT_SEED_START,
-    data.firstThirdLevelIngredientSeed(12345));
+    data.guaranteedHiddenIngredientSeed(12345));
   firstClient.setSave(guaranteed);
   assert.strictEqual(firstClient.state.progress.thirdLevelEntered, true);
   assert.strictEqual(firstClient.state.progress.discovered.length, 0);
@@ -874,10 +874,12 @@ function service(
     const reopened = service(firstServer, cache);
     await reopened.initialize();
     assert.strictEqual(reopened.state.progress.thirdLevelEntered, true);
+    assert(data.needsHiddenIngredientGuarantee(reopened.state.progress.discovered));
     assert.deepStrictEqual(plain(reopened.state.save), plain(guaranteed));
   }
   firstClient.beginDailySession(new Date(2026, 10, 5, 12));
   firstClient.setSave(freshSave(0));
+  assert(data.needsHiddenIngredientGuarantee(firstClient.state.progress.discovered));
   await firstClient.flush();
   const oldState = plain(firstClient.state);
   delete oldState.progress.thirdLevelEntered;
@@ -885,7 +887,24 @@ function service(
     expectedRevision: firstClient.revision, mutationId: 'legacy-first-entry-0001', state: oldState});
   assert.strictEqual(legacyEntryWrite.ok, true);
   assert.strictEqual(legacyEntryWrite.player.state.progress.thirdLevelEntered, true);
-  console.log('First third-level entry: checkpoint, local/cloud reopen, new device, daily reset and legacy client writes retain the one-time flag: OK');
+  assert(data.needsHiddenIngredientGuarantee(legacyEntryWrite.player.state.progress.discovered));
+  const hiddenId = guaranteed.types.find(type => data.getIngredient(type).hidden);
+  const acquired = plain(guaranteed);
+  const topHidden = domain.restoreLevel(acquired).tiles.find(tile => tile.type === hiddenId && tile.blockedBy.length === 0);
+  assert(topHidden, 'Fixture must have a selectable premium ingredient');
+  pick(acquired, topHidden.id);
+  const acquiredServer = backend();
+  const acquiredClient = service(acquiredServer, storage());
+  await acquiredClient.initialize();
+  acquiredClient.setSave(acquired);
+  assert(!data.needsHiddenIngredientGuarantee(acquiredClient.state.progress.discovered));
+  await acquiredClient.flush();
+  const collectedDevice = service(acquiredServer, storage());
+  await collectedDevice.initialize();
+  assert(!data.needsHiddenIngredientGuarantee(collectedDevice.state.progress.discovered));
+  acquiredClient.beginDailySession(new Date(2026, 10, 6, 12));
+  assert(!data.needsHiddenIngredientGuarantee(acquiredClient.state.progress.discovered));
+  console.log('Uncollected premium guarantee: retained across repeated entry, reopen, cloud and daily reset; collecting a premium ingredient stops it across devices; legacy entry flag retained for compatibility: OK');
   const rankingServer = backend();
   const rankingCache = storage();
   const rankingOptions = {};

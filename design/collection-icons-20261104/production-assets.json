@@ -1,0 +1,42 @@
+{
+  "source": "Approved large-entry image_gen v3 designs; runtime-size PNG, alpha preserved",
+  "totalBytes": 313601,
+  "files": [
+    {
+      "style": "01",
+      "source": "style-01-v3.png",
+      "resource": "collection-icons/style-01",
+      "width": 224,
+      "height": 174,
+      "bytes": 77833,
+      "sha256": "2522d7c7407d7ba647ac9230adebaefdf806a8acab8ca4a2fdfd1ff8592b73cb"
+    },
+    {
+      "style": "04",
+      "source": "style-04-v3.png",
+      "resource": "collection-icons/style-04",
+      "width": 224,
+      "height": 184,
+      "bytes": 74006,
+      "sha256": "68ffd5b3ce8e846303d00d0300d7292bae6e2a10281f6a3936dd223f95fa3a0c"
+    },
+    {
+      "style": "08",
+      "source": "style-08-v3.png",
+      "resource": "collection-icons/style-08",
+      "width": 224,
+      "height": 167,
+      "bytes": 73849,
+      "sha256": "d235b1703af16f2f074415169f2c32d1abee5880a8734a29db44a97389462765"
+    },
+    {
+      "style": "09",
+      "source": "style-09-v3.png",
+      "resource": "collection-icons/style-09",
+      "width": 224,
+      "height": 186,
+      "bytes": 87913,
+      "sha256": "2190846f7faf13efff78356d9455d6f5821f1f8ccf973329fe80d59950ef8d8b"
+    }
+  ]
+}

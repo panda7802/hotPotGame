@@ -2,7 +2,8 @@ import {Color, Node, Sprite, tween, UITransform, Vec3} from 'cc';
 
 import {
   createLevel,
-  firstThirdLevelIngredientSeed,
+  guaranteedHiddenIngredientSeed,
+  needsHiddenIngredientGuarantee,
   getIngredient,
   IngredientType,
   LevelData,
@@ -50,8 +51,9 @@ export abstract class HotPotBoardActions extends HotPotView {
       this.levelIndex,
       undefined,
       previousLevel?.config.level === 3 ? previousLevel.layoutSeed : undefined,
-      this.levelIndex === 2 && !this.playerService?.state.progress.thirdLevelEntered
-        ? firstThirdLevelIngredientSeed() : undefined,
+      this.levelIndex === 2 && needsHiddenIngredientGuarantee(
+        this.playerService?.state.progress.discovered || [],
+      ) ? guaranteedHiddenIngredientSeed() : undefined,
     );
     this.tray = [];
     this.reserve = [];

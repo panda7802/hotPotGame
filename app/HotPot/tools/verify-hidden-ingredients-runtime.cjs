@@ -4,7 +4,7 @@ const assert = require('assert');
 const {chromium, launchOptions} = require('./browser-runtime.cjs');
 const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
 const web = path.join(repo, 'tmp/hidden-ingredients-build-20261103/app/HotPot/build/web-hidden-ingredients');
-const out = process.env.HOTPOT_COLLECTION_OUT || path.join(repo, 'tmp/collection-first-rare-20261104');
+const out = process.env.HOTPOT_COLLECTION_OUT || path.join(repo, 'tmp/centered-header-runtime-20261104');
 const data = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/GameData'));
 const domain = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData'));
 const {HIDDEN_INGREDIENTS} = require(path.join(root, 'cloudfunctions/hotpotPlayerDev/GameConfig'));
@@ -81,7 +81,7 @@ async function click(page, name) {
   const origin = 'http://127.0.0.1:' + server.address().port;
   const browser = await chromium.launch({...launchOptions,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader']});
-  const errors = [], missing = [], checks = [], shaderErrors = [];
+  const errors = [], missing = [], checks = [], shaderErrors = [], iconChecks = [];
   try {
     const page = await browser.newPage({viewport: {width: 390, height: 844}, deviceScaleFactor: 2});
     page.on('pageerror', error => errors.push(error.message));
@@ -110,9 +110,52 @@ async function click(page, name) {
       return g?.ingredientFrames.size === 60 && g?.playerService && g?.levelData;
     }, null, {timeout: 90000});
     await page.evaluate(() => {window.realCheckpointGame = g.checkpointGame.bind(g); g.checkpointGame = () => {}; g.setSoundEnabled?.(false);});
+    // Resolve several asynchronous theme loads against the same live node.
+    await page.evaluate(() => {for (const style of [4, 8, 1, 9]) g.selectPageStyle(style);});
+    await page.waitForFunction(() => findNode(g.node, 'CollectionBook')?.getComponent(cc.Sprite)?.spriteFrame?.name === 'collection-style-09');
+    const rapidSwitch = await page.evaluate(() => !findNode(g.node, 'LibraryLabel').active);
+    assert(rapidSwitch);
     for (const size of [{width: 390, height: 844}, {width: 360, height: 640}]) {
       await page.setViewportSize(size);
       for (const style of [1, 4, 8, 9]) {
+        await page.evaluate(style => {
+          g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
+          g.selectPageStyle(style);
+        }, style);
+        await page.waitForTimeout(1900);
+        for (const index of [0, 1, 2]) {
+          await page.evaluate(index => g.loadLevel(index, false), index);
+          await page.waitForFunction(style => findNode(g.node, 'CollectionBook')?.getComponent(cc.Sprite)?.spriteFrame?.name === 'collection-style-0' + style, style);
+          const icon = await page.evaluate(() => {
+            const entry = findNode(g.node, 'ReferenceShell').getChildByName('Button_食材图鉴');
+            const book = entry.getChildByName('CollectionBook'), frame = book.getComponent(cc.Sprite).spriteFrame;
+            const ui = book.getComponent(cc.UITransform), bounds = entry.getComponent(cc.UITransform).getBoundingBoxToWorld();
+            const root = findNode(g.node, 'ReferenceShell');
+            const title = root.getChildByName('BrandArtwork').getComponent(cc.UITransform).getBoundingBoxToWorld();
+            const settings = root.getChildByName('Button_设置').getComponent(cc.UITransform).getBoundingBoxToWorld();
+            const stage = root.getChildByName('StageArtwork').getComponent(cc.UITransform).getBoundingBoxToWorld();
+            return {frame: frame.name, textureWidth: frame.texture.width,
+              logicalWidth: entry.getComponent(cc.UITransform).width,
+              visualWidth: ui.width,
+              titleCentered: Math.abs(title.x+title.width/2-(cc.view.getVisibleOrigin().x+cc.view.getVisibleSize().width/2))<0.1,
+              titleSeparate: bounds.x + bounds.width <= title.x + 0.1,
+              settingsSeparate: title.x + title.width <= settings.x + 0.1,
+              aboveStage: bounds.y >= stage.y + stage.height - 0.1,
+              proportional: Math.abs(ui.width / ui.height - frame.texture.width / frame.texture.height) < 0.001,
+              fallbackHidden: !entry.getChildByName('LibraryLabel').active,
+              noOldFood: !findNode(book, 'BookShrimp') && !findNode(book, 'BookCarrot'),
+              onScreen: bounds.x >= cc.view.getVisibleOrigin().x && bounds.y >= cc.view.getVisibleOrigin().y};
+          });
+          assert(icon.textureWidth === 224 && icon.proportional && icon.fallbackHidden && icon.noOldFood && icon.onScreen
+            && icon.visualWidth <= 128.1 && icon.logicalWidth <= 144 && icon.titleCentered && icon.titleSeparate && icon.settingsSeparate && icon.aboveStage,
+            JSON.stringify({style, index, size, icon}));
+          if (index === 0) await page.screenshot({path: path.join(out, `game-${style}-${size.width}.png`)});
+          await click(page, 'Button_食材图鉴');
+          assert(await page.evaluate(() => !!findNode(g.node, 'CollectionOverlay')));
+          await click(page, 'Button_返回');
+          assert(await page.evaluate(() => !findNode(g.node, 'CollectionOverlay')));
+          iconChecks.push({style, size, level: index + 1, ...icon, clickable: true});
+        }
         const result = await page.evaluate(({style, hiddenIds}) => {
           g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
           g.selectPageStyle(style);
@@ -120,6 +163,9 @@ async function click(page, name) {
           g.designIngredientGroup = 'ingredients';
           g.showCollection();
           const panel = findNode(g.node, 'CollectionOverlay');
+          if (panel.getComponentsInChildren(cc.Label).some(label => /第三关|首次|必遇|保底/.test(label.string))) {
+            throw Error('Hidden rules must not appear in collection copy');
+          }
           const cards = panel.getComponentsInChildren(cc.UITransform)
             .map(component => component.node).filter(node => node.name.startsWith('IngredientCard_'));
           const ordinaryOnly = cards.length === 50 && hiddenIds.every(id => !findNode(panel, 'IngredientCard_' + id));
@@ -225,7 +271,7 @@ async function click(page, name) {
     assert(restarts[3].refreshed && restarts[4].refreshed && restarts[5].resetToFirst);
     let ordinarySeed = 1;
     while (data.selectLevelIngredients(2, ordinarySeed).some(id => hiddenIds.includes(id))) ordinarySeed++;
-    const firstVisit = await page.evaluate(({state, ordinarySeed, max, hiddenIds}) => {
+    const collectionGuarantee = await page.evaluate(({state, ordinarySeed, max, hiddenIds}) => {
       g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
       g.playerService.local.state = state;
       g.checkpointGame = window.realCheckpointGame;
@@ -236,22 +282,33 @@ async function click(page, name) {
         g.loadLevel(0);const firstClean = !hasRare();
         g.loadLevel(1);const secondClean = !hasRare();
         g.nextLevel();
-        const guaranteed = hasRare(), recorded = g.playerService.state.progress.thirdLevelEntered;
+        const guaranteed = hasRare();
         const discovered = g.playerService.state.progress.discovered.length;
         const inventory = JSON.stringify(g.levelData.tiles.map(tile => tile.type).sort());
         g.restartLevel();
         const restartPreserved = inventory === JSON.stringify(g.levelData.tiles.map(tile => tile.type).sort());
         g.loadLevel(0);g.loadLevel(2);
-        return {firstClean, secondClean, guaranteed, recorded, discovered, restartPreserved,
+        const repeatUncollected = hasRare();
+        g.gameEnded = true;g.lastResult = 'lost';g.restartLevel();
+        const failureUncollected = hasRare();
+        g.playerService.local.state.progress.discovered = ['beef'];
+        g.loadLevel(2);
+        const normalCollectionStillGuarantees = hasRare();
+        g.playerService.local.state.progress.discovered = [hiddenIds[0]];
+        g.loadLevel(2);
+        return {firstClean, secondClean, guaranteed, discovered, restartPreserved,
+          repeatUncollected, failureUncollected, normalCollectionStillGuarantees,
           laterUsesNormalDraw: !hasRare() && g.levelData.ingredientSeed === ordinarySeed};
       } finally {Math.random = random;}
     }, {state: {...domain.emptyPlayerState(), playDate: domain.localPlayDate()}, ordinarySeed,
       max: data.INGREDIENT_SEED_MAX, hiddenIds});
-    assert(firstVisit.firstClean && firstVisit.secondClean && firstVisit.guaranteed && firstVisit.recorded);
-    assert.strictEqual(firstVisit.discovered, 0);
-    assert(firstVisit.restartPreserved && firstVisit.laterUsesNormalDraw);
+    assert(collectionGuarantee.firstClean && collectionGuarantee.secondClean && collectionGuarantee.guaranteed);
+    assert.strictEqual(collectionGuarantee.discovered, 0);
+    assert(collectionGuarantee.restartPreserved && collectionGuarantee.repeatUncollected);
+    assert(collectionGuarantee.failureUncollected && collectionGuarantee.normalCollectionStillGuarantees);
+    assert(collectionGuarantee.laterUsesNormalDraw);
     assert.deepStrictEqual(errors, []);assert.deepStrictEqual(missing, []);assert.deepStrictEqual(shaderErrors, []);
-    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, detailReturn, picked, restarts, firstVisit, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
-    console.log('Real Cocos runtime: 8 theme/viewport combinations, 50/10 ingredient tabs, independent scrolling, detail return, first-third-level guarantee, one-time checkpoint, manual restarts and normal later draws: OK');
+    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, iconChecks, rapidSwitch, detailReturn, picked, restarts, collectionGuarantee, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
+    console.log('Real Cocos runtime: 24 theme/level/viewport icon and click checks, rapid theme switching, proportional artwork, no duplicated title; collection rules and manual restarts: OK');
   } finally {await browser.close();server.close();}
 })().catch(error => {console.error(error);server.close();process.exitCode = 1;});

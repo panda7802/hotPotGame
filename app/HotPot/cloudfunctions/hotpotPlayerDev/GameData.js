@@ -4,7 +4,8 @@ exports.INGREDIENT_SEED_MAX = exports.VARIED_LAYOUT_SEED_END = exports.VARIED_LA
 exports.selectLevelIngredients = selectLevelIngredients;
 exports.levelThreeLayoutFamily = levelThreeLayoutFamily;
 exports.buildLevelThreeRoute = buildLevelThreeRoute;
-exports.firstThirdLevelIngredientSeed = firstThirdLevelIngredientSeed;
+exports.needsHiddenIngredientGuarantee = needsHiddenIngredientGuarantee;
+exports.guaranteedHiddenIngredientSeed = guaranteedHiddenIngredientSeed;
 exports.createLevel = createLevel;
 exports.createRestartLevel = createRestartLevel;
 exports.getIngredient = getIngredient;
@@ -429,8 +430,12 @@ function buildNewLevelThreePositions(config, seed) {
         return positions;
     });
 }
-/** 首次进入第三关使用含珍藏的种子，存档仍按原 v4 算法重现。 */
-function firstThirdLevelIngredientSeed(start = 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX)) {
+/** 尚未点亮任何珍藏图鉴时，新第三关持续保底，直到真正发现珍藏。 */
+function needsHiddenIngredientGuarantee(discovered) {
+    return !GameConfig_1.HIDDEN_INGREDIENTS.some(food => discovered.includes(food.id));
+}
+/** 保底局使用含珍藏的种子，存档仍按原 v4 算法重现。 */
+function guaranteedHiddenIngredientSeed(start = 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX)) {
     let seed = start;
     // Search only the small ingredient pool, never rebuild boards while searching.
     do {
@@ -438,7 +443,7 @@ function firstThirdLevelIngredientSeed(start = 1 + Math.floor(Math.random() * ex
             return seed;
         seed = seed === exports.INGREDIENT_SEED_MAX ? 1 : seed + 1;
     } while (seed !== start);
-    throw new Error('无法生成首次第三关珍藏食材');
+    throw new Error('无法生成珍藏食材');
 }
 // Explicit seeds restore exactly; retries request a different formation family.
 /**

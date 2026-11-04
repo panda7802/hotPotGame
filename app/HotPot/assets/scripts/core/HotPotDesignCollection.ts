@@ -73,7 +73,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         designButton(p, 'IngredientGroup_' + key, title + '  ' + count + '/' + pool.length,
           [x, 352, 312, 64], () => switchGroup(key), group !== key);
       }
-      designText(p, group === 'hidden' ? '仅第三关出没 · 首次进入必遇珍藏' : '烟火百味，收集每一份好滋味',
+      designText(p, group === 'hidden' ? '每次相遇，都有新的惊喜。' : '烟火百味，收集每一份好滋味',
         [40, 426, 640, 32], 21, designOnBackground());
       const height = Math.ceil(foods.length / 3) * 230 + 6;
       const {
@@ -151,7 +151,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     const portrait = designNode(body, 'IngredientPortrait', [140, 142, 360, 330]);
     if (known) this.addIngredientImage(portrait, type, false, 270, 270); else designText(portrait, '?', [0, 0, 360, 330], 170, t.muted);
     designText(body, known ? item.name : '神秘食材', [40, 490, 560, 74], 48, t.ink, true);
-    designText(body, known ? INGREDIENT_STORIES[type].story : item.hidden ? '第三关偶有珍贵食材到访。\n遇见并拿取，即可点亮珍藏。' : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);
+    designText(body, known ? INGREDIENT_STORIES[type].story : item.hidden ? '珍贵滋味，静候与你相遇。\n遇见并拿取，即可点亮珍藏。' : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);
     designText(body, known ? '三张相同食材，凑成一口好滋味。' : '每次相遇，都有新的惊喜。', [50, 752, 540, 38], 23, t.muted);
     designFooter(p, '返回', back);
   }
