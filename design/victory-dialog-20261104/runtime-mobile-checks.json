@@ -1,0 +1,592 @@
+{
+  "build": "20261104-victory-mobile",
+  "checks": [
+    {
+      "style": 1,
+      "index": 0,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 1,
+      "index": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 1,
+      "index": 2,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 0,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 2,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 0,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 2,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 0,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 2,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 1,
+      "index": 0,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 1,
+      "index": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 1,
+      "index": 2,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 0,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 4,
+      "index": 2,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 0,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 8,
+      "index": 2,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 0,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 0,
+      "total": 18,
+      "title": "第 1 关完成",
+      "stats": "开锅尝鲜   18 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "total": 30,
+      "title": "第 2 关完成",
+      "stats": "热锅练手   30 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    },
+    {
+      "style": 9,
+      "index": 2,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "total": 888,
+      "title": "全部通关！",
+      "stats": "千层盛宴   888 块已清空",
+      "noClose": true,
+      "oneModal": true,
+      "pixels": [
+        [
+          720,
+          774
+        ]
+      ],
+      "controlsVisible": true,
+      "fallbackHidden": true,
+      "primaryWorks": true,
+      "secondaryWorks": true
+    }
+  ],
+  "downloadFailureRetry": true,
+  "startupLoadsNoVictoryArt": true,
+  "selectedThemeOnly": true,
+  "requested": [
+    "victory-04",
+    "victory-01",
+    "victory-08",
+    "victory-09"
+  ],
+  "errors": [],
+  "missing": []
+}

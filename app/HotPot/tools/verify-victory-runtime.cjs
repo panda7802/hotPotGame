@@ -4,7 +4,7 @@ const assert = require('assert');
 const {chromium, launchOptions} = require('./browser-runtime.cjs');
 const root = path.resolve(__dirname, '..'), repo = path.resolve(root, '../..');
 const web = path.join(repo, 'tmp/hidden-ingredients-build-20261103/app/HotPot/build/web-hidden-ingredients');
-const out = path.join(repo, 'tmp/victory-verification-20261104');
+const out = path.resolve(process.env.HOTPOT_VICTORY_OUT || path.join(repo, 'tmp/victory-verification-20261104'));
 const build = fs.readFileSync(path.join(root, 'assets/scripts/core/HotPotTileSkin.ts'), 'utf8')
   .match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
 assert(fs.readFileSync(path.join(web, 'assets/main/index.js'), 'utf8').includes(build), 'Stale web build');
@@ -131,7 +131,7 @@ async function ready(page) {
         assert.strictEqual(state.title,index===2?'全部通关！':`第 ${index+1} 关完成`);
         assert(state.stats.includes(state.total+' 块已清空'));
         assert(state.noClose && state.oneModal && state.controlsVisible && state.fallbackHidden);
-        assert.deepStrictEqual(state.pixels,[[1210,1300]]);
+        assert.deepStrictEqual(state.pixels,[[720,774]]);
         await page.screenshot({path:path.join(out,`${style}-${index+1}-${size.width}.png`)});
         await click(page,index===2?'Button_再来一轮':'Button_下一关');
         assert.strictEqual(await page.evaluate(()=>g.levelIndex),(index+1)%3);

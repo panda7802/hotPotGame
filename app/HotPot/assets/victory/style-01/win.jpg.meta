@@ -4,8 +4,8 @@
   "imported": true,
   "uuid": "240cb7c8-01a2-40e4-ba6b-ba572928edb6",
   "files": [
-    ".json",
-    ".png"
+    ".jpg",
+    ".json"
   ],
   "subMetas": {
     "6c48a": {
@@ -38,7 +38,7 @@
     "fixAlphaTransparencyArtifacts": false,
     "hasAlpha": false,
     "redirect": "240cb7c8-01a2-40e4-ba6b-ba572928edb6@6c48a",
-    "width": 1210,
-    "height": 1300
+    "width": 720,
+    "height": 774
   }
 }

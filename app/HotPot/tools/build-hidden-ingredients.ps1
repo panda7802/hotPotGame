@@ -22,6 +22,16 @@ foreach($taskFolder in @('assets','settings','extensions','tools','cloudfunction
 foreach($taskFile in @('package.json','tsconfig.json','engine-mangle-config.json')){
   Copy-Item -LiteralPath (Join-Path $taskSource $taskFile) -Destination $taskProject -Force
 }
+# JPEG replaces the old generated victory PNG; merge-copy must not retain both.
+foreach($taskStyle in @('01','04','08','09')){
+  foreach($taskSuffix in @('.png','.png.meta')){
+    $taskRelative='assets\victory\style-'+$taskStyle+'\win'+$taskSuffix
+    $taskStale=Join-Path $taskProject $taskRelative
+    if(-not(Test-Path -LiteralPath (Join-Path $taskSource $taskRelative))){
+      if(Test-Path -LiteralPath $taskStale){Remove-Item -LiteralPath $taskStale -Force}
+    }
+  }
+}
 # Remove only the two retired files from an earlier isolated build copy.
 foreach($taskRetiredName in @('tiles.png','tiles.png.meta')){
   $taskOldTile=Join-Path $taskProject ('assets\resources\reference\'+$taskRetiredName)

@@ -38,8 +38,11 @@ if (fs.existsSync(victoryFolder)) {
     const name = 'victory-0' + style;
     const item = packages.find(item => item.name === name);
     assert(item, 'Missing victory subpackage: ' + name);
-    const image = unchangedMedia.find(item => item.source === `assets/victory/style-0${style}/win.png`);
+    const image = unchangedMedia.find(item => item.source === `assets/victory/style-0${style}/win.jpg`);
     assert(image && image.packaged.startsWith(item.root), 'Victory art must stay in its own theme subpackage');
+    assert.strictEqual(mediaHashes.filter(media => path.relative(build, media.file)
+      .replaceAll('\\', '/').startsWith(item.root)).length, 1,
+    'Each victory theme must contain one image; do not retain the old PNG');
     assert(!settings.assets.preloadBundles.some(item => (typeof item === 'string' ? item : item.bundle) === name),
       'Victory art must not preload at startup');
   }

@@ -1,5 +1,7 @@
 # 四主题珍藏庆功弹框
 
+当前运行资源已按用户要求压缩为 **720×774 JPEG、质量 84、4:4:4 色度采样**，四张合计 688,657 字节。原始 PNG 保留作设计源文件，不进入客户端。当前效果见 `runtime-mobile-overview.jpg`，验证见 `mobile-verification.json`、`runtime-mobile-checks.json`、`wechat-preview-mobile.json`，压缩设置及资源清单见 `production-assets.json`。
+
 日期：2026-11-04。按用户提供的第一关完成弹框截图设计，使用内置 image_gen 工具生成。
 
 效果图：`jade-feast-v1.png`；完整提示词：`prompt.txt`。
