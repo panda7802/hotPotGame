@@ -2,7 +2,7 @@
   "name": "hotpot-cloud-build",
   "title": "火锅云开发构建",
   "package_version": 2,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "微信小游戏分包构建：准备云开发配置，分别校验主包与分包预算。",
   "contributions": {
     "builder": "./builder.js"

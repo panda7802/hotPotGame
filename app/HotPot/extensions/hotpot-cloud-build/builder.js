@@ -1,6 +1,6 @@
 'use strict';
 const path = require('path');
-const {assertBuildOptions} = require('../../tools/cloud-build-pipeline.cjs');
+const {loadBuildTools} = require('./load-tools');
 const root = path.resolve(__dirname, '../..');
 
 exports.configs = {
@@ -30,6 +30,7 @@ exports.configs = {
           if (!options?.packages?.wechatgame || !options.buildPath) return true;
           // Older panels provide a complete task, so retain their early checks.
           try {
+            const {assertBuildOptions} = loadBuildTools(root);
             assertBuildOptions(root, options);
             return true;
           } catch (error) {
