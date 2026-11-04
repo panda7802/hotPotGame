@@ -47,7 +47,7 @@ fs.writeFileSync(path.join(output, 'build-report.json'), JSON.stringify({
 }, null, 2));
 fs.writeFileSync(path.join(output, '导入说明.md'), [
   '# 锅里捞啥：微信小游戏分包版', '',
-  '导入本目录中的 wechatgame 文件夹；三个分包随主包一起由微信开发者工具上传，不需要自行部署 CDN。',
+  `导入本目录中的 wechatgame 文件夹；${budget.packages.length} 个分包随主包一起由微信开发者工具上传，不需要自行部署 CDN。`,
   `当前主包 ${budget.mainBytes} 字节；全部文件合计 ${budget.bytes} 字节。`,
   '主包采用严格小于 4,000,000 字节的预算，主包和分包合计采用独立的 30,000,000 字节项目预算。',
   '整个客户端超过 4MB 不再触发项目构建失败。分包声明及 game.js 入口已校验。', '',

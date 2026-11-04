@@ -1,0 +1,43 @@
+{
+  "size": {
+    "total": 13719925,
+    "packages": [
+      {
+        "name": "TOTAL",
+        "size": 13719925
+      },
+      {
+        "name": "main",
+        "size": 1473603
+      },
+      {
+        "name": "/subpackages/internal/",
+        "size": 151788
+      },
+      {
+        "name": "/subpackages/main/",
+        "size": 229170
+      },
+      {
+        "name": "/subpackages/resources/",
+        "size": 2133958
+      },
+      {
+        "name": "/subpackages/victory-01/",
+        "size": 2275384
+      },
+      {
+        "name": "/subpackages/victory-04/",
+        "size": 2242226
+      },
+      {
+        "name": "/subpackages/victory-08/",
+        "size": 2129300
+      },
+      {
+        "name": "/subpackages/victory-09/",
+        "size": 3084496
+      }
+    ]
+  }
+}

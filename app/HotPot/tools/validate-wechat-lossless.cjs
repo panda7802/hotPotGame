@@ -21,13 +21,28 @@ for (const file of files.filter(file => file.endsWith('.js'))) {
 const media = files.filter(file => /\.(png|jpe?g|mp3)$/i.test(file));
 const mediaHashes = media.map(file => ({file, hash: hash(fs.readFileSync(file))}));
 const unchangedMedia = [];
-for (const source of walk(path.join(root, 'assets/resources')).filter(file => /\.(png|jpe?g|mp3)$/i.test(file))) {
+const victoryFolder = path.join(root, 'assets/victory');
+const sources = [...walk(path.join(root, 'assets/resources')),
+  ...(fs.existsSync(victoryFolder) ? walk(victoryFolder) : [])];
+for (const source of sources.filter(file => /\.(png|jpe?g|mp3)$/i.test(file))) {
   const sourceHash = hash(fs.readFileSync(source));
   const matches = mediaHashes.filter(item => item.hash === sourceHash);
   assert.strictEqual(matches.length, 1, 'Media missing, duplicated or modified: ' + source);
   unchangedMedia.push({source: path.relative(root, source).replaceAll('\\', '/'),
     packaged: path.relative(build, matches[0].file).replaceAll('\\', '/'),
     bytes: fs.statSync(source).size, sha256: sourceHash});
+}
+if (fs.existsSync(victoryFolder)) {
+  const settings = JSON.parse(fs.readFileSync(path.join(build, 'src/settings.json')));
+  for (const style of [1,4,8,9]) {
+    const name = 'victory-0' + style;
+    const item = packages.find(item => item.name === name);
+    assert(item, 'Missing victory subpackage: ' + name);
+    const image = unchangedMedia.find(item => item.source === `assets/victory/style-0${style}/win.png`);
+    assert(image && image.packaged.startsWith(item.root), 'Victory art must stay in its own theme subpackage');
+    assert(!settings.assets.preloadBundles.some(item => (typeof item === 'string' ? item : item.bundle) === name),
+      'Victory art must not preload at startup');
+  }
 }
 const retired = fs.readFileSync(path.join(root, 'art-source/retired-tiles-20261103/tiles.png'));
 assert(!mediaHashes.some(item => item.hash === hash(retired)), 'Retired undrawn texture was packaged');

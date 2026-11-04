@@ -2,7 +2,7 @@ import {Color, Node, resources, Sprite, Texture2D, UITransform} from 'cc';
 import {getPageTheme} from '../data/PageTheme';
 import {paintGameArt} from './HotPotGameArt';
 
-export const CLIENT_BUILD = '20261103-wechat-4mb-lossless';
+export const CLIENT_BUILD = '20261104-victory-feast';
 
 /** Warm the actual illustrated atlas; the retired tile sheet was never drawn. */
 export function loadReferenceTileSkins(done: () => void): void {

@@ -1,0 +1,46 @@
+{
+  "source": "Built-in image_gen",
+  "reencoding": "PNG lossless; original resolution and RGBA retained",
+  "files": [
+    {
+      "style": 1,
+      "width": 1210,
+      "height": 1300,
+      "bytes": 2274429,
+      "rgbaSha256": "d113386614fca35287323e4b6731c9ff44fc60e9156df1ba02b6495ea4c3a172",
+      "bundle": "victory-01",
+      "resource": "win",
+      "source": "background-01.png"
+    },
+    {
+      "style": 4,
+      "width": 1210,
+      "height": 1300,
+      "bytes": 2241271,
+      "rgbaSha256": "b8e60ff1e9c53d427e5a3190e44f2876f1a22bc82559c53ab4a0e431d64b3bb8",
+      "bundle": "victory-04",
+      "resource": "win",
+      "source": "background-04.png"
+    },
+    {
+      "style": 8,
+      "width": 1210,
+      "height": 1300,
+      "bytes": 2128345,
+      "rgbaSha256": "b79a962b6e12652fca30b2d2ea03a03bda096f65f66d318ac8d4c07080235433",
+      "bundle": "victory-08",
+      "resource": "win",
+      "source": "background-08.png"
+    },
+    {
+      "style": 9,
+      "width": 1210,
+      "height": 1300,
+      "bytes": 3083541,
+      "rgbaSha256": "1651d7860978d21fab7983e59f5a4a34c80a4f5141fcaa0d3c8923e62bde39e0",
+      "bundle": "victory-09",
+      "resource": "win",
+      "source": "background-09.png"
+    }
+  ]
+}

@@ -1,9 +1,10 @@
-import {Node,Tween} from 'cc';
+import {Graphics,Node,Tween} from 'cc';
 import {getPageTheme} from '../data/PageTheme';
 import {HotPotDesignCollection} from './HotPotDesignCollection';
-import {designButton,designIcon,designNode,designOverlay,designSurface,designText} from './HotPotDesignUi';
+import {designButton,designHit,designIcon,designNode,designOverlay,designSurface,designText} from './HotPotDesignUi';
 import {fitReferenceContent} from './HotPotReferenceLayout';
 import {transform} from './HotPotUi';
+import {paintVictoryArt} from './HotPotVictoryArt';
 
 export abstract class HotPotDesignResults extends HotPotDesignCollection {
   protected endGame(won:boolean):void {
@@ -16,18 +17,35 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
     if(!won)return;
     for(const child of panel.children.slice()){child.removeFromParent();child.destroy()}
     panel.getComponent('cc.Graphics')?.destroy();delete (panel as any).pageSkin;
-    const final=this.levelIndex===2,t=getPageTheme(),height=final?792:750;
-    const body=designNode(panel,'WinDialog',[56,(1280-height)/2,608,height]);designSurface(body);
-    const next=()=>this.nextLevel();designButton(body,'MenuClose','×',[526,16,64,64],next,true);
-    designText(body,final?'满 堂 鲜 香':'开 锅 大 吉',[80,40,448,40],23,t.accent);
-    const types=this.levelIndex===0?['toufu','beef','mushroom']:this.levelIndex===1?['corn','shrimp','mushroom']:['shrimp','mushroom','beef'];
-    types.forEach((type,i)=>{const icon=designNode(body,'WinIngredient_'+i,[108+i*118,110+(i===1?-14:0),156,156]);this.addIngredientImage(icon,type as any,false,156,156)});
-    designText(body,final?'全部通关！':'第 '+(this.levelIndex+1)+' 关完成',[42,282,524,72],44,t.ink,true);
-    designText(body,final?'千层食材尽收锅底，\n小馆因你热闹非凡。':this.levelIndex===0?'第一锅鲜香，稳稳拿下。':'热锅练手，越捞越顺手。',[42,368,524,final?94:72],27,t.muted);
-    const offset=final?26:0,stats=designNode(body,'DialogStats',[42,440+offset,524,74]);designSurface(stats,t.panel,20,t.edge,false);
-    designText(stats,this.levelData.config.title+'   '+this.levelData.total+' 块已清空',[14,8,496,58],26,t.ink,true);
-    designButton(body,final?'Button_再来一轮':'Button_下一关',final?'↻  再来一轮':'下一关',[42,536+offset,524,84],next);
-    designButton(body,'Button_返回游戏','返回游戏',[42,642+offset,524,84],next,true);
+    const final=this.levelIndex===2,t=getPageTheme(),height=714;
+    const body=designNode(panel,'WinDialog',[28,(1280-height)/2,664,height]);designSurface(body);
+    // One no-text image per theme; all three stages keep live data and controls.
+    const artwork=designNode(body,'VictoryArtwork_0'+t.id,[0,0,664,height]);
+    const loading=designText(body,'庆功盛宴准备中…',[74,170,516,80],28,t.muted);
+    const caption=designText(body,final?'满 堂 鲜 香':'开 锅 大 吉',[184,12,296,38],22,t.ink);
+    caption.node.name='VictoryCaption';
+    const title=designText(body,final?'全部通关！':'第 '+(this.levelIndex+1)+' 关完成',[58,363,548,62],48,t.ink,true);
+    title.node.name='VictoryTitle';title.lineHeight=60;
+    const subtitle=designText(body,final?'千层食材尽收锅底，小馆因你热闹非凡。':this.levelIndex===0?'第一锅鲜香，稳稳拿下。':'热锅练手，越捞越顺手。',[52,428,560,30],24,t.muted);
+    subtitle.node.name='VictorySubtitle';subtitle.lineHeight=28;
+    const stats=designNode(body,'DialogStats',[90,466,484,50]);designSurface(stats,t.panel,24,t.edge,false);
+    const summary=designText(stats,this.levelData.config.title+'   '+this.levelData.total+' 块已清空',[10,2,464,46],25,t.ink,true);
+    summary.node.name='VictoryStats';summary.lineHeight=32;
+    const next=()=>this.nextLevel();
+    const primary=designButton(body,final?'Button_再来一轮':'Button_下一关',final?'再来一轮':'下一关',[74,532,516,62],next);
+    const secondary=designButton(body,'Button_返回游戏','返回游戏',[74,615,516,62],next,true);
+    const surfaces=[stats,primary,secondary];
+    let pending=false;
+    const load=()=>{
+      if(pending)return;pending=true;
+      loading.string='庆功盛宴准备中…';
+      paintVictoryArt(artwork,t.id,()=>{
+        loading.node.destroy();
+        surfaces.forEach(node=>{const graphics=node.getComponent(Graphics);if(graphics)graphics.enabled=false});
+        (body as any).victoryArtworkReady=true;
+      },()=>{pending=false;loading.string='点击重试庆功盛宴';});
+    };
+    designHit(loading.node,()=>{if(!artwork.getComponent('cc.Sprite'))load()});load();
   }
   protected drawFailurePanel(panel:Node):void {
     transform(panel,720,1280);(panel as any).referenceHeight=1280;
