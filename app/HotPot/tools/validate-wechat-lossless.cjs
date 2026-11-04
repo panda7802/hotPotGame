@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs'), path = require('path'), vm = require('vm');
 const assert = require('assert'), crypto = require('crypto');
+const {inspectWechatPackages} = require('./wechat-package-budget.cjs');
 const root = path.resolve(__dirname, '..');
 const build = path.resolve(process.argv[2] || path.join(root, 'build/wechatgame-cloud-dev'));
 const reportFile = path.resolve(process.argv[3] || path.join(root, 'temp/wechat-lossless-validation.json'));
@@ -12,16 +13,8 @@ function walk(folder) {
   });
 }
 const files = walk(build);
-const bytes = files.reduce((sum, file) => sum + fs.statSync(file).size, 0);
-assert(bytes < 4000000, `Complete client is ${bytes} bytes`);
-const game = JSON.parse(fs.readFileSync(path.join(build, 'game.json')));
-const packages = (game.subpackages || game.subPackages || []).map(item => ({
-  name: item.name, root: item.root,
-  bytes: files.filter(file => file.startsWith(path.resolve(build, item.root) + path.sep))
-    .reduce((sum, file) => sum + fs.statSync(file).size, 0),
-}));
-const mainBytes = bytes - packages.reduce((sum, item) => sum + item.bytes, 0);
-assert(mainBytes < 4000000);
+const budget = inspectWechatPackages(build);
+const {bytes, packages, mainBytes} = budget;
 for (const file of files.filter(file => file.endsWith('.js'))) {
   new vm.Script(fs.readFileSync(file, 'utf8'), {filename: path.relative(build, file)});
 }
@@ -86,7 +79,7 @@ for (const index of [0, 1, 2]) {
   assert.strictEqual(board.ingredientPoolVersion, 4);
 }
 const report = {build: fs.readFileSync(path.join(root, 'assets/scripts/core/HotPotTileSkin.ts'), 'utf8')
-  .match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1], bytes, mainBytes, packages,
+  .match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1], bytes, mainBytes, packages, packageBudget: budget,
   mediaByteIdentical: true, unchangedMedia, retiredTextureExcluded: true,
   allJsParses: true, bundledIngredients: 60, hiddenWeight: .1, protocol: 7,
   allHiddenReachable: true, manualRestartKeepsInventory: true,

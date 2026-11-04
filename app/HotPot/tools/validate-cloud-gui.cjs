@@ -217,7 +217,8 @@ try {
   );
   write(
     path.join(build, 'game.json'),
-    JSON.stringify({deviceOrientation: 'portrait'}),
+    JSON.stringify({deviceOrientation: 'portrait',
+      subpackages: [{name: 'main', root: 'subpackages/main/'}]}),
   );
   copy(
     path.join(project, 'build-templates/wechatgame/first-screen.js'),
@@ -294,18 +295,36 @@ try {
    */
   assert.throws(() => finalizeCloudBuild({root, build}), /Mask/);
   write(engineFile, engine);
-  // The complete delivery budget includes resource subpackages as well.
+  // A delivery larger than 4 MB is valid when its main package remains small.
   const gameFile = path.join(build, 'game.json');
   const originalGame = readJson(gameFile);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: []}));
+  assert.throws(() => finalizeCloudBuild({root, build}), /必须启用小游戏分包/);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: [
+    ...originalGame.subpackages, {name: 'duplicate', root: 'subpackages/main/'}],
+  }));
+  assert.throws(() => finalizeCloudBuild({root, build}), /路径重复或相互嵌套/);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: [
+    ...originalGame.subpackages, {name: 'escape', root: '../outside'}],
+  }));
+  assert.throws(() => finalizeCloudBuild({root, build}), /相对路径/);
   const resourceFile = path.join(build, 'subpackages', 'art-test', 'texture.bin');
   write(gameFile, JSON.stringify({...originalGame,
-    subpackages: [{name: 'art-test', root: 'subpackages/art-test/'}],
+    subpackages: [...originalGame.subpackages, {name: 'art-test', root: 'subpackages/art-test/'}],
   }));
+  write(path.join(build, 'subpackages/art-test/game.js'), '');
   write(resourceFile, Buffer.alloc(2000000));
-  assert(finalizeCloudBuild({root, build}).bytes > 2000000);
+  const smallExpansion = finalizeCloudBuild({root, build});
+  assert(smallExpansion.bytes > 2000000);
   write(resourceFile, Buffer.alloc(5000000));
-  assert.throws(() => finalizeCloudBuild({root, build}), /完整开发包.*4 MB/);
+  const expanded = finalizeCloudBuild({root, build});
+  assert(expanded.bytes > 4000000);
+  assert.strictEqual(expanded.mainBytes, smallExpansion.mainBytes,
+    'Adding subpackage resources must not consume the main-package budget');
+  write(resourceFile, Buffer.alloc(30000000));
+  assert.throws(() => finalizeCloudBuild({root, build}), /合计超过项目 30 MB/);
   fs.unlinkSync(resourceFile);
+  fs.unlinkSync(path.join(build, 'subpackages/art-test/game.js'));
   write(gameFile, JSON.stringify(originalGame));
   write(path.join(build, 'oversize.bin'), Buffer.alloc(4000000));
   /**
@@ -354,8 +373,8 @@ try {
     'GUI build pipeline: output protection,' +
       ' branch/config checks, region validati' +
       'on, CloudBase flags, idempotency, stal' +
-      'e environment, missing Mask and size l' +
-      'imit: OK',
+      'e environment, missing Mask, subpackage structure, deliveries above 4 MB' +
+      ' and separate main/total limits: OK',
   );
 } finally {
   const resolved = path.resolve(fixture);

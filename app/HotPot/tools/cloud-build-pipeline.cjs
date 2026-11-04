@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {verifyCloudBuild} = require('./verify-cloud-build.cjs');
+const {inspectWechatPackages} = require('./wechat-package-budget.cjs');
 
 const OUTPUT = 'wechatgame-cloud-dev';
 const BRANCH = 'codex/cloudbase-player-save';
@@ -185,40 +186,13 @@ function finalizeCloudBuild({
   };
   fs.writeFileSync(runtimeSettingsFile, JSON.stringify(runtimeSettings));
   const target = verifyCloudBuild({root, build});
-  /**
-   * 为测试场景提供 size 所需的模拟行为。
-   */
-  function size(folder) {
-    /**
-     * 把集合条目汇总为一个结果。
-     */
-    return fs
-      .readdirSync(folder, {withFileTypes: true})
-      .reduce((total, item) => {
-        const file = path.join(folder, item.name);
-        if (item.isSymbolicLink()) {
-          throw new Error('构建产物中不允许目录/文件链接。');
-        }
-        return (
-          total + (item.isDirectory() ? size(file) : fs.statSync(file).size)
-        );
-      }, 0);
-  }
-  const bytes = size(build);
-  // Delivery budget covers every client file, including all resource subpackages.
-  const subpackageBytes = (game.subpackages || game.subPackages || []).reduce((total, item) => {
-    const folder = path.resolve(build, item.root);
-    if (!folder.startsWith(path.resolve(build) + path.sep)) {
-      throw new Error('分包路径超出构建目录');
-    }
-    return total + size(folder);
-  }, 0);
-  const mainBytes = bytes - subpackageBytes;
-  if (mainBytes >= 4000000) throw new Error(`微信主包超过 4 MB：${mainBytes} 字节。`);
-  if (bytes >= 4000000) throw new Error(`完整开发包超过 4 MB：${bytes} 字节。`);
+  const budget = inspectWechatPackages(build);
+  const {bytes, mainBytes, subpackageBytes, packages} = budget;
   console.log(`[HotPot Cloud Build] 主包 ${mainBytes} bytes，分包 ${subpackageBytes} bytes`);
+  for (const item of packages) console.log(`[HotPot Cloud Build] 分包 ${item.name}: ${item.bytes} bytes`);
+  console.log(`[HotPot Cloud Build] 小游戏分包模式；主包剩余 ${budget.mainRemainingBytes} bytes；总包采用独立 30 MB 项目预算。`);
   console.log(`[HotPot Cloud Build] 完成：${build} (${bytes} bytes)`);
-  return {...target, bytes};
+  return {...target, ...budget};
 }
 
 module.exports = {
