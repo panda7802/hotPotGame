@@ -1,0 +1,13 @@
+Use case: ui-mockup. Create ONE finished, high fidelity portrait 9:16 mobile game interface screenshot for Chinese casual tile matching game 锅里捞啥, new mode 捞到就收. Output one standalone complete screen, no device shell, no collage, no annotations.
+Reference image 1 is existing runtime game layout, reference image 2 is approved cream/clay style ONLY (triptych source, DO NOT copy triptych composition). Preserve visual family: tomato-red sculpted plaque logo with cream puffy Chinese lettering 锅里捞啥 and small green leaves; creamy dough-like rounded square tiles with food clay sculptures; apricot orange thick softly rounded frames; leafy green buttons; warm cream cozy tabletop backdrop with restrained vegetables and green gingham only at extreme corners. Thick soft clay, subtle tactile texture, soft occlusion shadows, warm light, beautifully legible dark cocoa Chinese typography, polished functional mobile UI.
+Layout from top to bottom, all readable:
+1 compact game logo 锅里捞啥; small orange cream mode plaque 捞到就收.
+2 title 第3段 · 山珍小锅, followed by exactly five connected small step markers numbered 1 2 3 4 5; first two done with subtle green checks, third active orange, last two quiet.
+3 compact cream status strip split two columns: 清空本段可收 50 on left, 失败保底 10 on right, tiny generic leaf-point icon (no money or currency). Value 50 is projected reward ONLY, not already earned. Do not add other reward numbers.
+4 small board progress label 剩余 45 / 72.
+5 large central layered tile board with apricot thick clay rim, occupies 45-50% of total screen height. 24-30 large square food tiles across a few staggered overlapping layers, food types shrimp, tofu, mushroom, corn, beef, green vegetables. Some darkened blocked tiles behind bright selectable top tiles. Visually realistic playable triple-match board with prominent readable individual food icons, balanced density. No minigame, restaurant scene, treasure map.
+6 directly below board a single orange tray with EXACTLY SEVEN evenly spaced square recessed slots in one row: slot1 beef, slot2 beef, slot3 corn, slot4 tofu, slot5 empty, slot6 empty, slot7 empty. Clear seven individual wells, 4 occupied and 3 empty. Do not add eighth well.
+7 three evenly aligned small cream pill controls with clay icons and labels 撤回 1, 炸 1, 翻锅 0; third muted to indicate zero.
+8 one tiny text line 复活剩余 1.
+9 bottom two wide green pill buttons 暂停 and 声音：开.
+No cash-out button midsegment, no restart button, no bonus currency counter, no extra UI elements, no watermark. Cozy charming cream clay aesthetic, actual practical touchscreen hierarchy. Render exact Chinese text cleanly. Output portrait 9:16.
