@@ -1009,6 +1009,48 @@ function service(
   console.log('Qinhuai guest win: explicit account sync, all parents, '
     + 'repeat sync and player document isolation: OK');
 
+  const reconnectServer = backend();
+  const reconnectOptions = {offline: true};
+  const reconnectCache = storage();
+  const reconnect = service(reconnectServer, reconnectCache, reconnectOptions);
+  await reconnect.initialize();
+  reconnect.setRegion(qinhuai);
+  reconnect.setSave(freshSave(2));
+  reconnect.setSave({...completed, runId: 'retry-cloud-sync-win-1'});
+  const queuedGuest = reconnectCache.getItem(
+    `${reconnect.key(null)}:pending-region-wins`);
+  await reconnect.refreshLeaderboard();
+  assert(reconnect.leaderboardText.includes(reconnect.failureText));
+  await reconnect.retryCloudSync();
+  assert.strictEqual(reconnect.playerId, null);
+  assert.strictEqual(reconnectCache.getItem(
+    `${reconnect.key(null)}:pending-region-wins`), queuedGuest);
+  reconnectOptions.offline = false;
+  await reconnect.retryCloudSync();
+  assert(reconnect.playerId);
+  assert(qinhuai.every(code => reconnect.regionCount(code) === 1));
+  assert.strictEqual(reconnect.pendingWins().length, 0);
+  await reconnect.retryCloudSync();
+  assert(qinhuai.every(code => reconnect.regionCount(code) === 1));
+
+  const outdatedServer = backend();
+  const outdatedHandler = outdatedServer.handler;
+  outdatedServer.handler = async event => {
+    const result = await outdatedHandler(event);
+    return event.action === 'load' ? {...result, playSessionVersion: 5} : result;
+  };
+  const outdated = service(outdatedServer);
+  await outdated.initialize();
+  await outdated.refreshLeaderboard();
+  assert.strictEqual(outdated.status, 'error');
+  assert(outdated.leaderboardText.includes('更新云函数'));
+  outdatedServer.handler = outdatedHandler;
+  await outdated.retryCloudSync();
+  assert(outdated.playerId);
+  assert(outdated.leaderboardText.startsWith('云端排行'));
+  console.log('Cloud retry: failed startup keeps guest wins, reconnect uploads '
+    + 'once, outdated protocol is visible and recovers after server update: OK');
+
   const webServer = backend();
   webServer.setWebUser('browser-user-one');
   const webCache = storage();
@@ -1834,6 +1876,9 @@ function service(
       '-501005',
       'FUNCTIONS_EXECUTE_FAIL',
     ]);
+    assert(local.failureText.includes('云函数执行失败'));
+    assert(local.failureText.includes('-501005'));
+    assert(!local.failureText.includes('private-'));
     local.describeFailure({
       errCode: -1,
       errMsg: 'private-player private-token',

@@ -3,6 +3,8 @@ import {getPageTheme,PageStyle} from '../data/PageTheme';
 import {hex,transform} from './HotPotUi';
 import {fitReferenceBackdrop,fitReferenceContent,referenceArea} from './HotPotReferenceLayout';
 import {paintGameArt} from './HotPotGameArt';
+import {gameInterfaceLayout} from './HotPotGameLayout';
+import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
 
 /** Pixel coordinates measured from the top left of the approved 720×1280 canvas. */
 export type DesignRect=[number,number,number,number];
@@ -69,6 +71,67 @@ export function designHeader(panel:Node,title:string):void {
   designText(panel,title,[185,218,350,44],30,t.id===9?t.onAccent:t.accent,true);
 }
 
+/** Small themed controls below the title; never resize the brand to fit. */
+export function paintThemeHeaderButton(node:Node,caption:string,icon:string,c=1):void {
+  const t=getPageTheme(),paper=t.id===1?t.dark:t.id===8?'#FFFAE7':t.card;
+  const ink=t.id===1?t.onAccent:t.ink,gold=t.id===8?'#B99450':t.edge;
+  const glyphInk=t.id===1?t.light:t.id===9?t.accent:t.id===8?'#264E40':t.accent;
+  const ui=node.getComponent(UITransform)!,w=ui.width,h=54*c;
+  const radius=t.id===9?8:h/2;
+  const sprite=node.getComponent(Sprite);if(sprite)sprite.enabled=false;
+  (node as any).gameArtKey='theme-header:'+t.id;
+  let plate=node.getChildByName('HeaderPlate');
+  if(!plate){plate=new Node('HeaderPlate');node.addChild(plate);plate.addComponent(UITransform);plate.addComponent(Graphics);plate.setSiblingIndex(0)}
+  plate.active=true;transform(plate,w,h);plate.setPosition(0,0);
+  const g=plate.getComponent(Graphics)!;g.clear();
+  g.fillColor=hex('#6D63492A');g.roundRect(-w/2,-h/2-3,w,h,radius);g.fill();
+  g.fillColor=hex(paper);g.strokeColor=hex(gold);g.lineWidth=2;
+  g.roundRect(-w/2,-h/2,w,h,radius);g.fill();g.stroke();
+  g.strokeColor=hex(t.id===8?'#E4D8AD':t.line);g.lineWidth=1;
+  g.roundRect(-w/2+4,-h/2+4,w-8,h-8,Math.max(3,radius-4));g.stroke();
+  let glyph=node.getChildByName('HeaderIcon');
+  if(!glyph){glyph=new Node('HeaderIcon');node.addChild(glyph);glyph.addComponent(UITransform);glyph.addComponent(Graphics)}
+  transform(glyph,40,40);
+  glyph.setPosition(-w*.29,0);glyph.setScale(Math.max(.9,c),Math.max(.9,c),1);
+  paintThemeHeaderIcon(glyph,icon,glyphInk,paper,gold);
+  let label=node.getChildByName('HeaderCaption')?.getComponent(Label);
+  if(!label){label=designText(node,caption,[0,0,72,44],26,'#264E40',true);label.node.name='HeaderCaption'}
+  label.string=caption;label.fontSize=26*c;label.lineHeight=36*c;
+  label.color=hex(ink);
+  transform(label.node,w*.55,44*c);label.node.setPosition(w*.13,0);
+}
+
+/** Filled silhouettes survive downscaling to a 320px-wide phone. */
+function paintThemeHeaderIcon(node:Node,icon:string,ink:string,paper:string,gold:string):void {
+  const g=node.getComponent(Graphics)!;g.clear();
+  g.fillColor=hex(ink);g.strokeColor=hex(ink);
+  g.lineWidth=3.2;g.lineJoin=Graphics.LineJoin.ROUND;g.lineCap=Graphics.LineCap.ROUND;
+  const polygon=(points:number[][])=>{
+    points.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));
+    g.close();g.fill();g.stroke();
+  };
+  if(icon==='book'){
+    polygon([[-18,14],[-7,14],[0,10],[7,14],[18,14],[18,-13],[7,-13],[0,-17],[-7,-13],[-18,-13]]);
+    g.fillColor=hex(paper);g.strokeColor=hex(paper);g.lineWidth=1;
+    polygon([[-14,10],[-8,10],[-3,7],[-3,-11],[-8,-9],[-14,-9]]);
+    polygon([[3,7],[8,10],[14,10],[14,-9],[8,-9],[3,-11]]);
+    g.strokeColor=hex(gold);g.lineWidth=1.8;
+    for(const side of [-1,1])for(const y of [4,-2]){g.moveTo(side*6,y);g.lineTo(side*12,y+1);g.stroke()}
+  }else if(icon==='settings'){
+    const points:number[][]=[];
+    for(let i=0;i<32;i++){
+      const angle=Math.PI*2*(i+.5)/32,r=i%4===0||i%4===3?14:19;
+      points.push([Math.cos(angle)*r,Math.sin(angle)*r]);
+    }
+    g.lineWidth=1;polygon(points);
+    g.fillColor=hex(paper);g.circle(0,0,8);g.fill();
+    g.strokeColor=hex(gold);g.lineWidth=1.5;g.circle(0,0,8);g.stroke();
+  }else{
+    g.lineWidth=5;g.moveTo(-3,12);g.lineTo(-16,0);g.lineTo(-3,-12);g.stroke();
+    g.moveTo(-15,0);g.lineTo(17,0);g.stroke();
+  }
+}
+
 /** Header/footer use screen width; only the middle composition fits its space. */
 export function fitDesignPage(panel:Node):void {
   if(!(panel as any).designPage)return;
@@ -77,7 +140,20 @@ export function fitDesignPage(panel:Node):void {
   transform(panel,720,h);panel.setScale(scale,scale,1);panel.setPosition(0,0);
   const header=panel.getChildByName('DesignHeader')!,body=panel.getChildByName('DesignBody')!,footer=panel.getChildByName('DesignFooter')!;
   header.setPosition(0,h/2-top-140);
-  const footerTop=h-bottom-124,bodyTop=top+280;
+  let bodyTop=top+280;
+  {
+    const art=GAME_ART_RECTS[getPageTheme().id].brand;
+    const l=gameInterfaceLayout(area,false,false,art[2]/art[3]);
+    header.setPosition(0,h/2-140);
+    const position=(node:Node,box:DesignRect)=>{transform(node,box[2],box[3]);node.setPosition(box[0]+box[2]/2-360,140-box[1]-box[3]/2)};
+    const brand=header.getChildByName('MenuBrand');if(brand)position(brand,l.brand);
+    const plaque=header.getChildByName('MenuTitlePlaque');if(plaque)position(plaque,l.stage);
+    const title=header.children.find(n=>n.name.startsWith('Text_')||n.name==='Button_食材图鉴');
+    if(title){position(title,[l.stage[0]+12,l.stage[1]+2,l.stage[2]-24,l.stage[3]-4]);const label=title.getComponent(Label)!;label.fontSize=26*l.c;label.lineHeight=38*l.c}
+    for(const [name,box] of [['HeaderBack',l.collection],['HeaderSettings',l.settings]] as const){const button=header.getChildByName(name);if(button){position(button,box);paintThemeHeaderButton(button,name==='HeaderBack'?'返回':'设置',name==='HeaderBack'?'back':'settings',l.c)}}
+    bodyTop=l.settings[1]+l.settings[3]+18;
+  }
+  const footerTop=h-bottom-124;
   const available=Math.max(1,footerTop-24-bodyTop),s=Math.min(1,available/832);
   body.setScale(s,s,1);body.setPosition(0,h/2-bodyTop-available/2);
   footer.setPosition(0,h/2-footerTop-78);
@@ -124,6 +200,7 @@ export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageT
   else if(type==='warning'){line([[12,3],[22,21],[2,21]],true);line([[12,9],[12,14]]);g.circle(0,-5*s,.8*s);g.fill()}
   else if(type==='check')line([[5,12],[10,17],[20,6]]);
   else if(type==='refresh'){line([[20,5],[20,11],[14,11]]);line([[4,19],[4,13],[10,13]]);g.arc(0,0,7*s,.25,2.7,false);g.stroke();g.arc(0,0,7*s,3.4,5.85,false);g.stroke()}
+  else if(type==='settings'){g.circle(0,0,6*s);g.stroke();g.circle(0,0,2*s);g.stroke();for(let i=0;i<8;i++){const a=i*Math.PI/4;g.moveTo(Math.cos(a)*6*s,Math.sin(a)*6*s);g.lineTo(Math.cos(a)*9*s,Math.sin(a)*9*s);g.stroke()}}
   else if(type==='rank'){line([[3,21],[3,10],[8,10],[8,21]]);line([[10,21],[10,3],[15,3],[15,21]]);line([[17,21],[17,13],[22,13],[22,21]])}
   else line([[8,5],[16,12],[8,19]]);
   return n;

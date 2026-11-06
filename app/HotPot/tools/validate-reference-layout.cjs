@@ -44,22 +44,21 @@ const headerContext={exports:{}};
 vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(root,'core/HotPotGameLayout.ts'),'utf8'),
   {compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,headerContext);
 let headerCases=0;
-for(const [width,height] of [[320,568],[360,640],[375,667],[390,844],[430,932],[768,1024]]){
-  for(const capsule of [false,true]){
-    const ratio=720/width;
-    const layout=headerContext.exports.gameInterfaceLayout({width:720,height:height*ratio,left:0,right:0,
-      top:capsule?103*ratio:0,systemTop:capsule?47*ratio:0,
-      menuBottom:capsule?83*ratio:0,bottom:capsule?34*ratio:0},false,false);
-    const {collection,brand,settings,stage}=layout;
-    assert(collection[0]>=0 && settings[0]+settings[2]<=720);
-    assert(collection[0]+collection[2]<brand[0], 'Collection entry must not overlap logo');
-    assert(Math.abs(brand[0]+brand[2]/2-360)<0.001, 'Title must be centered on the screen');
-    assert(brand[0]+brand[2]<settings[0], 'Logo must not overlap settings');
-    for(const box of [collection,brand,settings]) assert(box[1]+box[3]<=stage[1], 'Header must stay above stage label');
-    if(capsule) for(const box of [collection,brand,settings]) assert(box[1]>=83*ratio,
-      'Header must stay below the real WeChat capsule');
-    assert(Math.min(collection[2],collection[3])/ratio>=44, 'Collection touch target must remain usable on small phones');
-    headerCases++;
-  }
+for(const aspect of [736/284,829/302,801/342,805/256])
+for(const [width,height] of [[320,568],[360,640],[390,844],[430,932],[768,1024]])
+for(const capsule of [false,true])for(const first of [true,false])for(const reserve of [false,true]){
+  const ratio=720/width;
+  const l=headerContext.exports.gameInterfaceLayout({width:720,height:height*ratio,left:0,right:0,
+    top:capsule?103*ratio:0,systemTop:capsule?47*ratio:0,menuBottom:capsule?83*ratio:0,bottom:capsule?34*ratio:0},first,reserve,aspect);
+  assert(Math.abs(l.brand[0]+l.brand[2]/2-360)<.001);
+  assert(Math.abs(l.brand[2]/l.brand[3]-aspect)<.001,'Keep each brand illustration proportional');
+  assert(l.brand[1]+l.brand[3]<=l.collection[1],'Controls must be below the title');
+  assert(l.collection[0]+l.collection[2]<=l.stage[0] && l.stage[0]+l.stage[2]<=l.settings[0]);
+  assert(l.collection[0]>=0&&l.settings[0]+l.settings[2]<=720);
+  assert(Math.min(l.collection[2],l.collection[3])/ratio>=44-.001,'Keep a 44px touch target');
+  if(capsule)assert(l.brand[1]>=83*ratio,'Stay below the WeChat capsule');
+  assert(l.board[1]+l.board[3]<=l.tray[1] && l.play[3]>=80);
+  if(!first)assert(l.tray[1]+l.tray[3]<=l.tools[0][1] && l.tools[0][1]+l.tools[0][3]<=l.controls[0][1],'Keep room for second-level tools');
+  headerCases++;
 }
-console.log(`Centered header: ${headerCases} phone/tablet and WeChat capsule cases, centered title, separate controls and usable touch size: OK`);
+console.log(`Four-theme header: ${headerCases} aspect/viewport/capsule/tool/reserve cases OK`);

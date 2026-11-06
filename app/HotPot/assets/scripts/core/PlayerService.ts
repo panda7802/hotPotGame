@@ -20,6 +20,17 @@ export type {PlayerStorage, SyncStatus} from './PlayerServiceBase';
  * 云端连接、同步队列与本地存储实现。
  */
 export class PlayerService extends RegionLeaderboardService {
+  /** 玩家点击同步后重连，并补传登录前保留的通关；不替玩家选择存档。 */
+  async retryCloudSync(): Promise<void> {
+    await this.initialize();
+    if (!this.cloud || !this.playerId) {
+      await this.refreshLeaderboard();
+      return;
+    }
+    this.claimGuestWins();
+    await this.flush();
+    await this.refreshLeaderboard();
+  }
   /** Refresh on entry; failure leaves the last valid settings in memory. */
   async refreshRuntimeConfig(): Promise<void> {
     if (!this.cloud) {
@@ -374,8 +385,8 @@ export class PlayerService extends RegionLeaderboardService {
     const code =
       Object.keys(descriptions).find(
         /**
-         * 按条件筛选或判断条目：messages.indexOf(item) >= 0。
-         */ (item) => messages.indexOf(item) >= 0,
+         * 从平台包装后的错误文字中识别业务代码。
+         */ (item) => message.includes(item),
       ) ||
       (message.includes('超时')
         ? 'TIMEOUT'
@@ -397,6 +408,20 @@ export class PlayerService extends RegionLeaderboardService {
        * 按条件筛选或判断条目：message.includes(value)。
        */ (value) => message.includes(value),
     );
+    const platformDescriptions: Record<string, string> = {
+      INVALID_ENV: '云环境不可用，请检查环境配置',
+      FUNCTIONS_NOT_FOUND: '云函数未部署，请更新云端服务',
+      FUNCTIONS_EXECUTE_FAIL: '云函数执行失败，请检查云端日志',
+      DATABASE_PERMISSION_DENIED: '云数据库权限异常，请检查云端配置',
+      FUNCTIONS_TIME_LIMIT_EXCEEDED: '云函数执行超时，请重试',
+      RESOURCE_INSUFFICIENT: '云端资源暂不可用，请检查云环境',
+    };
+    if (!descriptions[code] && reason) {
+      this.failureText = platformDescriptions[reason];
+    }
+    if (/^-?\d+$/.test(code)) {
+      this.failureText += `（${code}）`;
+    }
     console.warn(
       '[HotPot Cloud Dev]',
       Object.hasOwnProperty.call(descriptions, code) ||

@@ -1,20 +1,21 @@
 export interface GameViewport {width:number;height:number;left:number;right:number;top:number;bottom:number;systemTop?:number;menuBottom?:number}
 export type GameBox=[number,number,number,number];
 /** Only positions depend on the safe area. The scene itself always fills the screen. */
-export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:boolean){
+export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:boolean,brandAspect=801/342){
   const scale=area.width/720,h=area.height/scale;
   const safeTop=area.top/scale,safeBottom=area.bottom/scale;
   const c=Math.min(1,Math.max(.64,(h-safeTop-safeBottom)/1330));
   const left=Math.max(22,area.left/scale+12),right=Math.max(22,area.right/scale+12),width=720-left-right;
   const logoTop=Math.max(18,(area.systemTop??area.top)/scale+12,
-    (area.menuBottom??0)/scale+10),logoHeight=190*c;
-  const settings:GameBox=[628,Math.max(logoTop+26*c,(area.menuBottom??0)/scale+10),80*c,80*c];
-  const collection:GameBox=[Math.max(4,area.left/scale+4),logoTop+14*c,144*c,144*c];
-  // Center the title on the screen, independently of the two side controls.
-  const brandWidth=420*c;
-  const brand:GameBox=[360-brandWidth/2,logoTop+5*c,brandWidth,175*c];
-  const stage:GameBox=[360-258*c,logoTop+logoHeight+7*c,516*c,48*c];
-  const progress:GameBox=[80,stage[1]+stage[3]+7*c,560,29*c];
+    (area.menuBottom??0)/scale+10);
+  // The same title box is used on gameplay and menus, with its native aspect.
+  const brandWidth=480*c;
+  const brand:GameBox=[360-brandWidth/2,logoTop+5*c,brandWidth,brandWidth/brandAspect];
+  const rowTop=brand[1]+brand[3]+8*c,touchHeight=Math.max(100,44/scale);
+  const collection:GameBox=[left,rowTop,132,touchHeight];
+  const settings:GameBox=[720-right-132,rowTop,132,touchHeight];
+  const stage:GameBox=[360-185*c,rowTop+(touchHeight-54*c)/2,370*c,54*c];
+  const progress:GameBox=[80,settings[1]+settings[3]+7*c,560,29*c];
   const meter:GameBox=[100,progress[1]+progress[3]+9*c,495,13*c];
   const controlsY=h-safeBottom-18-82*c;
   const controls:GameBox[]=[[76,controlsY,262,82*c],[382,controlsY,262,82*c]];

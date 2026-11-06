@@ -36,6 +36,24 @@ import {HotPotAppearanceMenus} from './HotPotAppearanceMenus';
  */
 export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
   protected menuReturnActions = new Map<string, () => void>();
+  /** 主动重连后保留现有棋盘，并让玩家决定是否恢复账号对局。 */
+  protected async retryPlayerCloud(): Promise<void> {
+    const service = this.playerService;
+    if (!service || service.status === 'connecting'
+      || service.status === 'syncing') return;
+    const wasConnected = !!service.playerId;
+    await service.retryCloudSync();
+    if (!this.node.isValid) return;
+    this.showToast(service.statusText, '#477345');
+    if (!service.playerId) return;
+    if (service.isConflict || !wasConnected) {
+      this.dismissPlayerMenu('PlayerOverlay');
+      this.dismissPlayerMenu('RegionOverlay');
+      if (service.isConflict) this.showSaveConflict();
+      else if (service.state.save) this.showConnectedSaveChoice(service.state.save);
+      else this.checkpointGame();
+    }
+  }
   /**
    * 关闭指定的玩家菜单。
    */

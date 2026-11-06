@@ -114,7 +114,11 @@ export abstract class RegionLeaderboardService extends PlayerServiceBase {
       // 损坏的展示缓存不阻止获取最新云榜。
     }
     if (!this.cloud || !this.playerId) {
-      this.leaderboardText = '云端未连接 · 通关保留在本机等待上传';
+      this.leaderboardText = this.status === 'error'
+        ? `${this.failureText} · 通关待上传`
+        : this.status === 'connecting'
+          ? '正在连接云端 · 通关记录保留在本机'
+          : '云端未连接 · 通关保留在本机等待上传';
       return;
     }
     try {

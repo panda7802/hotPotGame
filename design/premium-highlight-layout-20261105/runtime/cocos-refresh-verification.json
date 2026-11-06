@@ -1,0 +1,28 @@
+{
+  "latest": true,
+  "before": {
+    "frame": 1,
+    "clock": 0.04290000003576279,
+    "flow": true,
+    "food": [
+      142,
+      533.3563341624497
+    ],
+    "enabled": true
+  },
+  "after": {
+    "frame": 25,
+    "clock": 1.7389000000357624,
+    "flow": true,
+    "food": [
+      142,
+      533.3563341624497
+    ],
+    "enabled": true
+  },
+  "errors": [],
+  "logs": [
+    "[HotPot Cloud Dev] DAILY_UPGRADE_REQUIRED ",
+    "[HotPot 20261105-celadon-visible-flow] level=1 nodes=18 loadMs=13"
+  ]
+}

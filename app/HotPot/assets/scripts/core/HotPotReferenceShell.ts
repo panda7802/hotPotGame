@@ -4,10 +4,10 @@ import {HotPotLegacyGame} from './HotPotLegacyGame';
 import {hit,text} from './HotPotReferenceArt';
 import {drawRoundRect,hex,opacity,refreshPageMaterials,ToolType,transform} from './HotPotUi';
 import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotReferenceLayout';
-import {gameArtNode,paintGameArt,paintGameBackdrop,paintCollectionArt,COLLECTION_ART_SCALE,GameArtRole} from './HotPotGameArt';
+import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
-import {fitDesignPage} from './HotPotDesignUi';
+import {fitDesignPage,paintThemeHeaderButton} from './HotPotDesignUi';
 
 /** Independent transparent artwork over one full-bleed scene; all gameplay remains live. */
 export abstract class HotPotReferenceShell extends HotPotLegacyGame {
@@ -106,7 +106,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   protected positionReferenceShell():void{
     if(!this.referenceRoot||!this.levelLabel)return;
     const t=getPageTheme(),first=this.levelIndex===0;
-    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0);
+    const brandArt=GAME_ART_RECTS[t.id].brand;
+    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0,brandArt[2]/brandArt[3]);
     this.shellHeight=l.h;transform(this.referenceRoot,720,l.h);this.referenceRoot.setPosition(0,0);this.referenceRoot.setScale(l.scale,l.scale,1);
     transform(this.foodTransitionLayer,720,l.h);
     this.positionArt(this.brand,'brand',l.brand,t.id,false,true);
@@ -114,16 +115,20 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.positionArt(this.stageArt,'stage',l.stage,t.id);
     this.positionArt(this.trayArt,'tray',l.tray,t.id,true);
     this.positionArt(this.giftArt,'gift',[l.meter[0]+l.meter[2]+14,l.meter[1]-22*l.c,54*l.c,52*l.c],t.id,false,true);
-    const settings=this.referenceRoot.getChildByName('Button_设置')!;this.positionArt(settings,'settings',l.settings,t.id,false,true);
+    const settings=this.referenceRoot.getChildByName('Button_设置')!;
     const library=this.referenceRoot.getChildByName('Button_食材图鉴')!;
     this.positionBox(library,l.collection);
     const libraryLabel=library.getChildByName('LibraryLabel')!;
     transform(libraryLabel,112*l.c,32*l.c);libraryLabel.setPosition(0,-33*l.c);
     libraryLabel.getComponent(Label)!.color=hex(t.ink);
     libraryLabel.getComponent(Label)!.fontSize=26*l.c;
-    this.paintCollectionBook(library);
+    this.positionBox(settings,l.settings);
+    paintThemeHeaderButton(settings,'设置','settings',l.c);
+    paintThemeHeaderButton(library,'图鉴','book',l.c);
+    libraryLabel.active=false;
+    const book=library.getChildByName('CollectionBook');if(book)book.active=false;
     this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
-    this.levelLabel.fontSize=29*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
+    this.levelLabel.fontSize=26*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
     this.positionBox(this.progressLabel.node,l.progress);this.progressLabel.fontSize=24*l.c;this.progressLabel.lineHeight=30*l.c;
     this.progressLabel.color=hex(t.id===1?'#FFF0CE':t.ink);
     this.meterBox=l.meter;this.updateReferenceMeter();
@@ -184,18 +189,6 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       const component=label.getComponent(Label)!;component.fontSize=27*l.c;component.lineHeight=38*l.c;component.color=hex('#FFF4DF');
     }
     this.firstLevelBottom.active=first;this.toolBar.active=!first;this.updateSoundMark();
-  }
-  /** The approved book, premium hotpot food and title are one compact image. */
-  private paintCollectionBook(parent:Node):void{
-    let book=parent.getChildByName('CollectionBook');
-    if(!book){book=gameArtNode(parent,'CollectionBook');book.setSiblingIndex(0)}
-    book.setScale(1,1,1);book.setPosition(0,0);
-    const bounds=parent.getComponent(UITransform)!;
-    const texture=book.getComponent(Sprite)?.spriteFrame?.texture;
-    const ratio=texture?texture.width/texture.height:1;
-    const width=Math.min(bounds.width,bounds.height*ratio)*COLLECTION_ART_SCALE;
-    transform(book,width,width/ratio);
-    paintCollectionArt(book,getPageTheme().id,parent.getChildByName('LibraryLabel')!);
   }
   private updateReferenceMeter():void{
     if(!this.refMeter)return;

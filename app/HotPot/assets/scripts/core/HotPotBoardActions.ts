@@ -145,6 +145,7 @@ export abstract class HotPotBoardActions extends HotPotView {
       },
     );
     const ingredient = getIngredient(type);
+    (node as Node & {premiumIngredient?:boolean}).premiumIngredient=!!ingredient.hidden;
     drawFoodTile(node, TILE_WIDTH, TILE_HEIGHT, blocked);
     if (this.ingredientFrames.has(type)) {
       this.addIngredientImage(

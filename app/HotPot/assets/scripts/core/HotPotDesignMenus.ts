@@ -4,7 +4,7 @@ import {regionPath} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
 import {INGREDIENTS} from '../data/GameConfig';
 import {HotPotReferenceShell} from './HotPotReferenceShell';
-import {designButton,designFooter,designHeader,designHit,designIcon,designImage,designNode,designOnBackground,designOverlay,designScroll,designSurface,designText} from './HotPotDesignUi';
+import {designButton,designFooter,designHeader,designHit,designIcon,designImage,designNode,designOnBackground,designOverlay,designScroll,designSurface,designText,fitDesignPage} from './HotPotDesignUi';
 
 export abstract class HotPotDesignMenus extends HotPotReferenceShell {
   private designOriginalStyle:PageStyle|null=null;
@@ -22,7 +22,11 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
   }
   protected designPage(name:string,title:string,back:()=>void):Node|null {
     if(!this.playerService||!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded))return null;
-    const {panel}=designOverlay(this.node,name,this.viewportHeight);designHeader(panel,title);return panel;
+    const {panel}=designOverlay(this.node,name,this.viewportHeight);designHeader(panel,title);
+    designHit(designNode(panel,'HeaderBack',[22,204,132,88]),back);
+    if(name!=='PlayerOverlay')designHit(designNode(panel,'HeaderSettings',[566,204,132,88]),()=>{this.dismissPlayerMenu(name);this.showPlayerProfile()});
+    fitDesignPage(panel);
+    return panel;
   }
   /** Rare cloud-choice dialogs use the same safe canvas as the normal pages. */
   protected makePlayerMenu(name:string,height:number):Node|null {
@@ -39,7 +43,7 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     const address=regionPath(service.regions,state.profile.regionCodes).map(r=>r.name).join(' · ')||'尚未选择地区';
     const card=designNode(p,'ProfileCard',[40,290,640,184]);designSurface(card);
     const avatar=designNode(card,'Avatar',[30,44,96,96]);designSurface(avatar,t.panel,48,t.edge,false);this.addIngredientImage(avatar,'toufu',false,82,82);
-    designText(card,'本机玩家',[146,20,456,52],34,t.ink,true,true);
+    designText(card,service.playerId?'玩家 '+service.playerId.slice(0,8):'本机玩家',[146,20,456,52],34,t.ink,true,true);
     designText(card,address,[146,76,456,60],24,t.muted,false,true);
     designText(card,'一锅烟火，收藏日常好滋味',[146,138,456,30],23,t.muted,false,true);
     const stats=designNode(p,'ProfileStats',[40,494,640,124]);designSurface(stats);
@@ -61,6 +65,8 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     designIcon(clubIcon,'community',[10,10,36,36]);
     designText(club,'游戏圈',[116,2,420,64],30,t.ink,true,true);
     designIcon(club,'arrow',[584,21,26,26],t.muted);
+    this.playerStatusLabel=designText(p,service.statusText,[50,1024,440,80],20,designOnBackground(),false,true);
+    designButton(p,'Button_重试同步','重试同步',[502,1038,168,56],()=>{void this.retryPlayerCloud()},true);
     designFooter(p,'←  返回游戏',close,'Button_继续游戏',true);
   }
   protected showPageStyles():void {
@@ -103,7 +109,10 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     ['全国','省内','市内'].forEach((caption,i)=>designButton(tabs,'RankScope_'+i,caption,[8+i*210,8,204,66],()=>{
       this.dismissPlayerMenu('RegionOverlay');this.showDesignRanking(i);
     },scope!==i,!available[i]));
-    designText(p,'第三关通关次数 · 为家乡添一席',[50,382,620,34],24,designOnBackground());
+    designText(p,'第三关通关次数 · 为家乡添一席',[50,382,450,34],24,designOnBackground());
+    designButton(p,'Button_重试榜单','重试同步',[510,372,160,38],()=>{
+      void this.retryPlayerCloud().then(()=>{if(p.isValid)render()});
+    },true);
     const status=designText(p,service.leaderboardText,[50,414,620,28],18,designOnBackground());
     const regions=scope===0?service.regions:scope===1?province!.children!:city!.children!;
     const table=designNode(p,'RankingRows',[40,450,640,492]);designSurface(table);

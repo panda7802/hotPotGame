@@ -1,8 +1,9 @@
 import {Color, Node, resources, Sprite, Texture2D, UITransform} from 'cc';
 import {getPageTheme} from '../data/PageTheme';
 import {paintGameArt} from './HotPotGameArt';
+import {paintPremiumGlow} from './HotPotCeladonGlow';
 
-export const CLIENT_BUILD = '20261104-centered-header';
+export const CLIENT_BUILD = '20261106-cloud-sync-diagnostics';
 
 /** Warm the actual illustrated atlas; the retired tile sheet was never drawn. */
 export function loadReferenceTileSkins(done: () => void): void {
@@ -26,4 +27,5 @@ export function drawSharedTile(
   sprite.sizeMode = Sprite.SizeMode.CUSTOM;
   paintGameArt(face, 'tile', style);
   sprite.color = blocked ? new Color(130, 126, 116, 255) : Color.WHITE;
+  paintPremiumGlow(node,width,height,'tile',!!(node as Node & {premiumIngredient?:boolean}).premiumIngredient,blocked);
 }

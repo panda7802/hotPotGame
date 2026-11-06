@@ -4,6 +4,7 @@ import {achievementEntries, INGREDIENT_STORIES} from '../data/CollectionData';
 import {RegionNode} from '../data/PlayerData';
 import {hex, TOOL_NAMES, ToolType} from './HotPotUi';
 import {HotPotDesignMenus} from './HotPotDesignMenus';
+import {paintPremiumGlow} from './HotPotCeladonGlow';
 import {
   designButton,
   designFooter,
@@ -87,12 +88,13 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         const known = state.progress.discovered.includes(food.id),
           card = designNode(content, 'IngredientCard_' + food.id, [i % 3 * 218, Math.floor(i / 3) * 230, 204, 212]);
         designSurface(card, known ? t.card : t.panel, undefined, food.hidden ? '#B58A42' : t.edge);
+        if(food.hidden&&known)paintPremiumGlow(card,204,212,'card');
         if (known) {
           const icon = designNode(card, 'CollectionIngredient', [31, 12, 142, 142]);
           this.addIngredientImage(icon, food.id, false, 142, 142)
         } else designText(card, '?', [18, 6, 168, 150], 82, t.muted, true);
         designText(card, known ? food.name : food.hidden ? '隐藏珍藏' : '未发现', [8, 164, 188, 38], 27, t.ink, true);
-        if (food.hidden) designText(card, '珍藏', [144, 8, 52, 26], 16, '#A7792D', true);
+        if (food.hidden) designText(card, '珍藏', [144, 8, 52, 26], 16, known&&t.id===1?'#FFE7AF':t.id===4?'#925B23':'#A7792D', true);
         designHit(card, () => {
           saveOffset();
           this.dismissPlayerMenu('CollectionOverlay');
@@ -149,6 +151,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     designSurface(tag, t.panel, 26);
     designText(tag, known ? INGREDIENT_STORIES[type].tag : item.hidden ? '隐藏 · 尚未发现' : '尚未发现', [12, 4, 276, 44], 25, item.hidden ? '#A7792D' : t.accent);
     const portrait = designNode(body, 'IngredientPortrait', [140, 142, 360, 330]);
+    if(item.hidden&&known)paintPremiumGlow(portrait,330,310,'portrait');
     if (known) this.addIngredientImage(portrait, type, false, 270, 270); else designText(portrait, '?', [0, 0, 360, 330], 170, t.muted);
     designText(body, known ? item.name : '神秘食材', [40, 490, 560, 74], 48, t.ink, true);
     designText(body, known ? INGREDIENT_STORIES[type].story : item.hidden ? '珍贵滋味，静候与你相遇。\n遇见并拿取，即可点亮珍藏。' : '在游戏中拿取这份食材，\n就能点亮它的小馆故事。', [50, 590, 540, 150], 28, t.ink);

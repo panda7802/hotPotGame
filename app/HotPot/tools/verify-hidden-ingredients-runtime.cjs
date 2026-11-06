@@ -112,7 +112,8 @@ async function click(page, name) {
     await page.evaluate(() => {window.realCheckpointGame = g.checkpointGame.bind(g); g.checkpointGame = () => {}; g.setSoundEnabled?.(false);});
     // Resolve several asynchronous theme loads against the same live node.
     await page.evaluate(() => {for (const style of [4, 8, 1, 9]) g.selectPageStyle(style);});
-    await page.waitForFunction(() => findNode(g.node, 'CollectionBook')?.getComponent(cc.Sprite)?.spriteFrame?.name === 'collection-style-09');
+    await page.waitForFunction(() => findNode(g.node,'BrandArtwork')?.gameArtKey==='9:brand:false'
+      && !!findNode(g.node,'BrandArtwork').getComponent(cc.Sprite)?.spriteFrame);
     const rapidSwitch = await page.evaluate(() => !findNode(g.node, 'LibraryLabel').active);
     assert(rapidSwitch);
     for (const size of [{width: 390, height: 844}, {width: 360, height: 640}]) {
@@ -125,33 +126,35 @@ async function click(page, name) {
         await page.waitForTimeout(1900);
         for (const index of [0, 1, 2]) {
           await page.evaluate(index => g.loadLevel(index, false), index);
-          await page.waitForFunction(style => findNode(g.node, 'CollectionBook')?.getComponent(cc.Sprite)?.spriteFrame?.name === 'collection-style-0' + style, style);
+          await page.waitForFunction(()=>findNode(g.node,'Button_食材图鉴')?.getChildByName('HeaderCaption')?.active);
           const icon = await page.evaluate(() => {
             const entry = findNode(g.node, 'ReferenceShell').getChildByName('Button_食材图鉴');
-            const book = entry.getChildByName('CollectionBook'), frame = book.getComponent(cc.Sprite).spriteFrame;
-            const ui = book.getComponent(cc.UITransform), bounds = entry.getComponent(cc.UITransform).getBoundingBoxToWorld();
-            const root = findNode(g.node, 'ReferenceShell');
-            const title = root.getChildByName('BrandArtwork').getComponent(cc.UITransform).getBoundingBoxToWorld();
-            const settings = root.getChildByName('Button_设置').getComponent(cc.UITransform).getBoundingBoxToWorld();
-            const stage = root.getChildByName('StageArtwork').getComponent(cc.UITransform).getBoundingBoxToWorld();
-            return {frame: frame.name, textureWidth: frame.texture.width,
-              logicalWidth: entry.getComponent(cc.UITransform).width,
-              visualWidth: ui.width,
-              titleCentered: Math.abs(title.x+title.width/2-(cc.view.getVisibleOrigin().x+cc.view.getVisibleSize().width/2))<0.1,
-              titleSeparate: bounds.x + bounds.width <= title.x + 0.1,
-              settingsSeparate: title.x + title.width <= settings.x + 0.1,
-              aboveStage: bounds.y >= stage.y + stage.height - 0.1,
-              proportional: Math.abs(ui.width / ui.height - frame.texture.width / frame.texture.height) < 0.001,
-              fallbackHidden: !entry.getChildByName('LibraryLabel').active,
-              noOldFood: !findNode(book, 'BookShrimp') && !findNode(book, 'BookCarrot'),
-              onScreen: bounds.x >= cc.view.getVisibleOrigin().x && bounds.y >= cc.view.getVisibleOrigin().y};
+            const bounds=n=>n.getComponent(cc.UITransform).getBoundingBoxToWorld();
+            const root=findNode(g.node,'ReferenceShell'),title=bounds(root.getChildByName('BrandArtwork')),button=bounds(entry),settings=bounds(root.getChildByName('Button_设置'));
+            window.brandBox={x:title.x,y:title.y,width:title.width,height:title.height};
+            return {titleCentered:Math.abs(title.x+title.width/2-(cc.view.getVisibleOrigin().x+cc.view.getVisibleSize().width/2))<.1,
+              belowTitle:button.y+button.height<=title.y+.1&&settings.y+settings.height<=title.y+.1,
+              caption:entry.getChildByName('HeaderCaption').getComponent(cc.Label).string,
+              noLargeBook:!entry.getChildByName('CollectionBook')?.active,
+              iconWidth:entry.getChildByName('HeaderIcon').getComponent(cc.UITransform).width};
           });
-          assert(icon.textureWidth === 224 && icon.proportional && icon.fallbackHidden && icon.noOldFood && icon.onScreen
-            && icon.visualWidth <= 128.1 && icon.logicalWidth <= 144 && icon.titleCentered && icon.titleSeparate && icon.settingsSeparate && icon.aboveStage,
+          assert(icon.titleCentered&&icon.belowTitle&&icon.caption==='图鉴'&&icon.noLargeBook&&icon.iconWidth===40,
             JSON.stringify({style, index, size, icon}));
           if (index === 0) await page.screenshot({path: path.join(out, `game-${style}-${size.width}.png`)});
+          if(index===1){
+            await page.screenshot({path:path.join(out,`level2-${style}-${size.width}.png`)});
+            assert(await page.evaluate(()=>['undo','bomb','shuffle'].every(type=>{
+              const tool=findNode(g.node,'ReferenceTool_'+type),control=findNode(g.node,'Button_重新开始');
+              const a=tool.getComponent(cc.UITransform).getBoundingBoxToWorld(),b=control.getComponent(cc.UITransform).getBoundingBoxToWorld();
+              return tool.activeInHierarchy&&a.y>=b.y+b.height;
+            })),'Second-level tools must remain visible and separate from restart');
+          }
           await click(page, 'Button_食材图鉴');
           assert(await page.evaluate(() => !!findNode(g.node, 'CollectionOverlay')));
+          assert(await page.evaluate(()=>{
+            const box=findNode(g.node,'MenuBrand').getComponent(cc.UITransform).getBoundingBoxToWorld();
+            return ['x','y','width','height'].every(key=>Math.abs(box[key]-brandBox[key])<.1);
+          }),'Menu title must match gameplay title');
           await click(page, 'Button_返回');
           assert(await page.evaluate(() => !findNode(g.node, 'CollectionOverlay')));
           iconChecks.push({style, size, level: index + 1, ...icon, clickable: true});
@@ -234,6 +237,61 @@ async function click(page, name) {
     const detailReturn = await page.evaluate(() => g.designIngredientGroup === 'hidden'
       && !!findNode(g.node, 'IngredientCard_caviar') && !findNode(g.node, 'IngredientCard_beef'));
     assert(detailReturn, 'Returning from detail must keep the premium tab');
+    // Celadon-only animation, equal brand bounds, real header navigation and lifecycle.
+    await page.evaluate(save=>{
+      g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');
+      g.selectPageStyle(8);g.restoreGame(save);
+    },save);
+    await page.waitForTimeout(900);
+    const glowBefore=await page.evaluate(()=>{
+      window.glowComponents=g.node.getComponentsInChildren('HotPotCeladonGlow').filter(c=>c.node.activeInHierarchy);
+      window.glowFrames=glowComponents.map(c=>c.animationFrame);
+      const ui=findNode(g.node,'BrandArtwork').getComponent(cc.UITransform).getBoundingBoxToWorld();
+      window.celadonBrand={x:ui.x,y:ui.y,width:ui.width,height:ui.height};
+      return glowComponents.map(c=>({blocked:c.blocked,frame:c.animationFrame}));
+    });
+    assert(glowBefore.some(c=>!c.blocked),'Rare food must have a live glow');
+    await page.screenshot({path:path.join(out,'celadon-premium-game.png')});
+    await page.waitForTimeout(400);
+    const tileAnimation=await page.evaluate(()=>glowComponents.every((c,i)=>c.blocked?c.animationFrame===glowFrames[i]:c.animationFrame>glowFrames[i]));
+    assert(tileAnimation,'Available tiles animate, covered tiles stay still');
+    await click(page,'Button_食材图鉴');
+    await click(page,'IngredientGroup_hidden');
+    const menuHeader=await page.evaluate(hiddenIds=>{
+      g.dismissPlayerMenu('CollectionOverlay');g.playerService.local.state.progress.discovered=hiddenIds;g.showCollection();
+      const ui=findNode(g.node,'MenuBrand').getComponent(cc.UITransform).getBoundingBoxToWorld();
+      return ['x','y','width','height'].every(key=>Math.abs(ui[key]-celadonBrand[key])<.1);
+    },hiddenIds);
+    assert(menuHeader,'Collection and gameplay must have identical title bounds');
+    await page.waitForTimeout(250);
+    const collectionFrame=await page.evaluate(()=>{
+      window.collectionGlow=findNode(findNode(g.node,'IngredientCard_kingcrab'),'CeladonPremiumGlow').getComponent('HotPotCeladonGlow');
+      return collectionGlow.animationFrame;
+    });
+    await page.screenshot({path:path.join(out,'celadon-premium-collection.png')});
+    await page.waitForTimeout(450);
+    const collectionAnimation=await page.evaluate(frame=>collectionGlow.animationFrame>frame,collectionFrame);
+    assert(collectionAnimation,'Collection light must move');
+    await click(page,'HeaderSettings');
+    const profileHeader=await page.evaluate(()=>{
+      const ui=findNode(g.node,'MenuBrand').getComponent(cc.UITransform).getBoundingBoxToWorld();
+      return !!findNode(g.node,'PlayerOverlay')&&['x','y','width','height'].every(key=>Math.abs(ui[key]-celadonBrand[key])<.1);
+    });
+    assert(profileHeader,'Settings and gameplay must have identical title bounds');
+    await page.screenshot({path:path.join(out,'celadon-settings.png')});
+    assert(await page.evaluate(()=>!cc.isValid(collectionGlow)),'Closed collection must release its animation');
+    await click(page,'HeaderBack');
+    const otherThemeGlows=[];
+    for(const style of [1,4,9]){
+      await page.evaluate(style=>g.selectPageStyle(style),style);
+      otherThemeGlows.push(await page.evaluate(style=>{
+        const components=g.node.getComponentsInChildren('HotPotCeladonGlow').filter(c=>c.node.activeInHierarchy);
+        return components.length>0&&components.every(c=>c.style===style);
+      },style));
+    }
+    assert(otherThemeGlows.every(Boolean),'All themes must refresh premium effect colors');
+    await page.evaluate(()=>g.selectPageStyle(8));
+    const celadonEffects={tileAnimation,collectionAnimation,menuHeader,profileHeader,otherThemeGlows};
     const picked = await page.evaluate(save => {
       g.dismissPlayerMenu('CollectionOverlay');g.dismissPlayerMenu('CollectionDetailOverlay');g.restoreGame(save);
       const tile = g.levelData.tiles.find(tile => tile.type === 'caviar' && g.isTileSelectable(tile));
@@ -308,7 +366,7 @@ async function click(page, name) {
     assert(collectionGuarantee.failureUncollected && collectionGuarantee.normalCollectionStillGuarantees);
     assert(collectionGuarantee.laterUsesNormalDraw);
     assert.deepStrictEqual(errors, []);assert.deepStrictEqual(missing, []);assert.deepStrictEqual(shaderErrors, []);
-    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, iconChecks, rapidSwitch, detailReturn, picked, restarts, collectionGuarantee, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
+    fs.writeFileSync(path.join(out, 'runtime-checks.json'), JSON.stringify({build: expectedBuild, checks, iconChecks, rapidSwitch, detailReturn, celadonEffects, picked, restarts, collectionGuarantee, formattedShaderStages, shaderErrors, errors, missing}, null, 2));
     console.log('Real Cocos runtime: 24 theme/level/viewport icon and click checks, rapid theme switching, proportional artwork, no duplicated title; collection rules and manual restarts: OK');
   } finally {await browser.close();server.close();}
 })().catch(error => {console.error(error);server.close();process.exitCode = 1;});

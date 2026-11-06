@@ -1,0 +1,109 @@
+Random layout saves: exact geometry/coverage, pick, shuffle, seed validation and legacy restoration: OK
+Random ingredients: all levels, deterministic seed restore, shuffle preservation, 50-kind progress, invalid seeds and beef/lamb rejection: OK
+Collection/achievements: all 13 ingredients and 14 goals, legacy migration, invalid progress, restore/restart/undo idempotency: OK
+Every stable move across 936 tiles: save validation and complete round-trip; regions and bad input: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+Unlock all collection: 60 discoveries, unchanged board, idempotency, cloud/reopen and daily retention: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+Uncollected premium guarantee: retained across repeated entry, reopen, cloud and daily reset; collecting a premium ingredient stops it across devices; legacy entry flag retained for compatibility: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot] Using default runtime configuration db.collection is not a function
+Region ranking: offline/reopen queue, repeated and concurrent retry, parent totals, region changes, identity isolation and sorting: OK
+[HotPot] Runtime configuration unavailable Error: Offline
+    at Object.callFunction (D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:772:16)
+    at evalmachine.<anonymous>:304:43
+    at evalmachine.<anonymous>:416:17
+    at new Promise (<anonymous>)
+    at PlayerService.callbackRequest (evalmachine.<anonymous>:407:16)
+    at PlayerService.request (evalmachine.<anonymous>:301:37)
+    at PlayerService.refreshRuntimeConfig (evalmachine.<anonymous>:30:39)
+    at PlayerService.connect (evalmachine.<anonymous>:60:56)
+    at PlayerService.initialize (evalmachine.<anonymous>:129:36)
+    at D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:991:15
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot] Using default runtime configuration db.collection is not a function
+Qinhuai guest win: explicit account sync, all parents, repeat sync and player document isolation: OK
+[HotPot] Runtime configuration unavailable Error: Offline
+    at Object.callFunction (D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:772:16)
+    at evalmachine.<anonymous>:304:43
+    at evalmachine.<anonymous>:416:17
+    at new Promise (<anonymous>)
+    at PlayerService.callbackRequest (evalmachine.<anonymous>:407:16)
+    at PlayerService.request (evalmachine.<anonymous>:301:37)
+    at PlayerService.refreshRuntimeConfig (evalmachine.<anonymous>:30:39)
+    at PlayerService.connect (evalmachine.<anonymous>:60:56)
+    at PlayerService.initialize (evalmachine.<anonymous>:129:36)
+    at D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:1016:19
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot] Runtime configuration unavailable Error: Offline
+    at Object.callFunction (D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:772:16)
+    at evalmachine.<anonymous>:304:43
+    at evalmachine.<anonymous>:416:17
+    at new Promise (<anonymous>)
+    at PlayerService.callbackRequest (evalmachine.<anonymous>:407:16)
+    at PlayerService.request (evalmachine.<anonymous>:301:37)
+    at PlayerService.refreshRuntimeConfig (evalmachine.<anonymous>:30:39)
+    at PlayerService.connect (evalmachine.<anonymous>:60:56)
+    at PlayerService.initialize (evalmachine.<anonymous>:129:36)
+    at PlayerService.retryCloudSync (evalmachine.<anonymous>:15:20)
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] DAILY_UPGRADE_REQUIRED 
+[HotPot] Using default runtime configuration db.collection is not a function
+Cloud retry: failed startup keeps guest wins, reconnect uploads once, outdated protocol is visible and recovers after server update: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+Unified web/WeChat ranking: web login, pending Qinhuai upload, both platforms share counts, reload and trusted identity isolation: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+Daily entry: midnight/year rollover, legacy migration, same-day cloud restore, conflict choices and permanent progress retention: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+Server identity isolation, atomic CAS, idempotency, sanitization and release-environment guard: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] CLOUD_UPGRADE_REQUIRED 
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] DAILY_UPGRADE_REQUIRED 
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] DAILY_UPGRADE_REQUIRED 
+Collection cloud flow: cross-device restore, legacy-client retention, conflict union and old-function capability guard: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+Random layout cloud flow: local reopen, cross-device seed/shape/coverage restoration and prepared cloud modules: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+Read-only private region-file access and explicitly authorized shared environment with fixed Dev names: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+Native development environment: bundled regions and no cross-account storage access: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot Cloud Dev] NETWORK_ERROR 
+Full client/server flow: cross-device restore, offline queue, lost response retry and both conflict choices: OK
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Using default runtime configuration db.collection is not a function
+[HotPot] Runtime configuration unavailable Error: Offline
+    at Object.callFunction (D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:772:16)
+    at evalmachine.<anonymous>:304:43
+    at evalmachine.<anonymous>:416:17
+    at new Promise (<anonymous>)
+    at PlayerService.callbackRequest (evalmachine.<anonymous>:407:16)
+    at PlayerService.request (evalmachine.<anonymous>:301:37)
+    at PlayerService.refreshRuntimeConfig (evalmachine.<anonymous>:30:39)
+    at PlayerService.connect (evalmachine.<anonymous>:60:56)
+    at PlayerService.initialize (evalmachine.<anonymous>:129:36)
+    at D:\codeX\create\app\HotPot\tools\validate-player-save.cjs:1807:25
+[HotPot Cloud Dev] NETWORK_ERROR 
+[HotPot Cloud Dev] NETWORK_ERROR 
+Edits during sync, account changes, unverified offline identity, disabled cloud and broken storage: OK
+Nested platform error code diagnostics without raw identity or token leakage: OK
