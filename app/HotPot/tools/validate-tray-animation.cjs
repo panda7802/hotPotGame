@@ -813,6 +813,8 @@ function persistedGame() {
    * 更新当前对局并安排同步。
    */
   game.playerService = {
+    state: {progress: {discovered: []}},
+    beginDailySession: () => false,
     setSave(save) {
       writes.push(saveDomain.validateGameSave(save));
     },

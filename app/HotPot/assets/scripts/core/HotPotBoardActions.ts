@@ -338,30 +338,49 @@ export abstract class HotPotBoardActions extends HotPotView {
     this.locked = true;
     tile.removed = true;
     const targetIndex = this.insertIntoTray(tile.type);
-    const targetX = TRAY_START_X + Math.min(targetIndex, 6) * TRAY_SPACING;
-    const trayUI = this.trayNode.getComponent(UITransform)!;
-    const boardUI = this.board.getComponent(UITransform)!;
-    const transitionUI = this.foodTransitionLayer.getComponent(UITransform)!;
+    const movingLevel = this.levelData;
+    this.flyTrayTile(node, this.trayNode, this.foodTransitionLayer, targetIndex,
+      new Vec3(80 / TILE_WIDTH, 78 / TILE_HEIGHT, 1), () => {
+        if (this.levelData !== movingLevel) {
+          node.destroy();
+          return;
+        }
+        this.tileNodes.delete(tile.id);
+        this.acceptTrayTile(node, tile.type, targetIndex);
+        this.refreshTileStates();
+        this.resolveTray();
+      });
+    this.updateProgress();
+  }
+
+  /** Use the same world-space flight for main and side-game food tiles. */
+  protected flyTrayTile(
+    node: Node, tray: Node, transition: Node, index: number,
+    landingScale: Vec3, arrive: () => void,
+  ): void {
+    const targetX = TRAY_START_X + Math.min(index, 6) * TRAY_SPACING;
+    const trayUI = tray.getComponent(UITransform)!;
+    const boardUI = node.parent!.getComponent(UITransform)!;
+    const transitionUI = transition.getComponent(UITransform)!;
     const startWorld = boardUI.convertToWorldSpaceAR(node.position);
     const targetWorld = trayUI.convertToWorldSpaceAR(new Vec3(targetX, 0));
     const startWorldScale = node.worldScale.clone();
-    const transitionWorldScale = this.foodTransitionLayer.worldScale;
-    const trayWorldScale = this.trayNode.worldScale;
+    const transitionWorldScale = transition.worldScale;
+    const trayWorldScale = tray.worldScale;
     const destinationScale = new Vec3(
-      80 / TILE_WIDTH * trayWorldScale.x / transitionWorldScale.x,
-      78 / TILE_HEIGHT * trayWorldScale.y / transitionWorldScale.y,
+      landingScale.x * trayWorldScale.x / transitionWorldScale.x,
+      landingScale.y * trayWorldScale.y / transitionWorldScale.y,
       1,
     );
 
     // 脱离棋盘并保持屏幕位置不变；此后整段移动轨迹都处于界面最上层。
-    node.setParent(this.foodTransitionLayer);
+    node.setParent(transition);
     node.setScale(startWorldScale.x / transitionWorldScale.x,
       startWorldScale.y / transitionWorldScale.y, 1);
     node.setPosition(transitionUI.convertToNodeSpaceAR(startWorld));
-    node.setSiblingIndex(this.foodTransitionLayer.children.length - 1);
+    node.setSiblingIndex(transition.children.length - 1);
     const targetLocal = transitionUI.convertToNodeSpaceAR(targetWorld);
     const startScale = node.scale.clone();
-    const movingLevel = this.levelData;
     tween(node)
       .to(0.08, {
         scale: new Vec3(startScale.x * 0.9, startScale.y * 0.9, 1),
@@ -374,22 +393,8 @@ export abstract class HotPotBoardActions extends HotPotView {
         },
         {easing: 'cubicOut'},
       )
-      .call(
-        /**
-         * 在动画到达指定阶段后更新游戏状态。
-         */ () => {
-          if (this.levelData !== movingLevel) {
-            node.destroy();
-            return;
-          }
-          this.tileNodes.delete(tile.id);
-          this.acceptTrayTile(node, tile.type, targetIndex);
-          this.refreshTileStates();
-          this.resolveTray();
-        },
-      )
+      .call(arrive)
       .start();
-    this.updateProgress();
   }
 
   /**

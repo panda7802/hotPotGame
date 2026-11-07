@@ -21,14 +21,14 @@ import {HotPotBoardActions} from './HotPotBoardActions';
  */
 export abstract class HotPotBoard extends HotPotBoardActions {
   /** 按逻辑槽位排序；绘制层级不作为食材顺序。 */
-  protected trayItems(): Node[] {
-    return this.trayNode.children
+  protected trayItems(tray = this.trayNode): Node[] {
+    return tray.children
       .filter((child) => child.name.startsWith('TrayItem_'))
       .sort((a, b) => Number(a.name.slice(9)) - Number(b.name.slice(9)));
   }
 
-  protected animateTrayInsertion(index: number): void {
-    for (const item of this.trayItems()) {
+  protected animateTrayInsertion(index: number, tray = this.trayNode): void {
+    for (const item of this.trayItems(tray)) {
       const oldIndex = Number(item.name.slice(9));
       const nextIndex = oldIndex >= index ? oldIndex + 1 : oldIndex;
       item.name = `TrayItem_${nextIndex}`;
@@ -43,9 +43,10 @@ export abstract class HotPotBoard extends HotPotBoardActions {
   /** 外层负责槽位与消除动画，内层一直保留原来的牌面和食材图片。 */
   protected acceptTrayTile(
     visual: Node, type: IngredientType, index: number,
+    tray = this.trayNode, landingScale = new Vec3(80 / TILE_WIDTH, 78 / TILE_HEIGHT, 1),
   ): void {
     const item = new Node(`TrayItem_${index}`);
-    this.trayNode.addChild(item);
+    tray.addChild(item);
     item.setPosition(TRAY_START_X + index * TRAY_SPACING, 0);
     transform(item, 82 * 1.2, 84 * 1.2);
     (item as Node & {trayType?: IngredientType}).trayType = type;
@@ -53,21 +54,33 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     visual.setParent(item);
     visual.name = 'FoodVisual';
     visual.setPosition(Vec3.ZERO);
-    visual.setScale(80 / TILE_WIDTH, 78 / TILE_HEIGHT, 1);
+    visual.setScale(landingScale);
   }
 
   /**
    * 播放三消和后续托盘收拢动画。
    */
   protected animateMatch(matchStart: number): void {
+    this.tray.splice(matchStart, 3);
+    this.playTrayMatch(this.trayNode, matchStart);
+    const reward = this.grantBoilRewards();
+    this.updateProgress();
+    if (reward) this.showToast(reward, '#D64A36');
+    if (this.isBoardCleared()) {
+      this.endGame(true);
+    } else {
+      this.locked = false;
+      this.checkpointGame();
+    }
+  }
+
+  /** The settled tray data is independent of these transient match effects. */
+  protected playTrayMatch(tray: Node, matchStart: number, finish?: () => void): void {
     this.playEffect('match', 0.82);
-    const trayItems = this.trayItems();
+    const trayItems = this.trayItems(tray);
     const matching = trayItems.slice(matchStart, matchStart + 3);
     const effects = new Node('MatchEffects');
-    this.trayNode.addChild(effects);
-    // Commit the match before allowing another click. Animation nodes no
-    // longer occupy slots and cannot modify a later tray or restarted game.
-    this.tray.splice(matchStart, 3);
+    tray.addChild(effects);
     matching.forEach(
       /**
        * 依次处理集合中的每个条目。
@@ -118,23 +131,13 @@ export abstract class HotPotBoard extends HotPotBoardActions {
           .start();
       },
     );
-    const reward = this.grantBoilRewards();
-    this.updateProgress();
-    if (reward) this.showToast(reward, '#D64A36');
     tween(effects)
       .delay(0.82)
-      .call(
-        /**
-         * 在动画到达指定阶段后更新游戏状态。
-         */ () => effects.destroy(),
-      )
+      .call(() => {
+        effects.destroy();
+        finish?.();
+      })
       .start();
-    if (this.isBoardCleared()) {
-      this.endGame(true);
-    } else {
-      this.locked = false;
-      this.checkpointGame();
-    }
   }
 
   /**
