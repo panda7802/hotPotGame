@@ -22,13 +22,17 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
   private designIngredientGroup: 'ingredients' | 'hidden' = 'ingredients';
   private designCollectionTab: 'ingredients' | 'achievements' = 'ingredients';
 
+  protected returnFromCollection(tab: 'ingredients' | 'achievements'): void {
+    if (tab === 'achievements') this.showPlayerProfile();
+  }
+
   protected showCollection(tab: 'ingredients' | 'achievements' = 'ingredients', entry?: any): void {
     let saveOffset = () => {
     };
     const back = () => {
       saveOffset();
       this.dismissPlayerMenu('CollectionOverlay');
-      if(tab==='achievements')this.showPlayerProfile()
+      this.returnFromCollection(tab);
     };
     const p = this.designPage('CollectionOverlay', tab === 'ingredients' ? '食材图鉴' : '我的成就', back);
     if (!p) return;

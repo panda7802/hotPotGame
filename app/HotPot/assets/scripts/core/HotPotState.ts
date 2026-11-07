@@ -238,7 +238,7 @@ export abstract class HotPotState extends HotPotFields {
     this.achievementOwner = this.playerService.playerId;
     this.achievementNotificationsReady = true;
     const newDay = this.playerService.beginDailySession();
-    const saved = this.playerService.state.save;
+    const saved = this.resumeGameSave(this.playerService.state.save);
     if (saved) {
       this.restoreGame(saved);
       this.showToast('已恢复上次这锅的进度', '#D86A3B');
@@ -258,6 +258,10 @@ export abstract class HotPotState extends HotPotFields {
    */
   protected flushPlayerSave(): void {
     void this.playerService?.flush();
+  }
+
+  protected resumeGameSave(standard: GameSave | null): GameSave | null {
+    return standard;
   }
 
   /**
@@ -300,7 +304,16 @@ export abstract class HotPotState extends HotPotFields {
       (this.locked && !this.gameEnded)) {
       return;
     }
-    const save: GameSave = {
+    const save = this.captureGameSave();
+    try {
+      this.saveGameCheckpoint(save);
+    } catch {
+      this.showToast('当前进度未能保存，请重试', '#A24A3C');
+    }
+  }
+
+  protected captureGameSave(): GameSave {
+    return {
       ...(this.runId ? {runId: this.runId} : {}),
       version: 1,
       boardVersion: BOARD_VERSION,
@@ -337,11 +350,10 @@ export abstract class HotPotState extends HotPotFields {
       lastMove: this.lastMoveSnapshot ? clone(this.lastMoveSnapshot) : null,
       status: this.gameEnded ? this.lastResult : 'playing',
     };
-    try {
-      this.playerService.setSave(save);
-    } catch {
-      this.showToast('当前进度未能保存，请重试', '#A24A3C');
-    }
+  }
+
+  protected saveGameCheckpoint(save: GameSave): void {
+    this.playerService?.setSave(save);
   }
 
   /**
@@ -349,7 +361,7 @@ export abstract class HotPotState extends HotPotFields {
    */
   protected restoreGame(save: GameSave): void {
     const restored = restoreLevel(save);
-    if (shouldUpgradeUnstartedLevelThree(save)) {
+    if (!this.isInventoryAssisted() && shouldUpgradeUnstartedLevelThree(save)) {
       this.loadLevel(2, true, createLevel(2, undefined, save.layoutSeed,
         save.ingredientSeed || 0, save.ingredientPoolVersion || 1));
       return;
@@ -399,6 +411,7 @@ export abstract class HotPotState extends HotPotFields {
   /** Subclasses release the currently loaded background on teardown. */
   protected discardPageStylePreview(): void {}
   protected releasePageBackdrop(): void {}
+  protected isInventoryAssisted(): boolean { return false; }
   /**
    * 配置背景音乐和音效播放源。
    */

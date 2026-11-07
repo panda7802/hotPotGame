@@ -3,7 +3,7 @@ import {getPageTheme} from '../data/PageTheme';
 import {paintGameArt} from './HotPotGameArt';
 import {paintPremiumGlow} from './HotPotCeladonGlow';
 
-export const CLIENT_BUILD = '20261106-cloud-sync-diagnostics';
+export const CLIENT_BUILD = '20261107-cashout-hourly';
 
 /** Warm the actual illustrated atlas; the retired tile sheet was never drawn. */
 export function loadReferenceTileSkins(done: () => void): void {

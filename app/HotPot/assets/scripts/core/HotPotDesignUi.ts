@@ -158,11 +158,11 @@ export function fitDesignPage(panel:Node):void {
   body.setScale(s,s,1);body.setPosition(0,h/2-bodyTop-available/2);
   footer.setPosition(0,h/2-footerTop-78);
 }
-export function designOverlay(parent:Node,name:string,viewport:number,modal=false):{overlay:Node,panel:Node} {
+export function designOverlay(parent:Node,name:string,viewport:number,modal=false,background?:string):{overlay:Node,panel:Node} {
   const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,viewport);overlay.addComponent(BlockInputEvents);
   const scrim=designNode(overlay,'ModalScrim',[0,0,720,viewport]);
   designSurface(scrim,modal?'#101B19A8':getPageTheme().id===1?getPageTheme().dark:getPageTheme().panel,0,'',false);
-  if(!modal){const backdrop=designImage(overlay,'FullBleedBackground','reference/bg-0'+getPageTheme().id,[0,0,720,1280]);fitReferenceBackdrop(backdrop)}
+  if(!modal){const backdrop=designImage(overlay,'FullBleedBackground',background||'reference/bg-0'+getPageTheme().id,[0,0,720,1280]);fitReferenceBackdrop(backdrop)}
   const panel=new Node('PlayerPanel');overlay.addChild(panel);transform(panel,720,1280);
   (panel as any).referenceHeight=1280;(overlay as any).designModal=modal;
   if(modal)fitReferenceContent(panel,1280);
@@ -185,6 +185,63 @@ export function designScroll(parent:Node,name:string,box:DesignRect,height:numbe
 export function designFooter(panel:Node,caption:string,action:()=>void,name='Button_返回',primary=true):Node {
   return designButton(panel,name,caption==='返回'?'←  返回':caption,[52,1124,616,80],action,!primary);
 }
+const backpackStyles = new WeakMap<Node, PageStyle>();
+
+/** A 48-unit silhouette with a different material and front closure for each skin. */
+export function paintBackpackIcon(node: Node, style: PageStyle): void {
+  if (backpackStyles.get(node) === style) return;
+  backpackStyles.set(node, style);
+  const g = node.getComponent(Graphics) || node.addComponent(Graphics);
+  const palette = {
+    1: {body: '#21594A', flap: '#A83828', pocket: '#34705C', ink: '#4C2C19', trim: '#EAB866', light: '#F6CD83', radius: 7},
+    4: {body: '#F2A95F', flap: '#FFE1AA', pocket: '#F6BD78', ink: '#A55A2F', trim: '#669247', light: '#FFF5D5', radius: 11},
+    8: {body: '#A2C6B4', flap: '#F1F4DD', pocket: '#B8D4C5', ink: '#3D6E5D', trim: '#4A826B', light: '#FFF9DF', radius: 10},
+    9: {body: '#DFC096', flap: '#F5E8CC', pocket: '#E9D0AD', ink: '#5C3C29', trim: '#A23629', light: '#FFF2D4', radius: 4},
+  }[style];
+  const stroke = (color: string, width: number) => {
+    g.strokeColor = hex(color);
+    g.lineWidth = width;
+    g.stroke();
+  };
+  const fill = (color: string) => { g.fillColor = hex(color); g.fill(); };
+  const rounded = (x: number, y: number, w: number, h: number, r: number, color: string, edge = palette.ink) => {
+    g.roundRect(x, y, w, h, r);
+    fill(color);
+    stroke(edge, 1.6);
+  };
+  g.clear();
+  g.lineCap = Graphics.LineCap.ROUND;
+  g.lineJoin = Graphics.LineJoin.ROUND;
+  rounded(-7, 10, 14, 12, 5, palette.trim);
+  rounded(-21, -15, 11, 22, 5, palette.pocket);
+  rounded(10, -15, 11, 22, 5, palette.pocket);
+  rounded(-17, -20, 34, 36, palette.radius, palette.body);
+  rounded(-12, -15, 24, 15, style === 9 ? 2 : 5, palette.pocket);
+  if (style === 9) {
+    g.moveTo(-16, 11); g.lineTo(16, 11); g.lineTo(12, 2);
+    g.lineTo(0, -5); g.lineTo(-12, 2); g.close();
+    fill(palette.flap); stroke(palette.ink, 1.6);
+    rounded(-4, -8, 8, 8, 1, palette.trim);
+    g.moveTo(-2, -4); g.lineTo(2, -4); stroke(palette.light, 1.1);
+  } else {
+    rounded(-16, 1, 32, 14, 6, palette.flap);
+    g.moveTo(-11, 11); g.lineTo(11, 11); stroke(palette.light, 1.6);
+    if (style === 1) {
+      for (const x of [-9, 4]) rounded(x, -5, 5, 11, 1.5, palette.trim);
+    } else if (style === 4) {
+      g.moveTo(-5, 0); g.quadraticCurveTo(-4, 8, 7, 7);
+      g.quadraticCurveTo(5, -2, -5, 0); g.close(); fill(palette.trim);
+      g.moveTo(-5, -2); g.lineTo(3, 4); stroke(palette.ink, 1.5);
+    } else {
+      g.moveTo(0, -10); g.quadraticCurveTo(-8, -9, -8, -4);
+      g.quadraticCurveTo(-3, -5, 0, -8); g.quadraticCurveTo(3, -5, 8, -4);
+      g.quadraticCurveTo(8, -9, 0, -10); fill(palette.trim);
+      g.moveTo(0, -8); g.quadraticCurveTo(-4, -4, 0, -1);
+      g.quadraticCurveTo(4, -4, 0, -8); fill(palette.trim);
+    }
+  }
+}
+
 export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageTheme().accent):Node {
   const n=designNode(parent,'Icon_'+type,box),g=n.addComponent(Graphics),s=Math.min(box[2],box[3])/24;
   g.strokeColor=hex(color);g.fillColor=hex(color);g.lineWidth=1.8*s;g.lineCap=Graphics.LineCap.ROUND;g.lineJoin=Graphics.LineJoin.ROUND;

@@ -7,7 +7,7 @@ import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotRe
 import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
-import {fitDesignPage,paintThemeHeaderButton} from './HotPotDesignUi';
+import {designSurface,designText,fitDesignPage,paintBackpackIcon,paintThemeHeaderButton} from './HotPotDesignUi';
 
 /** Independent transparent artwork over one full-bleed scene; all gameplay remains live. */
 export abstract class HotPotReferenceShell extends HotPotLegacyGame {
@@ -107,7 +107,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     if(!this.referenceRoot||!this.levelLabel)return;
     const t=getPageTheme(),first=this.levelIndex===0;
     const brandArt=GAME_ART_RECTS[t.id].brand;
-    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0,brandArt[2]/brandArt[3]);
+    const backpack=this.levelIndex===2;
+    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0,brandArt[2]/brandArt[3],backpack);
     this.shellHeight=l.h;transform(this.referenceRoot,720,l.h);this.referenceRoot.setPosition(0,0);this.referenceRoot.setScale(l.scale,l.scale,1);
     transform(this.foodTransitionLayer,720,l.h);
     this.positionArt(this.brand,'brand',l.brand,t.id,false,true);
@@ -125,6 +126,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.positionBox(settings,l.settings);
     paintThemeHeaderButton(settings,'设置','settings',l.c);
     paintThemeHeaderButton(library,'图鉴','book',l.c);
+    library.active=false;
     libraryLabel.active=false;
     const book=library.getChildByName('CollectionBook');if(book)book.active=false;
     this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
@@ -183,6 +185,30 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       badge.setPosition(b[2]/2-18*badgeScale,t.id===8?b[3]*.38:b[3]/2-1);const count=badge.getChildByName('Label')!;transform(count,36*badgeScale,36*badgeScale);count.setPosition(0,0);
       count.getComponent(Label)!.fontSize=25*badgeScale;
     });
+    const inventory=this.toolBar.getChildByName('Button_背包')||(
+      backpack ? hit(this.toolBar,'Button_背包',[0,0,1,1],1280,()=>this.showInventoryTools()) : null
+    );
+    if(inventory){
+      inventory.active=backpack;
+      if(backpack){
+        const box=l.tools[3];
+        this.positionBox(inventory,box);
+        designSurface(inventory,t.card,26,t.edge);
+        const icon=inventory.getChildByName('InventoryIcon')||gameArtNode(inventory,'InventoryIcon');
+        const iconSize=Math.min(box[2]*.39,box[3]*.57);
+        transform(icon,48,48);
+        icon.setPosition(-box[2]*.23,0);
+        icon.setScale(iconSize/48,iconSize/48,1);
+        paintBackpackIcon(icon,t.id);
+        const label=inventory.getChildByName('InventoryLabel')?.getComponent(Label)
+          ||designText(inventory,'背包',[0,0,box[2],box[3]],28*l.c,t.ink,true);
+        label.node.name='InventoryLabel';
+        transform(label.node,box[2]*.54,box[3]);
+        label.node.setPosition(box[2]*.21,0);
+        label.color=hex(t.ink);
+        label.fontSize=28*l.c;label.lineHeight=40*l.c;
+      }
+    }
     for(const [i,name] of ['Button_重新开始','Button_声音'].entries()){
       const button=this.referenceRoot.getChildByName(name)!,b=l.controls[i];this.positionArt(button,i===0?'restart':'sound',b,t.id);
       const label=button.getChildByName('Label')!;transform(label,148,b[3]*.75);label.setPosition(43,0);
@@ -205,6 +231,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   protected updateProgress():void{
     super.updateProgress();
     if(this.levelLabel)this.levelLabel.string='第 '+(this.levelIndex+1)+' 关 · '+this.levelData.config.title;
+    if(this.isInventoryAssisted()&&this.progressLabel)
+      this.progressLabel.string='道具辅助 · 仅本机  |  '+this.progressLabel.string;
     if(this.refMeter)this.updateReferenceMeter();
   }
   private updateSoundMark():void{
@@ -213,6 +241,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     const g=mark.getComponent(Graphics)||mark.addComponent(Graphics);g.clear();g.strokeColor=hex('#9D281D');g.lineWidth=6;g.moveTo(-17,-17);g.lineTo(17,17);g.stroke();
   }
   protected toggleSound():void{super.toggleSound();this.updateSoundMark()}
+  protected showInventoryTools():void {}
   protected updateToolButtons():void{
     if(this.toolBar)this.toolBar.active=this.levelIndex>0;
     for(const type of ['undo','bomb','shuffle'] as ToolType[]){

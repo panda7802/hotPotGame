@@ -1,7 +1,7 @@
 export interface GameViewport {width:number;height:number;left:number;right:number;top:number;bottom:number;systemTop?:number;menuBottom?:number}
 export type GameBox=[number,number,number,number];
 /** Only positions depend on the safe area. The scene itself always fills the screen. */
-export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:boolean,brandAspect=801/342){
+export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:boolean,brandAspect=801/342,backpack=false){
   const scale=area.width/720,h=area.height/scale;
   const safeTop=area.top/scale,safeBottom=area.bottom/scale;
   const c=Math.min(1,Math.max(.64,(h-safeTop-safeBottom)/1330));
@@ -24,8 +24,9 @@ export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:bool
   const boardTop=meter[1]+meter[3]+30*c,boardEnd=trayY-20*c;
   const board:GameBox=[left,boardTop,width,Math.max(140,boardEnd-boardTop)];
   const tray:GameBox=[left-8,trayY,width+16,120*c];
-  const toolWidth=(width-24)/3;
-  const tools:GameBox[]=[0,1,2].map(i=>[left+i*(toolWidth+12),toolsY,toolWidth,112*c] as GameBox);
+  const toolCount=backpack?4:3;
+  const toolWidth=(width-(toolCount-1)*12)/toolCount;
+  const tools:GameBox[]=Array.from({length:toolCount},(_,i)=>[left+i*(toolWidth+12),toolsY,toolWidth,112*c]);
   const play:GameBox=[left+28,boardTop+26,width-56,Math.max(80,board[3]-52-(reserve?108:0))];
   return {scale,h,c,brand,collection,settings,stage,progress,meter,controls,tools,tray,board,play,safeTop,safeBottom};
 }
