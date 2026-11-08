@@ -33,6 +33,9 @@ import {CLIENT_BUILD} from './HotPotTileSkin';
  * HotPotBoardActions：拆分后的前段场景行为。
  */
 export abstract class HotPotBoardActions extends HotPotView {
+  private readonly pendingTilePicks = new Set<TileData>();
+  protected trayPickInProgress = false;
+
   /**
    * 生成并显示指定关卡，按需保存。
    */
@@ -45,6 +48,8 @@ export abstract class HotPotBoardActions extends HotPotView {
     this.runId = `${Date.now().toString(36)}-`
       + Math.random().toString(36).slice(2, 14);
     this.clearMatchEffects();
+    this.pendingTilePicks.clear();
+    this.trayPickInProgress = false;
     const previousLevel = this.levelData;
     this.levelIndex = Math.max(0, Math.min(LEVELS.length - 1, index));
     this.levelData = restored || createLevel(
@@ -302,7 +307,8 @@ export abstract class HotPotBoardActions extends HotPotView {
    * 处理取牌、移动动画与后续消除。
    */
   protected onTileClicked(tile: TileData): void {
-    if (this.locked || this.gameEnded || this.hasPlayerMenu() || tile.removed) {
+    if ((this.locked && !this.trayPickInProgress)
+      || this.gameEnded || this.hasPlayerMenu() || tile.removed) {
       return;
     }
     const node = this.tileNodes.get(tile.id);
@@ -317,6 +323,10 @@ export abstract class HotPotBoardActions extends HotPotView {
         .to(0.04, {position: start})
         .start();
       this.showToast('这张牌还被上层压着', '#A24A3C');
+      return;
+    }
+    if (this.trayPickInProgress) {
+      this.pendingTilePicks.add(tile);
       return;
     }
 
@@ -336,6 +346,7 @@ export abstract class HotPotBoardActions extends HotPotView {
         ),
     };
     this.locked = true;
+    this.trayPickInProgress = true;
     tile.removed = true;
     const targetIndex = this.insertIntoTray(tile.type);
     const movingLevel = this.levelData;
@@ -345,11 +356,11 @@ export abstract class HotPotBoardActions extends HotPotView {
           node.destroy();
           return;
         }
-        this.tileNodes.delete(tile.id);
         this.acceptTrayTile(node, tile.type, targetIndex);
-        this.refreshTileStates();
         this.resolveTray();
       });
+    this.tileNodes.delete(tile.id);
+    this.refreshTileStates();
     this.updateProgress();
   }
 
@@ -374,6 +385,7 @@ export abstract class HotPotBoardActions extends HotPotView {
     );
 
     // 脱离棋盘并保持屏幕位置不变；此后整段移动轨迹都处于界面最上层。
+    node.off(Node.EventType.TOUCH_END);
     node.setParent(transition);
     node.setScale(startWorldScale.x / transitionWorldScale.x,
       startWorldScale.y / transitionWorldScale.y, 1);
@@ -425,6 +437,7 @@ export abstract class HotPotBoardActions extends HotPotView {
    * 检查托盘中的连续三张并触发消除或失败。
    */
   protected resolveTray(): void {
+    this.trayPickInProgress = false;
     this.renderTray();
     const matchStart = this.findAdjacentMatch();
     if (matchStart >= 0) {
@@ -438,6 +451,16 @@ export abstract class HotPotBoardActions extends HotPotView {
       this.combo = 0;
       this.locked = false;
       this.checkpointGame();
+    }
+    if (this.gameEnded) {
+      this.pendingTilePicks.clear();
+      return;
+    }
+    // Finish matching and checking capacity before taking the next buffered tile.
+    for (const tile of this.pendingTilePicks) {
+      if (this.locked) break;
+      this.pendingTilePicks.delete(tile);
+      this.onTileClicked(tile);
     }
   }
 

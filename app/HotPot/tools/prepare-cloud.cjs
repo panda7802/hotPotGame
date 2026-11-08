@@ -80,6 +80,7 @@ function prepareCloud({
     'GameData',
     'PlayerTypes',
     'RegionData',
+    'CashoutData',
     'PlayerData',
   ];
   const domainModules = new Map();

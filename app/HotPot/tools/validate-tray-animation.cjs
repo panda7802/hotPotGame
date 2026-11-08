@@ -837,6 +837,44 @@ function persistedGame() {
   game.loadLevel(1);
   return {game, writes};
 }
+
+// Use real tap handling and settlement with controlled flight completions.
+const rapid = persistedGame();
+rapid.game.flyTrayTile = (node, _tray, transition, _index, _scale, arrive) => {
+  node.setParent(transition);
+  completions.push(arrive);
+};
+const rapidTiles = rapid.game.levelData.tiles
+  .filter(tile => rapid.game.isTileSelectable(tile)).slice(0, 3);
+rapidTiles.forEach(tile => rapid.game.createTileNode(tile));
+const writesBeforeRapid = rapid.writes.length;
+for (const tile of [rapidTiles[0], rapidTiles[1], rapidTiles[1], rapidTiles[2]]) {
+  rapid.game.onTileClicked(tile);
+}
+assert.strictEqual(rapid.game.remainingTiles(), 29);
+assert.strictEqual(rapid.writes.length, writesBeforeRapid);
+while (completions.length) completions.shift()();
+assert(!rapid.game.locked);
+assert.deepStrictEqual(
+  rapid.writes.slice(writesBeforeRapid).map(save =>
+    Array.from(rapidTiles, tile => save.removedIds.includes(tile.id))),
+  [[true, false, false], [true, true, false], [true, true, true]],
+  'rapid clicks must settle once each in input order',
+);
+
+rapid.game.loadLevel(1);
+const resetTiles = rapid.game.levelData.tiles
+  .filter(tile => rapid.game.isTileSelectable(tile)).slice(0, 2);
+for (const tile of resetTiles) {
+  rapid.game.createTileNode(tile);
+  rapid.game.onTileClicked(tile);
+}
+rapid.game.loadLevel(0);
+while (completions.length) completions.shift()();
+assert.strictEqual(rapid.game.remainingTiles(), 18);
+assert.strictEqual(rapid.game.tray.length, 0);
+assert(!rapid.game.locked);
+console.log('Rapid tile clicks: input order, duplicates and restart isolation: OK');
 for (const reviveUsed of [false, true]) {
   const failure = persistedGame();
   failure.game.loadLevel(2);

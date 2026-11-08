@@ -29,7 +29,6 @@ export abstract class RegionLeaderboardService extends PlayerServiceBase {
       this.storage.setItem(this.winKey(),
         JSON.stringify([...this.pendingWins(), ...guest]));
       this.storage.setItem(guestKey, '[]');
-      this.schedule();
     } catch {
       this.leaderboardText = '本机通关待同步，请重试';
     }
@@ -61,7 +60,6 @@ export abstract class RegionLeaderboardService extends PlayerServiceBase {
       playDate: this.local.state.playDate,
     });
     this.writePendingWins(pending);
-    this.schedule();
   }
 
   /** 失败保留队列；服务器按玩家和牌局去重。 */

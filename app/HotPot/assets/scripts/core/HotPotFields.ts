@@ -89,14 +89,6 @@ export abstract class HotPotFields extends Component {
    */
   protected playerService: PlayerService | null = null;
   /**
-   * 玩家同步状态的文字节点。
-   */
-  protected playerStatusLabel: Label | null = null;
-  /**
-   * 玩家存档摘要的文字节点。
-   */
-  protected playerSaveLabel: Label | null = null;
-  /**
    * 玩家档案入口的文字节点。
    */
   protected profileButtonLabel!: Label;

@@ -150,6 +150,7 @@ try {
     'GameData',
     'PlayerTypes',
     'RegionData',
+    'CashoutData',
     'PlayerData',
   ]) {
     copy(
@@ -233,8 +234,16 @@ try {
       },
     }),
   );
-  copy(path.join(project, 'assets/scripts/core/HotPotTileSkin.ts'),
-    path.join(root, 'assets/scripts/core/HotPotTileSkin.ts'));
+  const skinPath = 'assets/scripts/core/HotPotTileSkin.ts';
+  const skin = fs.readFileSync(path.join(project, skinPath), 'utf8');
+  const marker = /CLIENT_BUILD\s*=\s*'([^']+)'/;
+  const fixtureReceipt = path.join(compiledBuild, 'hotpot-build.json');
+  const fixtureBuild = fs.existsSync(fixtureReceipt) ? readJson(fixtureReceipt).clientBuild : undefined;
+  write(path.join(root, skinPath), skin);
+  if (fixtureBuild && fixtureBuild !== skin.match(marker)?.[1]) {
+    assert.throws(() => finalizeCloudBuild({root, build}), /旧代码/);
+    write(path.join(root, skinPath), skin.replace(marker, () => `CLIENT_BUILD = '${fixtureBuild}'`));
+  }
   const result = finalizeCloudBuild({root, build});
   assert.strictEqual(readJson(path.join(build, 'hotpot-build.json')).clientBuild,
     result.clientBuild);

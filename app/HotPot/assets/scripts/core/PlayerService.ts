@@ -1,6 +1,8 @@
 import {validateDevelopmentConfig} from '../data/CloudConfig';
 import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
+import {CashoutSave, emptyCashoutStock} from '../data/CashoutData';
 import {
+  CASHOUT_SYNC_VERSION,
   clone,
   CloudPlayer,
   enterPlayDay,
@@ -8,6 +10,7 @@ import {
   PLAY_SESSION_VERSION,
   PlayerState,
   PROGRESS_VERSION,
+  validateCashoutSave,
   validatePlayerState,
   validateRegions,
 } from '../data/PlayerData';
@@ -20,16 +23,57 @@ export type {PlayerStorage, SyncStatus} from './PlayerServiceBase';
  * 云端连接、同步队列与本地存储实现。
  */
 export class PlayerService extends RegionLeaderboardService {
-  /** 玩家点击同步后重连，并补传登录前保留的通关；不替玩家选择存档。 */
-  async retryCloudSync(): Promise<void> {
+  get cashout(): CashoutSave {
+    return clone(this.local.state.cashout || {version: 1, stock: emptyCashoutStock(), run: null});
+  }
+
+  setCashout(value: CashoutSave): boolean {
+    return this.commitState({...this.local.state, cashout: validateCashoutSave(value)}, true);
+  }
+
+  async syncAtStartup(): Promise<void> {
     await this.initialize();
+    if (this.isConflict) this.resolveConflict(true);
+    this.migrateLegacyCashout();
+  }
+
+  /** Pull the current revision, keeping pending local edits when it is still their base. */
+  async retryCloudSync(): Promise<void> {
+    if (this.playerId) {
+      await this.flush();
+      try {
+        const remote = this.parseRemote(await this.request({action: 'load'}));
+        if (remote.playerId !== this.playerId) throw new Error('云端身份不一致');
+        this.acceptRemote(remote, this.local);
+      } catch (error) {
+        this.describeFailure(error);
+        this.status = this.remote ? 'conflict' : 'error';
+        this.changed();
+        return;
+      }
+    } else {
+      await this.initialize(true);
+    }
     if (!this.cloud || !this.playerId) {
       await this.refreshLeaderboard();
       return;
     }
+    if (this.isConflict) this.resolveConflict(true);
+    this.migrateLegacyCashout();
     this.claimGuestWins();
     await this.flush();
+    if (this.isConflict) this.resolveConflict(true);
     await this.refreshLeaderboard();
+  }
+
+  private migrateLegacyCashout(): void {
+    if (this.local.state.cashout) return;
+    try {
+      const raw = this.storage.getItem('hotpot.cashout.v1:' + (this.playerId || 'guest'));
+      if (raw) this.setCashout(JSON.parse(raw));
+    } catch {
+      // Leave an unreadable legacy record in place.
+    }
   }
   /** Refresh on entry; failure leaves the last valid settings in memory. */
   async refreshRuntimeConfig(): Promise<void> {
@@ -46,7 +90,7 @@ export class PlayerService extends RegionLeaderboardService {
   /**
    * 验证环境、加载云档案并合并本机待同步记录。
    */
-  protected async connect(): Promise<void> {
+  protected async connect(adoptGuest: boolean): Promise<void> {
     if (this.playerId) {
       await this.flush();
       return;
@@ -71,49 +115,51 @@ export class PlayerService extends RegionLeaderboardService {
       // 确认服务器身份之后才读取该账号的本地缓存，不展示上一账号的私有进度。
       this.playerId = remote.playerId;
       const cached = this.readLocal(remote.playerId);
-      const browserGuest = this.cloud.platform === 'web' && !cached
-        && remote.revision === 0 ? this.local.state : null;
-      this.local =
-        cached || this.blank(remote.playerId, remote.revision,
-          browserGuest || remote.state);
-      if (browserGuest) {
+      const importGuest = !cached && remote.revision === 0
+        && (this.cloud.platform === 'web' || (adoptGuest && this.local.dirty));
+      if (importGuest) {
+        this.local = this.blank(remote.playerId, remote.revision, this.local.state);
         this.local.dirty = true;
         this.local.mutationId = this.newMutationId();
         this.status = 'pending';
-      } else if (cached?.dirty) {
-        if (cached.mutationId === remote.lastMutationId) {
-          this.local = this.blank(
-            remote.playerId,
-            remote.revision,
-            remote.state,
-          );
-          this.status = 'synced';
-        } else if (cached.baseRevision !== remote.revision) {
-          this.remote = remote;
-          this.status = 'conflict';
-        } else {
-          this.status = 'pending';
-        }
+        this.applyActiveDay();
+        this.persist();
+        this.changed();
       } else {
-        this.local = this.blank(remote.playerId, remote.revision, remote.state);
-        this.status = 'synced';
+        this.acceptRemote(remote, cached);
       }
-      this.applyActiveDay();
-      this.persist();
-      this.changed();
       if (this.cloud.platform === 'web') {
         this.claimGuestWins();
       }
       void this.refreshLeaderboard();
-      if (this.status === 'pending') {
-        this.schedule();
-      }
     } catch (error) {
       this.describeFailure(error);
       this.cloud = null;
       this.status = 'error';
       this.changed();
     }
+  }
+
+  private acceptRemote(remote: CloudPlayer, cached: LocalPlayer | null): void {
+    this.remote = null;
+    if (cached?.dirty && cached.mutationId !== remote.lastMutationId) {
+      this.local = cached;
+      if (cached.attemptedMutationId === remote.lastMutationId
+        && remote.revision === cached.baseRevision + 1) {
+        this.local.baseRevision = remote.revision;
+        this.local.state.progress = mergeProgress(this.local.state.progress, remote.state.progress);
+      } else if (cached.baseRevision !== remote.revision) {
+        this.remote = remote;
+      }
+      delete this.local.attemptedMutationId;
+      this.status = this.remote ? 'conflict' : 'pending';
+    } else {
+      this.local = this.blank(remote.playerId, remote.revision, remote.state);
+      this.status = 'synced';
+    }
+    this.applyActiveDay();
+    this.persist();
+    this.changed();
   }
 
   /**
@@ -141,13 +187,20 @@ export class PlayerService extends RegionLeaderboardService {
    * 校验并持久化玩家状态，再安排云端同步。
    */
   protected setState(state: PlayerState): void {
-    const valid = validatePlayerState(state, this.regions);
-    if (JSON.stringify(valid) === JSON.stringify(this.local.state)) {
-      return;
+    this.commitState(validatePlayerState(state, this.regions));
+  }
+
+  private commitState(state: PlayerState, requireStorage = false): boolean {
+    const previous = this.local;
+    if (JSON.stringify(state) === JSON.stringify(previous.state)) {
+      return true;
     }
-    this.local.state = valid;
-    this.local.dirty = true;
-    this.local.mutationId = this.newMutationId();
+    this.local = {...previous, state, dirty: true, mutationId: this.newMutationId()};
+    this.persist();
+    if (requireStorage && !this.storageAvailable) {
+      this.local = previous;
+      return false;
+    }
     if (this.status !== 'conflict') {
       this.status = this.playerId
         ? 'pending'
@@ -155,26 +208,32 @@ export class PlayerService extends RegionLeaderboardService {
           ? 'error'
           : 'local';
     }
-    this.persist();
     this.changed();
-    this.schedule();
+    return true;
   }
 
   /**
    * 按版本号提交本机修改并处理云端冲突。
    */
-  protected async drain(): Promise<void> {
-    if (!this.cloud
-      || !this.playerId ||
-      this.status === 'conflict') {
+  protected async drain(singleBatch: boolean): Promise<void> {
+    if (!this.cloud || !this.playerId) {
       return;
     }
     await this.flushRegionWins();
     while (this.local.dirty && !this.isConflict) {
-      const sent = clone(this.local);
-      this.status = 'syncing';
-      this.changed();
       try {
+        if (this.local.attemptedMutationId
+          && this.local.attemptedMutationId !== this.local.mutationId) {
+          const remote = this.parseRemote(await this.request({action: 'load'}));
+          if (remote.playerId !== this.playerId) throw new Error('云端身份不一致');
+          this.acceptRemote(remote, this.local);
+          if (this.isConflict || !this.local.dirty) return;
+        }
+        const sent = clone(this.local);
+        this.status = 'syncing';
+        this.local.attemptedMutationId = sent.mutationId;
+        this.persist();
+        this.changed();
         const response = await this.request({
           action: 'save',
           expectedRevision: sent.baseRevision,
@@ -191,6 +250,7 @@ export class PlayerService extends RegionLeaderboardService {
           this.changed();
           return;
         }
+        delete this.local.attemptedMutationId;
         this.local.baseRevision = remote.revision;
         if (this.local.mutationId === sent.mutationId) {
           this.local.dirty = false;
@@ -207,6 +267,7 @@ export class PlayerService extends RegionLeaderboardService {
         this.applyActiveDay();
         this.persist();
         this.changed();
+        if (singleBatch) return;
       } catch (error) {
         this.describeFailure(error);
         this.status = 'error';
@@ -214,27 +275,6 @@ export class PlayerService extends RegionLeaderboardService {
         return;
       }
     }
-  }
-
-  /**
-   * 延迟提交玩家状态，合并短时间内的连续操作。
-   */
-  protected schedule(): void {
-    if (!this.cloud
-      || !this.playerId ||
-      this.timer ||
-      this.status === 'conflict') {
-      return;
-    }
-    this.timer = setTimeout(
-      /**
-       * 到期后继续同步或完成动画。
-       */ () => {
-        this.timer = null;
-        void this.flush();
-      },
-      1500,
-    );
   }
 
   /**
@@ -337,6 +377,10 @@ export class PlayerService extends RegionLeaderboardService {
       && response.result.playSessionVersion !== PLAY_SESSION_VERSION) {
       throw new Error('DAILY_UPGRADE_REQUIRED');
     }
+    if (['load', 'save'].includes(data.action)
+      && response.result.cashoutSyncVersion !== CASHOUT_SYNC_VERSION) {
+      throw new Error('CASHOUT_UPGRADE_REQUIRED');
+    }
     return response.result;
   }
 
@@ -366,6 +410,7 @@ export class PlayerService extends RegionLeaderboardService {
       DATABASE_UNAVAILABLE: '云存档服务暂不可用',
       INVALID_STATE: '当前存档校验失败',
       CLOUD_UPGRADE_REQUIRED: '请先更新云函数再同步图鉴与成就',
+      CASHOUT_UPGRADE_REQUIRED: '请先更新云函数再同步副本与背包',
       DAILY_UPGRADE_REQUIRED:
         '请先更新云函数再同步每日关卡、随机牌阵与食材组合',
     };
@@ -531,7 +576,9 @@ export class PlayerService extends RegionLeaderboardService {
         !Number.isSafeInteger(value.baseRevision) ||
         value.baseRevision < 0 ||
         typeof value.dirty !== 'boolean' ||
-        typeof value.mutationId !== 'string') {
+        typeof value.mutationId !== 'string' ||
+        (value.attemptedMutationId !== undefined
+          && typeof value.attemptedMutationId !== 'string')) {
         return null;
       }
       return {...value, state: validatePlayerState(value.state, this.regions)};

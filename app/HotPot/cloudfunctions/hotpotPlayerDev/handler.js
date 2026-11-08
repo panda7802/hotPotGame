@@ -161,6 +161,7 @@ exports.createHandler = function createHandler(
             ok: true,
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
+            cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
             player: expose(current),
           };
         }
@@ -169,6 +170,7 @@ exports.createHandler = function createHandler(
             ok: true,
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
+            cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
             player: expose(current),
           };
         }
@@ -177,6 +179,7 @@ exports.createHandler = function createHandler(
             ok: true,
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
+            cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
             conflict: true,
             player: expose(current),
           };
@@ -184,6 +187,8 @@ exports.createHandler = function createHandler(
         // 兼容仍在运行的旧客户端：其请求没有 progress，也不能清空永久图鉴和成就。
         const nextState = {
           ...state,
+          ...(state.cashout === undefined && current.state.cashout !== undefined
+            ? {cashout: current.state.cashout} : {}),
           progress: domain.mergeProgress(
             current.state.progress,
             state.progress,
@@ -202,6 +207,7 @@ exports.createHandler = function createHandler(
           ok: true,
           progressVersion: domain.PROGRESS_VERSION,
           playSessionVersion: domain.PLAY_SESSION_VERSION,
+          cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
           player: expose(next),
         };
       });

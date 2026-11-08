@@ -17,7 +17,7 @@ import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
 import {getPageTheme} from '../data/PageTheme';
 
 /**
- * 玩家档案、云存档选择和图鉴菜单。
+ * 玩家档案与图鉴菜单。
  */
 export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
   private collectionOffsets = {ingredients: 0, achievements: 0};
@@ -288,19 +288,8 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
       alignFooter ? 500 : 580,
       40,
     );
-    this.playerStatusLabel = makeLabel(
-      panel,
-      this.playerService!.statusText,
-      24,
-      '#94735D',
-      new Vec3(0, -426),
-      alignFooter ? 500 : 580,
-      76,
-      true,
-    );
     if (alignFooter) {
       footerHint.horizontalAlign = Label.HorizontalAlign.LEFT;
-      this.playerStatusLabel.horizontalAlign = Label.HorizontalAlign.LEFT;
     }
     makeButton(
       panel,
@@ -326,10 +315,6 @@ export abstract class HotPotPlayerMenus extends HotPotProfileMenus {
    * 打开地区选择菜单。
    */
   protected abstract showRegionPicker(codes: string[]): void;
-  /**
-   * 打开存档冲突选择页。
-   */
-  protected abstract showSaveConflict(): void;
   /**
    * 显示食材详情。
    */

@@ -13,7 +13,7 @@ import {
   Vec3,
 } from 'cc';
 
-import {GameSave, regionPath} from '../data/PlayerData';
+import {regionPath} from '../data/PlayerData';
 import {getPageTheme} from '../data/PageTheme';
 
 import {
@@ -23,7 +23,6 @@ import {
   drawLacquerButton,
   drawRoundRect,
   makeButton,
-  makeBodyLabel,
   makeLabel,
   makePanelHeading,
   transform,
@@ -36,24 +35,6 @@ import {HotPotAppearanceMenus} from './HotPotAppearanceMenus';
  */
 export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
   protected menuReturnActions = new Map<string, () => void>();
-  /** 主动重连后保留现有棋盘，并让玩家决定是否恢复账号对局。 */
-  protected async retryPlayerCloud(): Promise<void> {
-    const service = this.playerService;
-    if (!service || service.status === 'connecting'
-      || service.status === 'syncing') return;
-    const wasConnected = !!service.playerId;
-    await service.retryCloudSync();
-    if (!this.node.isValid) return;
-    this.showToast(service.statusText, '#477345');
-    if (!service.playerId) return;
-    if (service.isConflict || !wasConnected) {
-      this.dismissPlayerMenu('PlayerOverlay');
-      this.dismissPlayerMenu('RegionOverlay');
-      if (service.isConflict) this.showSaveConflict();
-      else if (service.state.save) this.showConnectedSaveChoice(service.state.save);
-      else this.checkpointGame();
-    }
-  }
   /**
    * 关闭指定的玩家菜单。
    */
@@ -63,8 +44,6 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
     overlay?.removeFromParent();
     overlay?.destroy();
     this.menuReturnActions.delete(name);
-    this.playerStatusLabel = null;
-    this.playerSaveLabel = null;
   }
 
   /**
@@ -160,24 +139,7 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
   }
 
   /**
-   * 生成当前玩家存档的摘要文字。
-   */
-  protected playerSaveText(): string {
-    const service = this.playerService!;
-    const save = service.state.save;
-    return save
-      ? '第' +
-          String(save.levelIndex + 1) +
-          '关 · ' +
-          String(save.removedIds.length) +
-          '张已拿取' +
-          ` · 云版本${service.revision}` +
-          ''
-      : '还没有存档';
-  }
-
-  /**
-   * 展示玩家档案、地区和同步状态。
+   * 展示玩家档案和地区。
    */
   protected showPlayerProfile(): void {
     const panel = this.makePlayerMenu('PlayerOverlay', 760);
@@ -235,90 +197,6 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
     drawRoundRect(divider, contentWidth, theme.id === 8 ? 1.5 : 3, 0, outline);
     makeButton(panel, '继续游戏', new Vec3(0, -284),
       contentWidth, 88, '#A3613B', () => open(() => {}));
-  }
-
-  /**
-   * 让玩家选择已连接云端时保留哪份对局。
-   */
-  protected showConnectedSaveChoice(saved: GameSave): void {
-    const panel = this.makePlayerMenu('ConnectedSaveOverlay', 520);
-    if (!panel) {
-      return;
-    }
-    const service = this.playerService!;
-    const reviewLayout = getPageTheme().id === 8;
-    if (reviewLayout) makePanelHeading(panel, '账号已连接', 181, 420);
-    else makeLabel(panel, '账号已连接', 42, '#8D3426', new Vec3(0, 181), 570, 60);
-    const savedSummary =
-      `账号存档：第${saved.levelIndex + 1}关 · ` +
-      `${saved.removedIds.length}张已拿取`;
-    const currentCount = this.levelData.tiles.filter(
-      /**
-       * 按条件筛选或判断条目：tile.removed。
-       */ (tile) => tile.removed,
-    ).length;
-    const currentSummary =
-      `当前这锅：第${this.levelIndex + 1}关 · ` + `${currentCount}张已拿取`;
-    makeBodyLabel(
-      panel,
-      `${savedSummary}\n${currentSummary}`,
-      26,
-      '#775145',
-      new Vec3(0, 81),
-      reviewLayout ? 522 : 590,
-      110,
-      true,
-    );
-    makeBodyLabel(
-      panel,
-      '选择要继续的进度，当前本机记录仍单独保留',
-      22,
-      '#94735D',
-      new Vec3(0, -13),
-      reviewLayout ? 522 : 590,
-      48,
-      true,
-    );
-    const finish =
-      /**
-       * 处理 finish 对应的游戏逻辑。
-       */ (): void => {
-        if (service.isConflict) {
-          this.showSaveConflict();
-        } else {
-          this.showPlayerProfile();
-        }
-      };
-    makeButton(
-      panel,
-      '继续账号存档',
-      new Vec3(0, -99),
-      400,
-      66,
-      '#D75542',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        this.dismissPlayerMenu('ConnectedSaveOverlay');
-        this.restoreGame(saved);
-        finish();
-      },
-    );
-    makeButton(
-      panel,
-      '将当前这锅保存到账号',
-      new Vec3(0, -186),
-      450,
-      66,
-      '#A3613B',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        this.dismissPlayerMenu('ConnectedSaveOverlay');
-        this.checkpointGame();
-        finish();
-      },
-    );
   }
 
   /**

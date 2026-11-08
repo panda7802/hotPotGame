@@ -1,8 +1,10 @@
 import {IngredientType, LEVELS} from './GameData';
+import type {CashoutSave} from './CashoutData';
 export const SAVE_VERSION = 1;
 export const BOARD_VERSION = 'hotpot-20260929';
 export const PROGRESS_VERSION = 1;
 export const PLAY_SESSION_VERSION = 7;
+export const CASHOUT_SYNC_VERSION = 1;
 export type SaveStatus = 'playing' | 'lost' | 'won';
 /**
  * SavedMove 的数据结构；字段说明见各成员。
@@ -158,6 +160,8 @@ export interface PlayerState {
    * 当前对局对应的本地自然日。
    */
   playDate: string;
+  /** Absent on accounts that have never saved the side challenge. */
+  cashout?: CashoutSave;
 }
 /**
  * CloudPlayer 的数据结构；字段说明见各成员。

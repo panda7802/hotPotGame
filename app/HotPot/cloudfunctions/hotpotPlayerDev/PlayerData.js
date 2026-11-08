@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
+exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.CASHOUT_SYNC_VERSION = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
 exports.localPlayDate = localPlayDate;
 exports.enterPlayDay = enterPlayDay;
 exports.validateProgress = validateProgress;
@@ -8,8 +8,10 @@ exports.mergeProgress = mergeProgress;
 exports.validateGameSave = validateGameSave;
 exports.restoreLevel = restoreLevel;
 exports.shouldUpgradeUnstartedLevelThree = shouldUpgradeUnstartedLevelThree;
+exports.validateCashoutSave = validateCashoutSave;
 exports.validatePlayerState = validatePlayerState;
 const RegionData_1 = require("./RegionData");
+const CashoutData_1 = require("./CashoutData");
 var RegionData_2 = require("./RegionData");
 Object.defineProperty(exports, "regionPath", { enumerable: true, get: function () { return RegionData_2.regionPath; } });
 Object.defineProperty(exports, "validateRegions", { enumerable: true, get: function () { return RegionData_2.validateRegions; } });
@@ -20,6 +22,7 @@ Object.defineProperty(exports, "SAVE_VERSION", { enumerable: true, get: function
 Object.defineProperty(exports, "BOARD_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.BOARD_VERSION; } });
 Object.defineProperty(exports, "PROGRESS_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.PROGRESS_VERSION; } });
 Object.defineProperty(exports, "PLAY_SESSION_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.PLAY_SESSION_VERSION; } });
+Object.defineProperty(exports, "CASHOUT_SYNC_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.CASHOUT_SYNC_VERSION; } });
 Object.defineProperty(exports, "clone", { enumerable: true, get: function () { return PlayerTypes_2.clone; } });
 Object.defineProperty(exports, "emptyProgress", { enumerable: true, get: function () { return PlayerTypes_2.emptyProgress; } });
 Object.defineProperty(exports, "emptyPlayerState", { enumerable: true, get: function () { return PlayerTypes_2.emptyPlayerState; } });
@@ -413,6 +416,57 @@ function shouldUpgradeUnstartedLevelThree(save) {
         && save.toolUses.undo === 1 && save.toolUses.bomb === 1
         && save.toolUses.shuffle === 1;
 }
+function validateStock(value) {
+    (0, PlayerTypes_1.check)(value && CashoutData_1.CASHOUT_TOOLS.every(tool => (0, PlayerTypes_1.integer)(value[tool], 0, Number.MAX_SAFE_INTEGER)), '道具库存错误');
+    return { undo: value.undo, shuffle: value.shuffle, bomb: value.bomb };
+}
+function validateCashoutSave(value) {
+    var _a;
+    (0, PlayerTypes_1.check)((value === null || value === void 0 ? void 0 : value.version) === 1, '副本存档版本错误');
+    const stock = validateStock(value.stock);
+    const saved = { version: 1, stock, run: null };
+    if (value.run !== null) {
+        const run = value.run;
+        (0, PlayerTypes_1.check)(run && (run.difficulty === undefined || (0, PlayerTypes_1.integer)(run.difficulty, 0, 2)), '副本难度错误');
+        const stages = (0, CashoutData_1.cashoutStages)(run);
+        (0, PlayerTypes_1.check)((0, PlayerTypes_1.integer)(run.stage, 0, stages.length - 1) && (0, PlayerTypes_1.integer)(run.seed, 0, 0xffffffff), '副本牌阵错误');
+        const stage = stages[run.stage];
+        const total = stage.layers.reduce((sum, count) => sum + count, 0);
+        (0, PlayerTypes_1.check)(Array.isArray(run.removed) && run.removed.length <= total
+            && new Set(run.removed).size === run.removed.length
+            && run.removed.every(id => (0, PlayerTypes_1.integer)(id, 0, total - 1)), '副本移除牌错误');
+        (0, PlayerTypes_1.check)(Array.isArray(run.tray) && run.tray.length <= 7
+            && run.tray.every(type => GameData_1.INGREDIENTS.some(item => item.id === type)
+                && run.tray.filter(item => item === type).length < 3)
+            && run.removed.length >= run.tray.length
+            && (run.removed.length - run.tray.length) % 3 === 0, '副本托盘错误');
+        const cleared = run.removed.length === total && !run.tray.length;
+        (0, PlayerTypes_1.check)(run.status === 'playing' ? !cleared && run.tray.length < 7
+            : run.status === 'lost' ? run.tray.length === 7
+                : (run.status === 'decision' || run.status === 'won') && cleared, '副本结算状态错误');
+        saved.run = {
+            ...(run.difficulty === undefined ? {} : { difficulty: run.difficulty }),
+            stage: run.stage, seed: run.seed, removed: run.removed.slice(),
+            tray: run.tray.slice(), status: run.status,
+        };
+        if (run.status === 'won') {
+            const reward = validateStock(run.reward);
+            (0, PlayerTypes_1.check)(CashoutData_1.CASHOUT_TOOLS.reduce((sum, tool) => sum + reward[tool], 0) === stage.total, '副本奖励数量错误');
+            saved.run.reward = reward;
+        }
+    }
+    if (value.nextStartAt !== undefined) {
+        (0, PlayerTypes_1.check)((0, PlayerTypes_1.integer)(value.nextStartAt, 0, Number.MAX_SAFE_INTEGER), '副本冷却时间错误');
+        saved.nextStartAt = value.nextStartAt;
+    }
+    if (value.assisted !== undefined) {
+        (0, PlayerTypes_1.check)((0, PlayerTypes_1.integer)((_a = value.assisted) === null || _a === void 0 ? void 0 : _a.used, 1, 2), '背包使用次数错误');
+        const save = validateGameSave(value.assisted.save);
+        (0, PlayerTypes_1.check)(save.levelIndex === 2 && save.runId, '背包对局错误');
+        saved.assisted = { used: value.assisted.used, save };
+    }
+    return saved;
+}
 /**
  * 校验玩家地区、对局与永久记录。
  */
@@ -432,5 +486,6 @@ function validatePlayerState(value, regions) {
         save,
         progress: recordProgress(progress, save),
         playDate: validatePlayDate(value.playDate),
+        ...(value.cashout === undefined ? {} : { cashout: validateCashoutSave(value.cashout) }),
     };
 }

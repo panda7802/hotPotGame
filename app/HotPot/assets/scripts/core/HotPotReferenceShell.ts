@@ -1,4 +1,4 @@
-import {Graphics,Label,Node,screen,Sprite,UITransform,view} from 'cc';
+import {Graphics,Label,Node,screen,UITransform,view} from 'cc';
 import {PageStyle,getPageTheme,setPageTheme} from '../data/PageTheme';
 import {HotPotLegacyGame} from './HotPotLegacyGame';
 import {hit,text} from './HotPotReferenceArt';
@@ -7,7 +7,17 @@ import {referenceArea,fitReferenceBackdrop,fitReferenceContent} from './HotPotRe
 import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGameArt';
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
-import {designSurface,designText,fitDesignPage,paintBackpackIcon,paintThemeHeaderButton} from './HotPotDesignUi';
+import {
+  designSurface,designText,fitDesignPage,paintBackpackIcon,paintThemeHeaderButton,
+  paintToolIcon,TOOL_ICON_SIZE,
+} from './HotPotDesignUi';
+
+const TOOLBAR_PLATES = {
+  1:{fill:'#204C3E',bag:'#913729',edge:'#D2A35E',ink:'#FFF4D5',bagInk:'#FFF4D5',radius:19},
+  4:{fill:'#FFF3D9',bag:'#E3EEC7',edge:'#D8AF77',ink:'#653C22',bagInk:'#385638',radius:32},
+  8:{fill:'#FAF6E4',bag:'#DCEADC',edge:'#9FB6A1',ink:'#264E40',bagInk:'#264E40',radius:30},
+  9:{fill:'#FAEED6',bag:'#F1D8C2',edge:'#BA905E',ink:'#362A21',bagInk:'#7E3426',radius:8},
+};
 
 /** Independent transparent artwork over one full-bleed scene; all gameplay remains live. */
 export abstract class HotPotReferenceShell extends HotPotLegacyGame {
@@ -103,6 +113,14 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       b=[b[0]+(b[2]-source[2]*s)/2,b[1]+(b[3]-source[3]*s)/2,source[2]*s,source[3]*s]}
     this.positionBox(node,b);paintGameArt(node,role,style,sliced);
   }
+  private positionToolbarPlate(button:Node,box:GameBox,style:PageStyle,bag=false):void{
+    this.positionBox(button,box);
+    const material=TOOLBAR_PLATES[style];
+    const plate=button.getChildByName('ToolPlate')||gameArtNode(button,'ToolPlate');
+    plate.setSiblingIndex(0);
+    transform(plate,box[2],box[3]*.82);
+    designSurface(plate,bag?material.bag:material.fill,material.radius,material.edge);
+  }
   protected positionReferenceShell():void{
     if(!this.referenceRoot||!this.levelLabel)return;
     const t=getPageTheme(),first=this.levelIndex===0;
@@ -153,37 +171,27 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       const face=slot.getChildByName('SlotArtwork')||gameArtNode(slot,'SlotArtwork');transform(face,86,height);face.setPosition(0,0);paintGameArt(face,'slot',t.id);slot.active=true;
     }
     this.reserveNode.setPosition(0,l.h/2-l.tray[1]+64);
+    const material=TOOLBAR_PLATES[t.id];
     (['undo','bomb','shuffle'] as ToolType[]).forEach((type,i)=>{
       const button=this.toolButtons.get(type)!,b=l.tools[i];
-      let medallion=button.getChildByName('ToolMedallion');
-      let toolPlate=button.getChildByName('ToolPlate');
-      if(t.id===8){
-        this.positionBox(button,b);
-        (button as any).gameArtKey='tool-medallion-8';
-        const sprite=button.getComponent(Sprite);if(sprite)sprite.enabled=false;
-        if(!toolPlate)toolPlate=gameArtNode(button,'ToolPlate');
-        toolPlate.active=true;toolPlate.setSiblingIndex(0);
-        drawRoundRect(toolPlate,b[2],b[3]*.82,b[3]*.41,t.card,t.edge,2);
-        if(!medallion)medallion=gameArtNode(button,'ToolMedallion');
-        medallion.active=true;transform(medallion,b[2]*.60,b[3]*.84);
-        medallion.setPosition(-b[2]*.19,0);paintGameArt(medallion,type,t.id);
-      }else{
-        if(toolPlate)toolPlate.active=false;
-        if(medallion)medallion.active=false;
-        const plate=button.getComponent(Graphics);if(plate)plate.enabled=false;
-        this.positionArt(button,type,b,t.id);
-        const sprite=button.getComponent(Sprite);if(sprite)sprite.enabled=true;
-      }
+      this.positionToolbarPlate(button,b,t.id);
+      const icon=button.getChildByName('ToolIcon')||gameArtNode(button,'ToolIcon');
+      const scale=Math.min(b[2]*.42,b[3]*.64)/TOOL_ICON_SIZE;
+      transform(icon,TOOL_ICON_SIZE,TOOL_ICON_SIZE);
+      icon.setScale(scale,scale,1);icon.setPosition(-b[2]*.23,0);
+      paintToolIcon(icon,type,t.id);
       const label=button.getChildByName('ToolLabel')!;
-      // 青瓷按钮的插画占据左半部，文字固定在右侧留白内。
-      const labelWidth=t.id===8?b[2]*.33:b[2]*.5;
-      transform(label,labelWidth,b[3]*.65);
-      label.setPosition(b[2]*(t.id===8?.28:.22),0);
-      const component=label.getComponent(Label)!;component.fontSize=(t.id===8?25:30)*l.c;component.lineHeight=40*l.c;component.overflow=Label.Overflow.SHRINK;component.color=hex(t.id===8||t.id===9?t.ink:'#FFF5D9');
-      const badgeScale=t.id===8?l.c:1;
-      const badge=button.getChildByName('UsesBadge')!;transform(badge,38*badgeScale,38*badgeScale);const g=badge.getComponent(Graphics)||badge.addComponent(Graphics);g.clear();g.fillColor=hex('#EA5937');g.strokeColor=hex('#FFE9AF');g.lineWidth=2*badgeScale;g.circle(0,0,18*badgeScale);g.fill();g.stroke();
-      badge.setPosition(b[2]/2-18*badgeScale,t.id===8?b[3]*.38:b[3]/2-1);const count=badge.getChildByName('Label')!;transform(count,36*badgeScale,36*badgeScale);count.setPosition(0,0);
-      count.getComponent(Label)!.fontSize=25*badgeScale;
+      transform(label,b[2]*.50,b[3]*.6);label.setPosition(b[2]*.22,-2*l.c);
+      const component=label.getComponent(Label)!;
+      component.fontSize=30*l.c;component.lineHeight=40*l.c;
+      component.overflow=Label.Overflow.SHRINK;component.color=hex(material.ink);
+      const badge=button.getChildByName('UsesBadge')!;
+      badge.setSiblingIndex(button.children.length-1);
+      const badgeSize=34*l.c;
+      drawRoundRect(badge,badgeSize,badgeSize,badgeSize/2,'#AD412D','#FFF0CA',1.5);
+      badge.setPosition(b[2]/2-badgeSize*.58,b[3]*.40);
+      const count=badge.getChildByName('Label')!;transform(count,badgeSize,badgeSize);count.setPosition(0,0);
+      count.getComponent(Label)!.fontSize=24*l.c;
     });
     const inventory=this.toolBar.getChildByName('Button_背包')||(
       backpack ? hit(this.toolBar,'Button_背包',[0,0,1,1],1280,()=>this.showInventoryTools()) : null
@@ -192,10 +200,9 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       inventory.active=backpack;
       if(backpack){
         const box=l.tools[3];
-        this.positionBox(inventory,box);
-        designSurface(inventory,t.card,26,t.edge);
+        this.positionToolbarPlate(inventory,box,t.id,true);
         const icon=inventory.getChildByName('InventoryIcon')||gameArtNode(inventory,'InventoryIcon');
-        const iconSize=Math.min(box[2]*.39,box[3]*.57);
+        const iconSize=Math.min(box[2]*.41,box[3]*.62);
         transform(icon,48,48);
         icon.setPosition(-box[2]*.23,0);
         icon.setScale(iconSize/48,iconSize/48,1);
@@ -205,8 +212,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
         label.node.name='InventoryLabel';
         transform(label.node,box[2]*.54,box[3]);
         label.node.setPosition(box[2]*.21,0);
-        label.color=hex(t.ink);
-        label.fontSize=28*l.c;label.lineHeight=40*l.c;
+        label.color=hex(material.bagInk);
+        label.fontSize=30*l.c;label.lineHeight=40*l.c;
       }
     }
     for(const [i,name] of ['Button_重新开始','Button_声音'].entries()){
@@ -232,7 +239,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     super.updateProgress();
     if(this.levelLabel)this.levelLabel.string='第 '+(this.levelIndex+1)+' 关 · '+this.levelData.config.title;
     if(this.isInventoryAssisted()&&this.progressLabel)
-      this.progressLabel.string='道具辅助 · 仅本机  |  '+this.progressLabel.string;
+      this.progressLabel.string='道具辅助  |  '+this.progressLabel.string;
     if(this.refMeter)this.updateReferenceMeter();
   }
   private updateSoundMark():void{
@@ -246,7 +253,9 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     if(this.toolBar)this.toolBar.active=this.levelIndex>0;
     for(const type of ['undo','bomb','shuffle'] as ToolType[]){
       const button=this.toolButtons.get(type);if(!button)continue;
-      (button as any).referenceDisabled=this.levelIndex===0||!(this.unlimitedTools[type]||this.toolUses[type]>0);
+      const disabled=this.levelIndex===0||!(this.unlimitedTools[type]||this.toolUses[type]>0);
+      (button as any).referenceDisabled=disabled;
+      const icon=button.getChildByName('ToolIcon');if(icon)opacity(icon,disabled?150:255);
       const label=button.getChildByName('UsesBadge')?.getChildByName('Label')?.getComponent(Label);
       if(label)label.string=this.levelIndex>0?(this.unlimitedTools[type]?'∞':String(this.toolUses[type])):'0';
     }

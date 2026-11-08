@@ -44,6 +44,8 @@ export interface LocalPlayer {
    * 一次修改的幂等标识。
    */
   mutationId: string;
+  /** A batch sent against baseRevision whose response may have been lost. */
+  attemptedMutationId?: string;
   /**
    * 玩家档案或对局状态。
    */ state: PlayerState;
@@ -97,10 +99,6 @@ export abstract class PlayerServiceBase {
    * 正在执行的同步任务。
    */
   protected flushPromise: Promise<void> | null = null;
-  /**
-   * 延迟同步的计时器。
-   */
-  protected timer: ReturnType<typeof setTimeout> | null = null;
   /**
    * 本会话中本机修改的递增序号。
    */
@@ -183,11 +181,11 @@ export abstract class PlayerServiceBase {
   /**
    * 建立云连接；并发初始化复用同一个 Promise。
    */
-  initialize(): Promise<void> {
+  initialize(adoptGuest = false): Promise<void> {
     if (this.startupPromise) {
       return this.startupPromise;
     }
-    this.startupPromise = this.connect().then(
+    this.startupPromise = this.connect(adoptGuest).then(
       /**
        * 处理异步任务完成或失败后的状态。
        */ () => {
@@ -232,7 +230,6 @@ export abstract class PlayerServiceBase {
     if (reset) {
       this.persist();
       this.changed();
-      this.schedule();
     }
     return reset;
   }
@@ -240,15 +237,11 @@ export abstract class PlayerServiceBase {
   /**
    * 立即执行待处理的同步。
    */
-  flush(): Promise<void> {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
+  flush(singleBatch = false): Promise<void> {
     if (this.flushPromise) {
       return this.flushPromise;
     }
-    this.flushPromise = this.drain().then(
+    this.flushPromise = this.drain(singleBatch).then(
       /**
        * 处理异步任务完成或失败后的状态。
        */ () => {
@@ -278,10 +271,15 @@ export abstract class PlayerServiceBase {
     );
     this.remote = null;
     if (useCloud) {
+      const cashout = remote.state.cashout === undefined ? this.local.state.cashout : undefined;
       this.local = this.blank(this.playerId, remote.revision, remote.state);
       this.local.state.progress = progress;
+      if (cashout) {
+        this.local.state.cashout = cashout;
+      }
       this.local.dirty =
-        JSON.stringify(progress) !== JSON.stringify(remote.state.progress);
+        JSON.stringify(progress) !== JSON.stringify(remote.state.progress)
+        || !!cashout;
       if (this.local.dirty) {
         this.local.mutationId = this.newMutationId();
       }
@@ -289,6 +287,7 @@ export abstract class PlayerServiceBase {
     } else {
       this.local.state.progress = progress;
       this.local.baseRevision = remote.revision;
+      delete this.local.attemptedMutationId;
       this.local.dirty = true;
       this.local.mutationId = this.newMutationId();
       this.status = 'pending';
@@ -296,13 +295,12 @@ export abstract class PlayerServiceBase {
     this.applyActiveDay();
     this.persist();
     this.changed();
-    this.schedule();
     return this.state;
   }
   /**
    * 连接云端账号。
    */
-  protected abstract connect(): Promise<void>;
+  protected abstract connect(adoptGuest: boolean): Promise<void>;
   /**
    * 根据当前自然日调整存档。
    */
@@ -314,11 +312,7 @@ export abstract class PlayerServiceBase {
   /**
    * 发送等待同步的修改。
    */
-  protected abstract drain(): Promise<void>;
-  /**
-   * 安排下一次同步。
-   */
-  protected abstract schedule(): void;
+  protected abstract drain(singleBatch: boolean): Promise<void>;
   /**
    * 获取地区树。
    */

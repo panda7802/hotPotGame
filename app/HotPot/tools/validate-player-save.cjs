@@ -56,6 +56,7 @@ function load(filename) {
 }
 const data = load(path.join(root, 'assets/scripts/data/GameData'));
 const domain = load(path.join(root, 'assets/scripts/data/PlayerData'));
+const cashout = load(path.join(root, 'assets/scripts/data/CashoutData'));
 const collection = load(path.join(root, 'assets/scripts/data/CollectionData'));
 const configDomain = load(path.join(root, 'assets/scripts/data/CloudConfig'));
 const {PlayerService} = load(
@@ -825,11 +826,6 @@ function service(
     wxClient(server, options),
     config,
   );
-  /**
-   * 延迟提交玩家状态，合并短时间内的连续操作。
-   */
-  // Tests explicitly drain queues; no background timers.
-  instance.schedule = () => {};
   return instance;
 }
 
@@ -837,6 +833,108 @@ function service(
  * 为测试提供当前调用所需的回调行为。
  */
 (async () => {
+  const cashoutServer = backend();
+  const cashoutCache = storage();
+  const cashoutNetwork = {};
+  const account = (await cashoutServer.handler({action: 'load'})).player.playerId;
+  const started = {...cashout.createCashoutRun(0), seed: 42};
+  const faces = cashout.cashoutTiles(started);
+  const sidePick = faces.find(tile => !tile.blockers.length);
+  const legacyCashout = {
+    version: 1,
+    stock: {undo: 2, shuffle: 1, bomb: 3},
+    run: cashout.takeCashoutTile(started, faces, sidePick.id),
+    nextStartAt: 1790000000000,
+    assisted: {used: 1, save: {...freshSave(2), runId: 'assisted-migration'}},
+  };
+  cashoutCache.setItem('hotpot.cashout.v1:' + account, JSON.stringify(legacyCashout));
+  const sideClient = service(cashoutServer, cashoutCache, cashoutNetwork);
+  await sideClient.syncAtStartup();
+  assert.deepStrictEqual(plain(sideClient.cashout), plain(domain.validateCashoutSave(legacyCashout)));
+  sideClient.setSave(freshSave(1));
+  assert.strictEqual(cashoutServer.documents.get(account).revision, 0);
+  await sideClient.flush(true);
+  assert.strictEqual(cashoutServer.documents.get(account).revision, 1);
+  const sideDeviceCache = storage();
+  const sideDevice = service(cashoutServer, sideDeviceCache);
+  await sideDevice.syncAtStartup();
+  assert.strictEqual(sideDevice.state.save.levelIndex, 1);
+  assert.deepStrictEqual(plain(sideDevice.cashout), plain(sideClient.cashout));
+
+  const {cashout: ignored, ...legacyState} = sideDevice.state;
+  const oldWrite = await cashoutServer.handler({
+    action: 'save', expectedRevision: 1, mutationId: 'legacy-main-save',
+    state: {...legacyState, save: freshSave(0)},
+  });
+  assert(oldWrite.ok);
+  assert.deepStrictEqual(plain(oldWrite.player.state.cashout), plain(sideClient.cashout));
+  await sideClient.retryCloudSync();
+  assert.strictEqual(sideClient.state.save.levelIndex, 0, 'manual sync pulls on an already connected device');
+
+  let releaseSideBatch;
+  cashoutNetwork.saveGate = new Promise(resolve => { releaseSideBatch = resolve; });
+  sideClient.setCashout({...sideClient.cashout, stock: {...sideClient.cashout.stock, undo: 1}});
+  const firstBatch = sideClient.flush(true);
+  await new Promise(resolve => setImmediate(resolve));
+  sideClient.setCashout({...sideClient.cashout, stock: {...sideClient.cashout.stock, bomb: 2}});
+  releaseSideBatch();
+  await firstBatch;
+  assert.strictEqual(cashoutServer.documents.get(account).state.cashout.stock.bomb, 3);
+  await sideClient.flush(true);
+  assert.strictEqual(cashoutServer.documents.get(account).state.cashout.stock.bomb, 2);
+
+  cashoutNetwork.loseResponse = true;
+  sideClient.setCashout({...sideClient.cashout, stock: {...sideClient.cashout.stock, undo: 0}});
+  await sideClient.flush(true);
+  assert.strictEqual(sideClient.status, 'error');
+  sideClient.setCashout({...sideClient.cashout, stock: {...sideClient.cashout.stock, bomb: 1}});
+  const reopenedSide = service(cashoutServer, cashoutCache);
+  await reopenedSide.syncAtStartup();
+  assert.strictEqual(reopenedSide.cashout.stock.bomb, 1, 'newer edits survive a lost acknowledgement and reopen');
+  await reopenedSide.flush(true);
+  assert.strictEqual(cashoutServer.documents.get(account).state.cashout.stock.bomb, 1);
+
+  sideDevice.setSave(freshSave(2));
+  await sideDevice.flush(true);
+  assert(sideDevice.isConflict);
+  const resolvedSide = service(cashoutServer, sideDeviceCache);
+  await resolvedSide.syncAtStartup();
+  assert(!resolvedSide.isConflict);
+  assert.strictEqual(resolvedSide.state.save.levelIndex, 0);
+  assert.strictEqual(resolvedSide.cashout.stock.bomb, 1);
+  const malformedSide = await cashoutServer.handler({
+    action: 'save', expectedRevision: resolvedSide.revision, mutationId: 'bad-cashout-run',
+    state: {...resolvedSide.state, cashout: {...resolvedSide.cashout,
+      run: {...resolvedSide.cashout.run, removed: [sidePick.id, sidePick.id]}}},
+  });
+  assert.strictEqual(malformedSide.code, 'INVALID_STATE');
+  const staleFunction = backend();
+  const staleHandler = staleFunction.handler;
+  staleFunction.handler = async event => {
+    const result = await staleHandler(event);
+    delete result.cashoutSyncVersion;
+    return result;
+  };
+  const guardedSide = service(staleFunction);
+  await guardedSide.syncAtStartup();
+  assert.strictEqual(guardedSide.status, 'error');
+  assert.strictEqual(guardedSide.playerId, null, 'old cloud function cannot acknowledge a side-game checkpoint');
+
+  const offlineSideServer = backend();
+  const offlineSideNetwork = {offline: true};
+  const offlineSide = service(offlineSideServer, storage(), offlineSideNetwork);
+  await offlineSide.syncAtStartup();
+  offlineSide.beginDailySession(new Date(2026, 10, 8));
+  offlineSide.setSave(freshSave(1));
+  offlineSide.setCashout({...legacyCashout, assisted: undefined});
+  await offlineSide.flush(true);
+  offlineSideNetwork.offline = false;
+  await offlineSide.retryCloudSync();
+  const adopted = offlineSideServer.documents.get(offlineSide.playerId).state;
+  assert.strictEqual(adopted.save.levelIndex, 1);
+  assert.deepStrictEqual(plain(adopted.cashout), plain(offlineSide.cashout));
+  console.log('Combined progress sync: migration, periodic batches, cross-device restore, legacy writes, lost replies and version guard OK');
+
   const unlockServer = backend();
   const unlockCache = storage();
   const unlockClient = service(unlockServer, unlockCache);

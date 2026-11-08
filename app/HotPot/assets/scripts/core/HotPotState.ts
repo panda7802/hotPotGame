@@ -34,6 +34,8 @@ import {
 import {DESIGN_HEIGHT, DESIGN_WIDTH, ToolType} from './HotPotUi';
 import {readPageStyle, setPageTheme} from '../data/PageTheme';
 
+const PLAYER_UPLOAD_INTERVAL = 30;
+
 /**
  * HotPotState：场景状态、生命周期和资源加载。
  */
@@ -42,6 +44,7 @@ export abstract class HotPotState extends HotPotFields {
   private readonly wechatSharing = new WechatShareService();
   private readonly wechatGameClub = new WechatGameClubService();
   private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
+  private manualPlayerSync = false;
 
   protected unbindGameClubEntry(): void {
     this.wechatGameClub.dispose();
@@ -117,7 +120,7 @@ export abstract class HotPotState extends HotPotFields {
     );
     this.buildShell();
     this.setupAudio();
-    this.progressLabel.string = '正在载入食材与玩家档案…';
+    this.progressLabel.string = '正在载入食材…';
     this.loadIngredientImages(
       /**
        * 在当前操作完成后更新相关游戏状态。
@@ -125,12 +128,11 @@ export abstract class HotPotState extends HotPotFields {
         void this.initializePlayer();
       },
     );
-    cocosGame.on(Game.EVENT_HIDE, this.flushPlayerSave, this);
     cocosGame.on(Game.EVENT_SHOW, this.resumePlayerDay, this);
   }
 
   /**
-   * 释放事件监听与音频，并提交待同步存档。
+   * 释放事件监听与音频。
    */
   onDestroy(): void {
     this.wechatSharing.dispose();
@@ -139,9 +141,8 @@ export abstract class HotPotState extends HotPotFields {
     this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
     this.bgmSource?.stop();
     this.effectSource?.stop();
-    cocosGame.off(Game.EVENT_HIDE, this.flushPlayerSave, this);
     cocosGame.off(Game.EVENT_SHOW, this.resumePlayerDay, this);
-    this.playerService?.flush();
+    this.unschedule(this.flushPlayerSave);
   }
 
   /**
@@ -184,12 +185,6 @@ export abstract class HotPotState extends HotPotFields {
           return;
         }
         this.profileButtonLabel.string = '我的';
-        if (this.playerStatusLabel?.node.isValid) {
-          this.playerStatusLabel.string = this.playerService!.statusText;
-        }
-        if (this.playerSaveLabel?.node.isValid) {
-          this.playerSaveLabel.string = this.playerSaveText();
-        }
         if (this.achievementNotificationsReady) {
           const entries = achievementEntries(this.playerService!.state).filter(
             /**
@@ -228,7 +223,7 @@ export abstract class HotPotState extends HotPotFields {
           }
         }
       };
-    await this.playerService.initialize();
+    await this.playerService.syncAtStartup();
     if (!this.node.isValid) {
       return;
     }
@@ -241,23 +236,47 @@ export abstract class HotPotState extends HotPotFields {
     const saved = this.resumeGameSave(this.playerService.state.save);
     if (saved) {
       this.restoreGame(saved);
-      this.showToast('已恢复上次这锅的进度', '#D86A3B');
     } else {
       this.loadLevel(0);
       if (newDay) {
         this.showToast('新的一天，从第一关开始', '#D86A3B');
       }
     }
-    if (this.playerService.isConflict) {
-      this.showSaveConflict();
-    }
+    this.schedule(this.flushPlayerSave, PLAYER_UPLOAD_INTERVAL);
   }
 
   /**
    * 立即提交待同步的玩家存档。
    */
   protected flushPlayerSave(): void {
-    void this.playerService?.flush();
+    if (!this.manualPlayerSync) void this.playerService?.flush(true);
+  }
+
+  protected async retryPlayerCloud(): Promise<void> {
+    const service = this.playerService;
+    if (!service || this.manualPlayerSync || (this.locked && !this.gameEnded)) return;
+    const owner = service.playerId;
+    const before = JSON.stringify([service.state.save, service.cashout.assisted]);
+    const wasLocked = this.locked;
+    const runId = this.runId;
+    this.manualPlayerSync = true;
+    this.locked = true;
+    try {
+      await service.retryCloudSync();
+    } catch (error) {
+      console.warn('[HotPot] Manual progress sync failed', error);
+      return;
+    } finally {
+      this.manualPlayerSync = false;
+      if (this.runId === runId) this.locked = wasLocked;
+    }
+    if (!this.node.isValid || !service.playerId
+      || (owner === service.playerId
+        && before === JSON.stringify([service.state.save, service.cashout.assisted]))) return;
+    this.dismissPlayerMenu('PlayerOverlay');
+    const saved = this.resumeGameSave(service.state.save);
+    if (saved) this.restoreGame(saved);
+    else this.loadLevel(0);
   }
 
   protected resumeGameSave(standard: GameSave | null): GameSave | null {
@@ -278,8 +297,6 @@ export abstract class HotPotState extends HotPotFields {
         'RegionOverlay',
         'RegionConfirmOverlay',
         'StyleOverlay',
-        'CloudConflictOverlay',
-        'ConnectedSaveOverlay',
         'CollectionOverlay',
         'CollectionDetailOverlay',
         'BackdoorOverlay',
@@ -287,11 +304,7 @@ export abstract class HotPotState extends HotPotFields {
         this.dismissPlayerMenu(name);
       this.loadLevel(0);
       this.showToast('新的一天，从第一关开始', '#D86A3B');
-      if (this.playerService.isConflict) {
-        this.showSaveConflict();
-      }
     }
-    this.flushPlayerSave();
   }
 
   /**
@@ -396,8 +409,6 @@ export abstract class HotPotState extends HotPotFields {
     return [
       'PlayerOverlay',
       'RegionOverlay',
-      'CloudConflictOverlay',
-      'ConnectedSaveOverlay',
       'CollectionOverlay',
       'CollectionDetailOverlay',
       'BackdoorOverlay',
@@ -537,11 +548,6 @@ export abstract class HotPotState extends HotPotFields {
   ): void;
 
   /**
-   * 返回当前存档摘要。
-   */
-  protected abstract playerSaveText(): string;
-
-  /**
    * 打开玩家资料页。
    */
   protected abstract showPlayerProfile(): void;
@@ -556,11 +562,6 @@ export abstract class HotPotState extends HotPotFields {
       collectionHeadingTaps: number; collectionIngredientTaps: number;
     },
   ): void;
-
-  /**
-   * 打开存档冲突选择页。
-   */
-  protected abstract showSaveConflict(): void;
 
   /**
    * 绘制失败弹窗。

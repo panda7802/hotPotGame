@@ -96,7 +96,6 @@ export abstract class HotPotReferenceMenus extends HotPotReferenceShell {
       this.referenceField(p,'profile',[.10,.437,.25,.032],String(stats.total),30);
       this.referenceField(p,'profile',[.39,.437,.25,.032],String(found),30);
       this.referenceField(p,'profile',[.68,.437,.25,.032],String(achieved),30);
-      hit(p,'Button_云存档',[.18,.87,.65,.07],h,()=>{void this.playerService!.flush().then(()=>this.showToast(this.playerService!.statusText,'#477345'))});
     }
     hit(p,'MenuClose',[0,0,.19,.13],h,()=>this.dismissPlayerMenu('PlayerOverlay'));
     hit(p,'Button_继续游戏',[.05,.92,.9,.075],h,()=>this.dismissPlayerMenu('PlayerOverlay'));

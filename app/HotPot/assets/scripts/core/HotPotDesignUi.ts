@@ -1,6 +1,7 @@
 import {BlockInputEvents,Graphics,Label,Mask,Node,resources,ScrollView,Sprite,SpriteFrame,Texture2D,UITransform} from 'cc';
 import {getPageTheme,PageStyle} from '../data/PageTheme';
 import {hex,transform} from './HotPotUi';
+import type {ToolType} from './HotPotUi';
 import {fitReferenceBackdrop,fitReferenceContent,referenceArea} from './HotPotReferenceLayout';
 import {paintGameArt} from './HotPotGameArt';
 import {gameInterfaceLayout} from './HotPotGameLayout';
@@ -186,6 +187,84 @@ export function designFooter(panel:Node,caption:string,action:()=>void,name='But
   return designButton(panel,name,caption==='返回'?'←  返回':caption,[52,1124,616,80],action,!primary);
 }
 const backpackStyles = new WeakMap<Node, PageStyle>();
+
+export const TOOL_ICON_SIZE = 56;
+const toolIconStyles = new WeakMap<Node, string>();
+
+/** Draw on a square canvas so the same symbol fits cards and the game toolbar. */
+export function paintToolIcon(node: Node, tool: ToolType, style: PageStyle): void {
+  const key = tool + ':' + style;
+  if (toolIconStyles.get(node) === key) return;
+  toolIconStyles.set(node, key);
+  const g = node.getComponent(Graphics) || node.addComponent(Graphics);
+  const colors = {
+    1: {gold: '#FFD177', green: '#80BBA1', rim: '#754520'},
+    4: {gold: '#FFC160', green: '#78AE54', rim: '#86502A'},
+    8: {gold: '#E8BE71', green: '#81B49A', rim: '#4F6956'},
+    9: {gold: '#E7B678', green: '#C75C46', rim: '#753F2D'},
+  }[style];
+  g.clear();
+  g.lineCap = Graphics.LineCap.ROUND;
+  g.lineJoin = Graphics.LineJoin.ROUND;
+  const stroke = (color: string, width: number) => {
+    g.strokeColor = hex(color);
+    g.lineWidth = width;
+    g.stroke();
+  };
+  const fill = (color: string) => { g.fillColor = hex(color); g.fill(); };
+  const arrow = (path: () => void, color: string) => {
+    path();
+    stroke(colors.rim, 10);
+    path();
+    stroke(color, 6.5);
+  };
+  if (tool === 'undo') {
+    arrow(() => {
+      g.moveTo(-3, -17);
+      g.lineTo(5, -17);
+      g.bezierCurveTo(24, -17, 25, 10, 5, 10);
+      g.lineTo(-20, 10);
+      g.moveTo(-10, 20);
+      g.lineTo(-20, 10);
+      g.lineTo(-10, 0);
+    }, colors.gold);
+  } else if (tool === 'shuffle') {
+    arrow(() => {
+      g.moveTo(-20, -2);
+      g.bezierCurveTo(-15, 15, 3, 18, 20, 12);
+      g.moveTo(13, 21);
+      g.lineTo(20, 12);
+      g.lineTo(9, 7);
+    }, colors.gold);
+    arrow(() => {
+      g.moveTo(20, 2);
+      g.bezierCurveTo(15, -15, -3, -18, -20, -12);
+      g.moveTo(-13, -21);
+      g.lineTo(-20, -12);
+      g.lineTo(-9, -7);
+    }, colors.green);
+  } else {
+    g.circle(-5, -6, 18);
+    fill('#272C37');
+    g.circle(-5, -6, 18);
+    stroke(colors.rim, 2.4);
+    g.circle(-8, -3, 13);
+    fill('#485461');
+    g.moveTo(-17, -5);
+    g.quadraticCurveTo(-15, 3, -9, 5);
+    stroke('#DDE7DF', 3.5);
+    g.roundRect(1, 9, 10, 8, 3);
+    fill(colors.gold);
+    g.moveTo(7, 16);
+    g.bezierCurveTo(8, 25, 16, 16, 18, 21);
+    stroke(colors.rim, 3.7);
+    g.moveTo(18, 17); g.lineTo(18, 27);
+    g.moveTo(13, 22); g.lineTo(24, 22);
+    stroke('#ED873C', 3.5);
+    g.circle(18, 22, 3);
+    fill('#FFE59C');
+  }
+}
 
 /** A 48-unit silhouette with a different material and front closure for each skin. */
 export function paintBackpackIcon(node: Node, style: PageStyle): void {

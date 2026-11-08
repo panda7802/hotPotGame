@@ -1,4 +1,4 @@
-import {Label, Node, sys, Vec3} from 'cc';
+import {Label, Node, Vec3} from 'cc';
 import {
   CASHOUT_TOOLS, CASHOUT_TOOL_NAMES,
   CashoutRun, CashoutSave, CashoutStock, CashoutTool,
@@ -12,8 +12,9 @@ import {achievementEntries} from '../data/CollectionData';
 import {getPageTheme} from '../data/PageTheme';
 import {HotPotDesignResults} from './HotPotDesignResults';
 import {
-  DesignRect, designButton, designFooter, designHeader, designHit,
+  DesignRect, designButton, designFooter, designHeader, designHit, designIcon,
   designNode, designOnBackground, designOverlay, designSurface, designText, fitDesignPage, paintBackpackIcon,
+  paintToolIcon, TOOL_ICON_SIZE,
 } from './HotPotDesignUi';
 import {GameArtRole, paintGameArt} from './HotPotGameArt';
 import {TRAY_SPACING} from './HotPotUi';
@@ -21,6 +22,61 @@ import {TRAY_SPACING} from './HotPotUi';
 const MODE_OVERLAY = 'CashoutOverlay';
 const DIALOG_OVERLAY = 'CashoutDialogOverlay';
 const BAG_LIMIT = 2;
+const INVENTORY_TOOL_HINTS: Record<CashoutTool, string> = {
+  undo: '撤回上一步',
+  shuffle: '重排剩余食材',
+  bomb: '炸掉同类食材',
+};
+
+type SettingsEntry = {
+  name: string;
+  icon: string;
+  detail: string;
+  action: () => void;
+};
+
+const SETTINGS_APPEARANCE = {
+  1: {
+    ingredients: ['mushroom', 'beef'] as const,
+    features: [
+      {fill: '#782A22', trim: '#C79A50', badge: '#5A231A', ink: '#FFF0BC'},
+      {fill: '#225447', trim: '#C79A50', badge: '#163D34', ink: '#FFF0BC'},
+    ],
+    radius: 18, highlight: '#E9C986', heading: '#F8DFAB', divider: '#9B7944',
+    row: {fill: '#214C3E', edge: '#BC955B', badge: '#D8AB60', ink: '#FFF2D0', muted: '#E7CE9B'},
+    footer: {fill: '#9A3024', base: '#57291D', edge: '#E3B86F', ink: '#FFF3CF'},
+  },
+  4: {
+    ingredients: ['corn', 'toufu'] as const,
+    features: [
+      {fill: '#F3F7DF', trim: '#ACC080', badge: '#E3EDBD', ink: '#41653B'},
+      {fill: '#FFF0D3', trim: '#E9AE6C', badge: '#FFDBA4', ink: '#8C4E25'},
+    ],
+    radius: 31, highlight: '#FFFFFFC8', heading: '#533A24', divider: '#DDBB86',
+    row: {fill: '#FFF9EB', edge: '#E6C38C', badge: '#E8EFCF', ink: '#653C22', muted: '#826445'},
+    footer: {fill: '#48733C', base: '#304F2B', edge: '#B8CB81', ink: '#FFF8E7'},
+  },
+  8: {
+    ingredients: ['ou', 'vegetable'] as const,
+    features: [
+      {fill: '#DDE9D9', trim: '#93AF9E', badge: '#C6DCC9', ink: '#285344'},
+      {fill: '#FBF5DD', trim: '#C6B580', badge: '#EBDEB0', ink: '#66522D'},
+    ],
+    radius: 32, highlight: '#FFFCED', heading: '#294F41', divider: '#B4A479',
+    row: {fill: '#FBFAEC', edge: '#BAC9AC', badge: '#DCE9D8', ink: '#264E40', muted: '#58725E'},
+    footer: {fill: '#396553', base: '#224638', edge: '#D5C08A', ink: '#FFFBE8'},
+  },
+  9: {
+    ingredients: ['bambooshoot', 'mushroom'] as const,
+    features: [
+      {fill: '#F8EBD0', trim: '#BD925B', badge: '#EBD9AF', ink: '#522E24'},
+      {fill: '#F7E1CC', trim: '#BD925B', badge: '#EDD0B2', ink: '#942F26'},
+    ],
+    radius: 8, highlight: '#FFFAE8', heading: '#692F24', divider: '#C29B6C',
+    row: {fill: '#FFF6E3', edge: '#C6A879', badge: '#F0D8BD', ink: '#362A21', muted: '#7D6550'},
+    footer: {fill: '#98352A', base: '#672B22', edge: '#D8AA77', ink: '#FFF3D8'},
+  },
+};
 
 export abstract class HotPotCashout extends HotPotDesignResults {
   private cashoutMyPage = false;
@@ -30,23 +86,8 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     return 'hotpot.cashout.v1:' + (this.playerService?.playerId || 'guest');
   }
 
-  private readCashout(key = this.cashoutKey()): CashoutSave {
-    try {
-      const data = JSON.parse(sys.localStorage.getItem(key) || 'null') as CashoutSave | null;
-      if (data?.version === 1 && CASHOUT_TOOLS.every(tool =>
-        Number.isSafeInteger(data.stock?.[tool]) && data.stock[tool] >= 0)) {
-        const run = data.run;
-        if (run && (!cashoutStages(run)?.[run.stage]
-          || !Array.isArray(run.removed) || !Array.isArray(run.tray)
-          || !['playing', 'decision', 'won', 'lost'].includes(run.status)
-          || (run.status === 'won' && !run.reward))) data.run = null;
-        if (!Number.isSafeInteger(data.nextStartAt) || data.nextStartAt! < 0) delete data.nextStartAt;
-        return data;
-      }
-    } catch {
-      // A malformed local record must not break the game menu.
-    }
-    return {version: 1, stock: emptyCashoutStock(), run: null};
+  private readCashout(): CashoutSave {
+    return this.playerService?.cashout || {version: 1, stock: emptyCashoutStock(), run: null};
   }
 
   private writeCashout(key: string, save: CashoutSave): boolean {
@@ -56,12 +97,12 @@ export abstract class HotPotCashout extends HotPotDesignResults {
       return false;
     }
     try {
-      sys.localStorage.setItem(key, JSON.stringify(save));
-      return true;
+      if (this.playerService?.setCashout(save)) return true;
     } catch {
-      this.showToast('本机进度未能保存，请重试', '#A24A3C');
-      return false;
+      // Keep the current challenge when its checkpoint is rejected.
     }
+    this.showToast('进度保存失败，请重试', '#A24A3C');
+    return false;
   }
 
   private closeCashout(): void {
@@ -76,21 +117,84 @@ export abstract class HotPotCashout extends HotPotDesignResults {
 
   protected showPlayerProfile(): void {
     if (this.cashoutMyPage) return this.showCashoutMy();
+    const style = getPageTheme().id;
     const close = () => this.dismissPlayerMenu('PlayerOverlay');
-    const panel = this.designPage('PlayerOverlay', '我的小馆', close);
+    const panel = this.designPage('PlayerOverlay', '系统设置', close, 'game-ui/bg-0' + style);
     if (!panel) return;
     const open = (action: () => void) => () => { close(); action(); };
-    designButton(panel, 'Button_我的', '我的', [40, 347, 310, 150], open(() => this.showCashoutMy()), true);
-    designButton(panel, 'Button_道具', '道具', [370, 347, 310, 150], open(() => this.showCashoutHome()), true);
-    const entries: [string, () => void][] = [
-      ['地域榜单', () => this.showRegionPicker([], true)],
-      ['页面换肤', () => this.showPageStyles()],
-      ['分享', () => this.shareGame()],
-      ['游戏圈', () => { void this.openGameClub(); }],
+    const profile = open(() => this.showCashoutMy());
+    const tools = open(() => this.showCashoutHome());
+    const entries: SettingsEntry[] = [
+      {name: '地域榜单', icon: 'rank', detail: '查看家乡排名', action: open(() => this.showRegionPicker([], true))},
+      {name: '页面换肤', icon: 'palette', detail: '挑选小馆风格', action: open(() => this.showPageStyles())},
+      {name: '分享', icon: 'share', detail: '邀请好友来捞锅', action: () => this.shareGame()},
+      {name: '游戏圈', icon: 'community', detail: '去圈里逛逛', action: () => { void this.openGameClub(); }},
     ];
-    entries.forEach(([name, action], i) => designButton(panel, 'Button_' + name, name,
-      [40, 525 + i * 96, 640, 78], name === '分享' || name === '游戏圈' ? action : open(action), true));
-    designFooter(panel, '返回游戏', close);
+    this.drawSettingsMenu(panel, profile, tools, entries, close);
+  }
+
+  private drawSettingsMenu(
+    panel: Node, profile: () => void, tools: () => void, entries: SettingsEntry[], close: () => void,
+  ): void {
+    const t = getPageTheme();
+    const {ingredients, features: colors, radius, highlight, heading, divider, row: rowColors, footer} =
+      SETTINGS_APPEARANCE[t.id];
+    const paper = t.id === 9;
+    const cream = t.id === 4;
+    const menu = this.cashoutArt(panel, 'panel', [30, 318, 660, 730], true);
+    const features = [
+      {name: '我的', detail: '资料 · 图鉴 · 成就', action: profile},
+      {name: '道具', detail: '库存 · 捞到就收', action: tools},
+    ];
+    features.forEach(({name, detail, action}, i) => {
+      const {fill, trim, badge, ink} = colors[i];
+      const card = designHit(designNode(menu, 'Button_' + name, [40 + 300 * i, 39, 280, 225]), action);
+      designSurface(card, trim, radius, trim, !paper);
+      const face = designNode(card, 'CardFace', [2, cream ? 0 : 2, 276, cream ? 215 : 220]);
+      designSurface(face, fill, radius - 1, highlight, false);
+      const medallion = designNode(face, 'IllustrationMedallion', [157, 18, 101, 101]);
+      designSurface(medallion, badge, paper ? 12 : 50, cream ? '' : trim, false);
+      if (i === 0) {
+        this.addIngredientImage(designNode(face, 'RearIngredient', [131, 16, 86, 84]),
+          ingredients[0], false, 86, 84);
+        this.addIngredientImage(designNode(face, 'FrontIngredient', [171, 33, 95, 91]),
+          ingredients[1], false, 95, 91);
+      } else {
+        this.cashoutArt(face, 'gift', [148, 14, 114, 105]);
+      }
+      designText(face, name, [21, 112, 180, 50], 42, ink, true, true);
+      designText(face, detail, [22, 165, 194, 35], 23, cream ? t.ink : ink, false, true);
+      const arrow = designNode(face, 'ArrowBadge', [217, 157, 40, 40]);
+      designSurface(arrow, badge, paper ? 6 : 20, cream ? '' : trim, false);
+      designIcon(arrow, 'arrow', [8, 8, 24, 24], ink);
+    });
+
+    designText(menu, '更多功能', [44, 287, 190, 42], 29, heading, true, true);
+    designSurface(designNode(menu, 'SectionDivider', [196, 308, 424, 2]), divider, 0, '', false);
+    entries.forEach(({name, icon, detail, action}, i) => {
+      const row = designHit(designNode(menu, 'Button_' + name, [40, 342 + i * 83, 580, 69]), action);
+      designSurface(row, rowColors.fill, radius - 3, rowColors.edge, !paper);
+      const badge = designNode(row, 'IconBadge', [14, 9, 51, 51]);
+      const warmClay = cream && i % 2 === 1;
+      const ink = warmClay ? '#99532B' : t.dark;
+      designSurface(badge, warmClay ? '#FFE5BF' : rowColors.badge, paper ? 6 : 24, '', false);
+      designIcon(badge, icon, [9, 9, 33, 33], ink);
+      designText(row, name, [81, 4, 240, 61], 31, rowColors.ink, true, true);
+      designText(row, detail, [313, 4, 199, 61], 22, rowColors.muted);
+      designIcon(row, 'arrow', [535, 21, 27, 27], rowColors.muted);
+    });
+
+    const sync = designHit(designNode(panel, 'Button_同步', [52, 1124, 218, 80]),
+      () => { void this.retryPlayerCloud(); });
+    designSurface(sync, rowColors.fill, radius + 4, rowColors.edge, !paper);
+    designIcon(sync, 'refresh', [44, 22, 36, 36], rowColors.ink);
+    designText(sync, '同步', [82, 4, 100, 72], 32, rowColors.ink, true);
+    const back = designHit(designNode(panel, 'Button_返回', [286, 1124, 382, 80]), close);
+    designSurface(back, footer.base, radius + 4, footer.edge, !paper);
+    const face = designNode(back, 'ButtonFace', [2, cream ? 0 : 2, 378, 72]);
+    designSurface(face, footer.fill, radius + 2, footer.edge, false);
+    designIcon(face, 'back', [96, 19, 34, 34], footer.ink);
+    designText(face, '返回游戏', [136, 5, 146, 62], 32, footer.ink, true);
   }
 
   private showCashoutMy(): void {
@@ -120,10 +224,6 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     designButton(panel, 'Button_我的位置', '我的位置', [52, 518, 616, 82], open(() => this.showRegionPicker([])), true);
     designButton(panel, 'Button_图鉴', '图鉴', [52, 614, 616, 82], open(() => this.showCollection()), true);
     designButton(panel, 'Button_成就', '成就', [52, 710, 616, 82], open(() => this.showCollection('achievements')), true);
-    const status = designNode(panel, 'CashoutCloudStatus', [52, 820, 616, 125]);
-    designSurface(status);
-    this.playerStatusLabel = designText(status, service.statusText, [18, 8, 375, 109], 22, t.muted, false, true);
-    designButton(status, 'Button_重试同步', '重试同步', [405, 28, 190, 69], () => { void this.retryPlayerCloud(); }, true);
     designFooter(panel, '返回菜单', close);
   }
 
@@ -154,14 +254,15 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     tools.forEach((tool, i) => {
       const card = designNode(parent, 'CashoutStock_' + tool, [360 - tools.length * 102 + i * 204, y, 188, 169]);
       designSurface(card);
-      this.cashoutArt(card, tool, [41, 11, 106, 61]);
+      const icon = designNode(card, 'ToolIcon', [66, 14, TOOL_ICON_SIZE, TOOL_ICON_SIZE]);
+      paintToolIcon(icon, tool, getPageTheme().id);
       designText(card, CASHOUT_TOOL_NAMES[tool], [4, 74, 180, 41], 26, undefined, true);
       designText(card, '×' + stock[tool], [4, 115, 180, 43], 32, getPageTheme().accent, true);
     });
   }
 
   private showCashoutHome(): void {
-    const key = this.cashoutKey(), save = this.readCashout(key), run = save.run;
+    const key = this.cashoutKey(), save = this.readCashout(), run = save.run;
     const {overlay, panel} = this.cashoutPage('道具');
     const ongoing = cashoutActive(run);
     const wait = cashoutWait(save, Date.now());
@@ -179,7 +280,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     const start = designButton(card, 'Button_赚道具',
       ongoing ? '继续捞锅' : wait ? this.cashoutCooldownLabel(wait) : '开捞',
       [36, 253, 568, 68], () => {
-        const current = this.readCashout(key);
+        const current = this.readCashout();
         if (cashoutActive(current.run)) return this.showCashoutRun();
         const next = startCashout(current, Date.now());
         if (next === current) return this.showCashoutHome();
@@ -198,12 +299,11 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     if (ongoing) {
       designButton(panel, 'Button_放弃副本', '放弃这锅', [157, 981, 406, 64], () =>
         this.cashoutConfirm('放弃这锅？', '本轮进度与未结算奖励将清空。冷却时间照常计算。', '确认放弃', () => {
-          if (this.writeCashout(key, {...this.readCashout(key), run: null})) this.showCashoutHome();
+          if (this.writeCashout(key, {...this.readCashout(), run: null})) this.showCashoutHome();
         }), true);
     } else if (run) {
       designButton(panel, 'Button_查看结算', '查看上次结算', [174, 981, 372, 64], () => this.showCashoutRun(), true);
     }
-    designText(panel, '道具和副本进度仅保存在本机', [40, 1052, 640, 43], 22, designOnBackground());
     designFooter(panel, '返回菜单', () => { this.closeCashout(); this.showPlayerProfile(); });
   }
 
@@ -217,7 +317,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
   }
 
   private showCashoutRun(): void {
-    const key = this.cashoutKey(), save = this.readCashout(key), run = save.run;
+    const key = this.cashoutKey(), save = this.readCashout(), run = save.run;
     if (!run) return this.showCashoutHome();
     const {overlay, panel} = this.cashoutPage(this.cashoutStageTitle(run));
     const tiles = cashoutTiles(run);
@@ -258,9 +358,58 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     let record = save;
     let current = run;
     let moving = false;
+    const pendingPicks = new Set<number>();
     const pageOpen = () => this.node.getChildByName(MODE_OVERLAY) === overlay;
     const advance = (next: CashoutSave) => {
       if (pageOpen() && this.writeCashout(key, next)) this.showCashoutRun();
+    };
+    const pickTile = (id: number) => {
+      if (!pageOpen() || current.status !== 'playing'
+        || this.node.getChildByName(DIALOG_OVERLAY)) return;
+      const artwork = faces.get(id);
+      if (!artwork || artwork.shade.active) return;
+      if (moving) {
+        pendingPicks.add(id);
+        return;
+      }
+      const next = takeCashoutTile(current, tiles, id);
+      if (next === current) return;
+      const food = tiles[id].food;
+      const index = cashoutTrayInsertion(current.tray, food);
+      const matched = next.tray.length < current.tray.length;
+      const last = current.stage === stages.length - 1;
+      const saved = last && next.status === 'decision' ? settleCashout(record, next) : {...record, run: next};
+      // Save the settled state before animation so interruption cannot
+      // strand a seventh tile or replay a reward.
+      if (!this.writeCashout(key, saved)) return;
+      record = saved;
+      current = saved.run!;
+      moving = true;
+      faces.delete(id);
+      this.animateTrayInsertion(index, tray);
+      this.flyTrayTile(artwork.face, tray, transition, index, landingScale, () => {
+        if (!pageOpen()) return;
+        this.acceptTrayTile(artwork.face, food, index, tray, landingScale);
+        const finish = () => {
+          if (!pageOpen()) return;
+          moving = false;
+          if (current.status === 'playing') {
+            for (const pending of pendingPicks) {
+              if (moving) break;
+              pendingPicks.delete(pending);
+              pickTile(pending);
+            }
+            return;
+          }
+          if (current.status === 'won') this.playEffect('win', 0.72);
+          else if (current.status === 'lost') this.playEffect('lose', 0.72);
+          this.showCashoutRun();
+        };
+        const ending = current.status !== 'playing';
+        if (matched) this.playTrayMatch(tray, index - 2, ending ? finish : undefined);
+        if (!matched || !ending) finish();
+      });
+      refreshBoard();
     };
     const refreshBoard = () => {
       const removed = new Set(current.removed);
@@ -288,39 +437,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
           designSurface(shade, '#37261666', 18, '', false);
           artwork = {face, shade};
           faces.set(tile.id, artwork);
-          designHit(face, () => {
-            if (moving || !pageOpen() || this.node.getChildByName(DIALOG_OVERLAY)) return;
-            const next = takeCashoutTile(current, tiles, tile.id);
-            if (next === current) return;
-            const index = cashoutTrayInsertion(current.tray, tile.food);
-            const matched = next.tray.length < current.tray.length;
-            const last = current.stage === stages.length - 1;
-            const saved = last && next.status === 'decision' ? settleCashout(record, next) : {...record, run: next};
-            // Save the settled state before animation so interruption cannot
-            // strand a seventh tile or replay a reward.
-            if (!this.writeCashout(key, saved)) return;
-            record = saved;
-            current = saved.run!;
-            moving = true;
-            faces.delete(tile.id);
-            this.animateTrayInsertion(index, tray);
-            this.flyTrayTile(face, tray, transition, index, landingScale, () => {
-              if (!pageOpen()) return;
-              this.acceptTrayTile(face, tile.food, index, tray, landingScale);
-              refreshBoard();
-              const finish = () => {
-                if (!pageOpen()) return;
-                moving = false;
-                if (current.status === 'playing') return;
-                if (current.status === 'won') this.playEffect('win', 0.72);
-                else if (current.status === 'lost') this.playEffect('lose', 0.72);
-                this.showCashoutRun();
-              };
-              const ending = current.status !== 'playing';
-              if (matched) this.playTrayMatch(tray, index - 2, ending ? finish : undefined);
-              if (!matched || !ending) finish();
-            });
-          });
+          designHit(face, () => pickTile(tile.id));
         }
         artwork.face.setSiblingIndex(i + 1);
         artwork.shade.active = tile.blockers.some(id => !removed.has(id));
@@ -332,7 +449,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     designText(modeTag, '捞到就收 · 道具挑战', [10, 0, 315, 58], 25, t.ink, true);
     designButton(panel, 'Button_暂停', '暂停', [484, 1137, 188, 80], () => {
       if (moving) return;
-      this.cashoutConfirm('副本已暂停', '牌阵和托盘已保存到本机。', '返回道具页',
+      this.cashoutConfirm('副本已暂停', '返回后可以继续这锅。', '返回道具页',
         () => this.showCashoutHome(), '继续捞');
     }, true);
     if (run.status === 'decision') this.showCashoutDecision(run, () => advance(settleCashout(save, run)),
@@ -340,12 +457,13 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     else if (finished) this.showCashoutResult(run);
   }
 
-  private cashoutDialog(title: string, height: number): Node {
+  private cashoutDialog(title: string, height: number, framed = false): Node {
     this.dismissPlayerMenu(DIALOG_OVERLAY);
     const {panel} = designOverlay(this.node, DIALOG_OVERLAY, this.viewportHeight, true);
     const body = designNode(panel, 'CashoutDialog', [34, (1280 - height) / 2, 652, height]);
-    designSurface(body);
-    designText(body, title, [25, 28, 602, 76], 42, undefined, true);
+    if (framed) this.cashoutArt(body, 'panel', [0, 0, 652, height], true);
+    else designSurface(body);
+    designText(body, title, [25, 28, 602, 76], 42, framed ? designOnBackground() : undefined, true);
     return body;
   }
 
@@ -408,17 +526,11 @@ export abstract class HotPotCashout extends HotPotDesignResults {
   }
 
   protected resumeGameSave(standard: GameSave | null): GameSave | null {
-    const key = this.cashoutKey(), record = this.readCashout(key).assisted;
-    if (record && (record.used === 1 || record.used === 2)) {
-      try {
-        const save = validateGameSave(record.save);
-        if (save.levelIndex === 2 && save.runId) {
-          this.assistedRun = {key, used: record.used, runId: save.runId};
-          return save;
-        }
-      } catch {
-        // The regular checkpoint can still be resumed.
-      }
+    const key = this.cashoutKey(), record = this.readCashout().assisted;
+    this.assistedRun = null;
+    if (record?.save.runId) {
+      this.assistedRun = {key, used: record.used, runId: record.save.runId};
+      return record.save;
     }
     return super.resumeGameSave(standard);
   }
@@ -427,56 +539,20 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     const assisted = this.assistedRun;
     if (!assisted) return super.saveGameCheckpoint(save);
     if (save.runId === assisted.runId && assisted.key === this.cashoutKey()) {
-      const record = this.readCashout(assisted.key);
+      const record = this.readCashout();
       this.writeCashout(assisted.key, {...record, assisted: {used: assisted.used, save}});
     }
   }
 
-  protected restoreGame(save: GameSave): void {
-    if (this.assistedRun) {
-      const {key, runId} = this.assistedRun;
-      if (key === this.cashoutKey()) {
-        const local = this.readCashout(key).assisted?.save;
-        if (local?.runId === runId) super.restoreGame(local);
-        return;
-      }
-      this.assistedRun = null;
-    }
-    super.restoreGame(save);
-  }
-
-  protected showSaveConflict(): void {
-    if (this.assistedRun?.key !== this.cashoutKey()) super.showSaveConflict();
-  }
-
-  protected showConnectedSaveChoice(saved: GameSave): void {
-    if (this.assistedRun?.key !== this.cashoutKey()) super.showConnectedSaveChoice(saved);
-  }
-
-  protected async retryPlayerCloud(): Promise<void> {
-    const assisted = this.assistedRun;
-    await super.retryPlayerCloud();
-    if (!this.node.isValid || !assisted || assisted.key === this.cashoutKey()) return;
-    this.assistedRun = null;
-    this.closeCashout();
-    this.dismissPlayerMenu('ConnectedSaveOverlay');
-    this.dismissPlayerMenu('CloudConflictOverlay');
-    const save = this.resumeGameSave(this.playerService?.state.save ?? null);
-    if (save) this.restoreGame(save);
-    else this.loadLevel(0);
-    if (this.playerService?.isConflict) this.showSaveConflict();
-  }
-
   protected resumePlayerDay(): void {
-    if (this.assistedRun?.key === this.cashoutKey()) this.flushPlayerSave();
-    else super.resumePlayerDay();
+    if (this.assistedRun?.key !== this.cashoutKey()) super.resumePlayerDay();
   }
 
   protected loadLevel(index: number, persist = true, restored?: LevelData): void {
     if (persist && this.assistedRun) {
       const {key} = this.assistedRun;
       if (key === this.cashoutKey()) {
-        const record = this.readCashout(key);
+        const record = this.readCashout();
         delete record.assisted;
         if (!this.writeCashout(key, record)) return;
       }
@@ -498,36 +574,51 @@ export abstract class HotPotCashout extends HotPotDesignResults {
 
   protected showInventoryTools(): void {
     if (!this.inventoryAvailable() || this.hasPlayerMenu()) return;
-    const key = this.cashoutKey(), record = this.readCashout(key);
+    const key = this.cashoutKey(), record = this.readCashout();
     const used = this.assistedRun?.key === key ? this.assistedRun.used : 0;
-    const body = this.cashoutDialog('背包', 664);
-    const icon = designNode(body, 'InventoryIcon', [230, 42, 48, 48]);
-    paintBackpackIcon(icon, getPageTheme().id);
-    designText(body, '库存道具 · 本局已用 ' + used + ' / ' + BAG_LIMIT, [30, 112, 592, 56], 28);
+    const t = getPageTheme();
+    const {row: colors, footer, radius} = SETTINGS_APPEARANCE[t.id];
+    const body = this.cashoutDialog('背包', 700, true);
+    const bag = designNode(body, 'InventoryIcon', [228, 42, 48, 48]);
+    paintBackpackIcon(bag, t.id);
+    const summary = designNode(body, 'InventorySummary', [42, 111, 568, 58]);
+    designSurface(summary, colors.fill, radius, colors.edge, false);
+    designText(summary, '库存道具', [19, 2, 217, 54], 29, colors.ink, true, true);
+    designText(summary, '本局已用 ' + used + ' / ' + BAG_LIMIT, [270, 2, 278, 54], 25, colors.muted);
     CASHOUT_TOOLS.forEach((tool, i) => {
-      const row = designNode(body, 'Inventory_' + tool, [30, 180 + i * 111, 592, 96]);
-      designSurface(row, getPageTheme().panel, 22, getPageTheme().edge, false);
-      this.cashoutArt(row, tool, [18, 20, 94, 55]);
-      designText(row, CASHOUT_TOOL_NAMES[tool] + '   库存 ×' + record.stock[tool],
-        [129, 13, 306, 70], 29, undefined, true, true);
-      const disabled = used >= BAG_LIMIT || record.stock[tool] === 0 || !this.canApplyInventory(tool);
-      designButton(row, 'Button_使用_' + tool, '使用', [442, 12, 134, 72], () => {
+      const row = designNode(body, 'Inventory_' + tool, [42, 188 + i * 114, 568, 103]);
+      designSurface(row, colors.fill, radius, colors.edge, t.id !== 9);
+      const medallion = designNode(row, 'IconMedallion', [14, 14, 75, 75]);
+      designSurface(medallion, colors.badge, radius, '', false);
+      const icon = designNode(medallion, 'ToolIcon', [9.5, 9.5, TOOL_ICON_SIZE, TOOL_ICON_SIZE]);
+      paintToolIcon(icon, tool, t.id);
+      designText(row, CASHOUT_TOOL_NAMES[tool], [106, 10, 173, 45], 32, colors.ink, true, true);
+      designText(row, INVENTORY_TOOL_HINTS[tool], [107, 55, 200, 34], 22, colors.muted, false, true);
+      const stock = designNode(row, 'StockCount', [294, 27, 86, 49]);
+      designSurface(stock, colors.badge, radius, '', false);
+      designText(stock, '×' + record.stock[tool], [4, 0, 78, 49], 29, t.dark, true);
+      const unavailable = used >= BAG_LIMIT ? '已达上限'
+        : record.stock[tool] === 0 ? '无库存'
+        : !this.canApplyInventory(tool) ? '暂不可用' : '';
+      const use = designButton(row, 'Button_使用_' + tool, unavailable || '使用', [397, 16, 155, 71], () => {
         if (used) {
           this.useInventoryTool(key, tool);
           return;
         }
         this.cashoutConfirm('使用库存' + CASHOUT_TOOL_NAMES[tool] + '？',
-          '消耗 1 个库存道具。使用后本局成绩仅保存在本机，不计入地域榜单。',
+          '消耗 1 个库存道具。本局成绩不计入地域榜单。',
           '确认使用', () => this.useInventoryTool(key, tool), '取消', () => this.showInventoryTools());
-      }, false, disabled);
+      }, false, !!unavailable);
+      designSurface(use, unavailable ? t.disabled : footer.fill, radius, colors.edge, false);
     });
-    designButton(body, 'Button_返回棋局', '返回棋局', [48, 556, 556, 78],
-      () => this.dismissPlayerMenu(DIALOG_OVERLAY), true);
+    const back = designButton(body, 'Button_返回棋局', '返回棋局', [48, 572, 556, 76],
+      () => this.dismissPlayerMenu(DIALOG_OVERLAY));
+    designSurface(back, footer.fill, radius, footer.edge);
   }
 
   private useInventoryTool(key: string, tool: CashoutTool): void {
     if (key !== this.cashoutKey() || !this.inventoryAvailable() || !this.canApplyInventory(tool)) return;
-    const record = this.readCashout(key);
+    const record = this.readCashout();
     const used = this.assistedRun?.key === key ? this.assistedRun.used : 0;
     if (used >= BAG_LIMIT || record.stock[tool] < 1) return;
     // Stage the same logical effects on a snapshot. The stock and affected board

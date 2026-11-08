@@ -50,7 +50,6 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     item.setPosition(TRAY_START_X + index * TRAY_SPACING, 0);
     transform(item, 82 * 1.2, 84 * 1.2);
     (item as Node & {trayType?: IngredientType}).trayType = type;
-    visual.off(Node.EventType.TOUCH_END);
     visual.setParent(item);
     visual.name = 'FoodVisual';
     visual.setPosition(Vec3.ZERO);
@@ -345,6 +344,7 @@ export abstract class HotPotBoard extends HotPotBoardActions {
         ),
     };
     this.locked = true;
+    this.trayPickInProgress = true;
     const type = this.reserve.splice(index, 1)[0];
     this.insertIntoTray(type);
     this.renderReserve();

@@ -20,9 +20,9 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     if(stats.runs.includes(key))return;stats.total++;stats.daily++;stats.runs=[...stats.runs,key].slice(-100);
     try{sys.localStorage.setItem('hotpot.reference.stats.v1',JSON.stringify(stats))}catch{}
   }
-  protected designPage(name:string,title:string,back:()=>void):Node|null {
+  protected designPage(name:string,title:string,back:()=>void,background?:string):Node|null {
     if(!this.playerService||!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded))return null;
-    const {panel}=designOverlay(this.node,name,this.viewportHeight);designHeader(panel,title);
+    const {panel}=designOverlay(this.node,name,this.viewportHeight,false,background);designHeader(panel,title);
     designHit(designNode(panel,'HeaderBack',[22,204,132,88]),back);
     if(name!=='PlayerOverlay')designHit(designNode(panel,'HeaderSettings',[566,204,132,88]),()=>{this.dismissPlayerMenu(name);this.showPlayerProfile()});
     fitDesignPage(panel);
@@ -65,8 +65,6 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     designIcon(clubIcon,'community',[10,10,36,36]);
     designText(club,'游戏圈',[116,2,420,64],30,t.ink,true,true);
     designIcon(club,'arrow',[584,21,26,26],t.muted);
-    this.playerStatusLabel=designText(p,service.statusText,[50,1024,440,80],20,designOnBackground(),false,true);
-    designButton(p,'Button_重试同步','重试同步',[502,1038,168,56],()=>{void this.retryPlayerCloud()},true);
     designFooter(p,'←  返回游戏',close,'Button_继续游戏',true);
   }
   protected showPageStyles():void {
@@ -109,11 +107,7 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     ['全国','省内','市内'].forEach((caption,i)=>designButton(tabs,'RankScope_'+i,caption,[8+i*210,8,204,66],()=>{
       this.dismissPlayerMenu('RegionOverlay');this.showDesignRanking(i);
     },scope!==i,!available[i]));
-    designText(p,'第三关通关次数 · 为家乡添一席',[50,382,450,34],24,designOnBackground());
-    designButton(p,'Button_重试榜单','重试同步',[510,372,160,38],()=>{
-      void this.retryPlayerCloud().then(()=>{if(p.isValid)render()});
-    },true);
-    const status=designText(p,service.leaderboardText,[50,414,620,28],18,designOnBackground());
+    designText(p,'第三关通关次数 · 为家乡添一席',[50,382,620,34],24,designOnBackground());
     const regions=scope===0?service.regions:scope===1?province!.children!:city!.children!;
     const table=designNode(p,'RankingRows',[40,450,640,492]);designSurface(table);
     designText(table,'排名',[12,10,96,48],25,t.ink,true);
@@ -127,7 +121,6 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     const render=()=>{
       if(!table.isValid)return;
       const previous=table.getChildByName('RankingViewport');previous?.removeFromParent();previous?.destroy();
-      status.string=service.leaderboardText;
       const rows=service.sortedRegions(regions).filter(r=>service.regionCount(r.code)>0);
       const {content}=designScroll(table,'RankingViewport',[8,62,624,422],Math.max(422,rows.length*70));
       if(!rows.length){

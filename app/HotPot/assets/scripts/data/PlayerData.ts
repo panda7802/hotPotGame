@@ -1,4 +1,6 @@
 import {regionPath} from './RegionData';
+import {CASHOUT_TOOLS, cashoutStages} from './CashoutData';
+import type {CashoutRun, CashoutSave, CashoutStock} from './CashoutData';
 export {regionPath, validateRegions} from './RegionData';
 import {
   createLevel,
@@ -29,6 +31,7 @@ export {
   BOARD_VERSION,
   PROGRESS_VERSION,
   PLAY_SESSION_VERSION,
+  CASHOUT_SYNC_VERSION,
   clone,
   emptyProgress,
   emptyPlayerState,
@@ -547,6 +550,64 @@ export function shouldUpgradeUnstartedLevelThree(save: GameSave): boolean {
     && save.toolUses.undo === 1 && save.toolUses.bomb === 1
     && save.toolUses.shuffle === 1;
 }
+
+function validateStock(value: any): CashoutStock {
+  check(value && CASHOUT_TOOLS.every(tool =>
+    integer(value[tool], 0, Number.MAX_SAFE_INTEGER)), '道具库存错误');
+  return {undo: value.undo, shuffle: value.shuffle, bomb: value.bomb};
+}
+
+export function validateCashoutSave(value: any): CashoutSave {
+  check(value?.version === 1, '副本存档版本错误');
+  const stock = validateStock(value.stock);
+  const saved: CashoutSave = {version: 1, stock, run: null};
+  if (value.run !== null) {
+    const run = value.run as CashoutRun;
+    check(run && (run.difficulty === undefined || integer(run.difficulty, 0, 2)),
+      '副本难度错误');
+    const stages = cashoutStages(run);
+    check(integer(run.stage, 0, stages.length - 1) && integer(run.seed, 0, 0xffffffff),
+      '副本牌阵错误');
+    const stage = stages[run.stage];
+    const total = stage.layers.reduce((sum, count) => sum + count, 0);
+    check(Array.isArray(run.removed) && run.removed.length <= total
+      && new Set(run.removed).size === run.removed.length
+      && run.removed.every(id => integer(id, 0, total - 1)), '副本移除牌错误');
+    check(Array.isArray(run.tray) && run.tray.length <= 7
+      && run.tray.every(type => INGREDIENTS.some(item => item.id === type)
+        && run.tray.filter(item => item === type).length < 3)
+      && run.removed.length >= run.tray.length
+      && (run.removed.length - run.tray.length) % 3 === 0, '副本托盘错误');
+    const cleared = run.removed.length === total && !run.tray.length;
+    check(run.status === 'playing' ? !cleared && run.tray.length < 7
+      : run.status === 'lost' ? run.tray.length === 7
+      : (run.status === 'decision' || run.status === 'won') && cleared,
+    '副本结算状态错误');
+    saved.run = {
+      ...(run.difficulty === undefined ? {} : {difficulty: run.difficulty}),
+      stage: run.stage, seed: run.seed, removed: run.removed.slice(),
+      tray: run.tray.slice(), status: run.status,
+    };
+    if (run.status === 'won') {
+      const reward = validateStock(run.reward);
+      check(CASHOUT_TOOLS.reduce((sum, tool) => sum + reward[tool], 0) === stage.total,
+        '副本奖励数量错误');
+      saved.run.reward = reward;
+    }
+  }
+  if (value.nextStartAt !== undefined) {
+    check(integer(value.nextStartAt, 0, Number.MAX_SAFE_INTEGER), '副本冷却时间错误');
+    saved.nextStartAt = value.nextStartAt;
+  }
+  if (value.assisted !== undefined) {
+    check(integer(value.assisted?.used, 1, 2), '背包使用次数错误');
+    const save = validateGameSave(value.assisted.save);
+    check(save.levelIndex === 2 && save.runId, '背包对局错误');
+    saved.assisted = {used: value.assisted.used, save};
+  }
+  return saved;
+}
+
 /**
  * 校验玩家地区、对局与永久记录。
  */
@@ -569,5 +630,6 @@ export function validatePlayerState(
     save,
     progress: recordProgress(progress, save),
     playDate: validatePlayDate(value.playDate),
+    ...(value.cashout === undefined ? {} : {cashout: validateCashoutSave(value.cashout)}),
   };
 }

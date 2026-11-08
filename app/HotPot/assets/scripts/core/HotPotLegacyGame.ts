@@ -2,7 +2,7 @@ import {_decorator, EditBox, Graphics, Label, Mask, Node, ScrollView, Vec3} from
 
 import {createRestartLevel, LEVELS} from '../data/GameData';
 
-import {GameSave, RegionNode} from '../data/PlayerData';
+import {RegionNode} from '../data/PlayerData';
 import {getPageTheme} from '../data/PageTheme';
 
 import {
@@ -113,9 +113,9 @@ export abstract class HotPotLegacyGame extends HotPotDialogs {
     scroll.inertia = true;
     scroll.elastic = false;
     scroll.cancelInnerEvents = true;
-    const rankingStatus = compact && !leaderboard ? null : makeBodyLabel(panel,
-      leaderboard ? service.leaderboardText : '逐级选择或搜索，确认后保存',
-      25, '#94735D', new Vec3(0, -337), compact ? 500 : 560, compact ? 72 : 52, true);
+    const searchHint = !compact && !leaderboard ? makeBodyLabel(panel,
+      '逐级选择或搜索，确认后保存', 25, '#94735D',
+      new Vec3(0, -337), 560, 52, true) : null;
     type Row = {region: RegionNode; path: string[]; names: string[]};
     const searchRows = (keyword: string): Row[] => {
       const rows: Row[] = [];
@@ -182,13 +182,12 @@ export abstract class HotPotLegacyGame extends HotPotDialogs {
         const mark = selected ? '✓' : row.region.children?.length ? '›' : '';
         if (mark) makeLabel(button, mark, 26, theme.ink, new Vec3(248, 0), 30, 38);
       });
-      if (keyword && rows.length === 60 && rankingStatus) rankingStatus.string = '最多显示60项，请输入更精确的名称';
+      if (keyword && rows.length === 60 && searchHint) searchHint.string = '最多显示60项，请输入更精确的名称';
     };
     inputRoot?.on(EditBox.EventType.TEXT_CHANGED, render);
     render();
     void service.refreshLeaderboard().then(() => {
       if (!panel.isValid) return;
-      if (leaderboard && rankingStatus) rankingStatus.string = service.leaderboardText;
       render();
     });
     makeButton(panel, codes.length ? '上一级' : '返回我的', new Vec3(-142, -452),
@@ -220,127 +219,6 @@ export abstract class HotPotLegacyGame extends HotPotDialogs {
     makeButton(panel, '再选一下', new Vec3(0, -221), 530, 74, '#B88261', () => {
       this.dismissPlayerMenu('RegionConfirmOverlay'); back();
     });
-  }
-
-  /**
-   * 显示本机与云端存档的冲突选项。
-   */
-  protected showSaveConflict(): void {
-    const service = this.playerService!;
-    if (!service?.remote) {
-      return;
-    }
-    const panel = this.makePlayerMenu('CloudConflictOverlay', 650);
-    if (!panel) {
-      return;
-    }
-    const reviewLayout = getPageTheme().id === 8;
-    const describe =
-      /**
-       * 处理 describe 对应的游戏逻辑。
-       */ (save: GameSave | null): string =>
-        save
-          ? '第' +
-            String(save.levelIndex + 1) +
-            '关 · ' +
-            String(save.removedIds.length) +
-            '张已拿取 · ' +
-            String(
-              save.status === 'playing'
-                ? '进行中'
-                : save.status === 'won'
-                  ? '已通关'
-                  : '托盘已满',
-            ) +
-            ''
-          : '没有进行中的对局';
-    if (reviewLayout) makePanelHeading(panel, '发现两份不同进度', 227, 420);
-    else makeLabel(panel, '发现两份不同进度', 40, '#8D3426',
-      new Vec3(0, 253), 580, 60);
-    makeBodyLabel(
-      panel,
-      reviewLayout ? '另一台设备已有进度，请选择要保留的一份'
-        : '另一台设备已保存新进度，请选择要保留的一份',
-      24,
-      '#94735D',
-      new Vec3(0, reviewLayout ? 145 : 177),
-      reviewLayout ? 522 : 590,
-      64,
-      true,
-    );
-    makeBodyLabel(
-      panel,
-      '本机：' +
-        String(describe(service.state.save)) +
-        '\n云端：' +
-        String(describe(service.remote.state.save)) +
-        '',
-      26,
-      '#775145',
-      new Vec3(0, reviewLayout ? 53 : 73),
-      reviewLayout ? 522 : 580,
-      reviewLayout ? 96 : 114,
-      true,
-    );
-    makeBodyLabel(
-      panel,
-      '所选版本会同时保留该版本的地区资料',
-      22,
-      '#AE5A3E',
-      new Vec3(0, reviewLayout ? -30 : -24),
-      reviewLayout ? 522 : 590,
-      reviewLayout ? 38 : 40,
-    );
-    makeButton(
-      panel,
-      '使用云端进度',
-      new Vec3(0, -104),
-      400,
-      66,
-      '#D75542',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        const state = service.resolveConflict(true);
-        this.dismissPlayerMenu('CloudConflictOverlay');
-        if (state.save) {
-          this.restoreGame(state.save);
-        } else {
-          this.loadLevel(0);
-        }
-      },
-    );
-    makeButton(
-      panel,
-      '保留本机进度',
-      new Vec3(0, -188),
-      400,
-      66,
-      '#A3613B',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => {
-        const state = service.resolveConflict(false);
-        this.dismissPlayerMenu('CloudConflictOverlay');
-        if (state.save) {
-          this.restoreGame(state.save);
-        } else {
-          this.loadLevel(0);
-        }
-        void service.flush();
-      },
-    );
-    makeButton(
-      panel,
-      '稍后决定',
-      new Vec3(0, -272),
-      290,
-      54,
-      '#B88261',
-      /**
-       * 在当前操作完成后更新相关游戏状态。
-       */ () => this.dismissPlayerMenu('CloudConflictOverlay'),
-    );
   }
 
   /**
