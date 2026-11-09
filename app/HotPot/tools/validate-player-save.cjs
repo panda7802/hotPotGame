@@ -380,16 +380,19 @@ assert.strictEqual(collected.progress.discovered.length, 13);
 assert.deepStrictEqual(plain(collected.progress.completedLevels), [0, 1, 2]);
 assert.deepStrictEqual(plain(collected.progress.cleanWins), [0, 1, 2]);
 assert.deepStrictEqual(plain(collected.progress.bestCleared), [18, 30, 888]);
-/**
- * 按条件筛选或判断条目：item.unlocked || ['hometown', 'full-menu'].includes(item.id)。
- */
-assert(
-  collection
-    .achievementEntries(collected)
-    .every(
-      (item) => item.unlocked || ['hometown', 'full-menu'].includes(item.id),
-    ),
-);
+const goals = collection.achievementEntries(collected);
+assert.strictEqual(goals.length, 22);
+assert.deepStrictEqual(Array.from(goals.filter(item => !item.unlocked), item => item.id), [
+  'hometown', 'full-menu', 'rare-first', 'rare-five', 'rare-all',
+  'cashout-first', 'cashout-second', 'cashout-final',
+]);
+assert.deepStrictEqual(new Set(Array.from(goals, item => item.category)),
+  new Set(['main', 'collection', 'cashout', 'tavern']));
+const rareProgress = {...collected, progress: {...collected.progress,
+  discovered: [...collected.progress.discovered, ...data.HIDDEN_INGREDIENTS.map(food => food.id)]}};
+assert(collection.achievementEntries(rareProgress)
+  .filter(item => item.id.startsWith('rare-')).every(item => item.unlocked));
+assert.throws(() => domain.validateProgress({...collected.progress, bestCashoutStage: 4}));
 const withRegion = domain.validatePlayerState(
   {...collected, profile: {regionCodes: ['OVERSEAS']}},
   regions,
@@ -428,7 +431,7 @@ for (const playDate of ['2026-02-30', '2026-13-01', 'yesterday', 123]) {
     domain.validatePlayerState({...withRegion, playDate}, regions),
   );
 }
-assert.strictEqual(collection.unlockedAchievementIds(withRegion).length, 13);
+assert.strictEqual(collection.unlockedAchievementIds(withRegion).length, 15);
 const fullMenu = domain.validatePlayerState(
   {
     ...withRegion,
@@ -442,7 +445,7 @@ const fullMenu = domain.validatePlayerState(
   },
   regions,
 );
-assert.strictEqual(collection.unlockedAchievementIds(fullMenu).length, 14);
+assert.strictEqual(collection.unlockedAchievementIds(fullMenu).length, 19);
 const replay = domain.validatePlayerState(
   {...withRegion, save: freshSave(0), profile: {regionCodes: []}},
   regions,
@@ -502,7 +505,7 @@ assert.deepStrictEqual(
 );
 console.log(
   'Collection/achievements: all 13 ingred' +
-    'ients and 14 goals, legacy migration, ' +
+    'ients and 22 goals, legacy migration, ' +
     'invalid progress, restore/restart/undo' +
     ' idempotency: OK',
 );
@@ -833,6 +836,36 @@ function service(
  * 为测试提供当前调用所需的回调行为。
  */
 (async () => {
+  const achievementServer = backend();
+  const achievementClient = service(achievementServer);
+  await achievementClient.syncAtStartup();
+  const finalStage = cashout.createCashoutRun(2);
+  const pendingReward = {...finalStage, status: 'decision',
+    removed: cashout.cashoutTiles(finalStage).map(tile => tile.id)};
+  const challenge = {version: 1, stock: cashout.emptyCashoutStock(), run: pendingReward};
+  assert(achievementClient.setCashout(challenge));
+  assert.strictEqual(achievementClient.state.progress.bestCashoutStage, undefined);
+  assert(achievementClient.setCashout(cashout.settleCashout(challenge, pendingReward)));
+  assert.strictEqual(achievementClient.state.progress.bestCashoutStage, 3);
+  assert(achievementClient.setCashout({...achievementClient.cashout, run: cashout.createCashoutRun(0)}));
+  await achievementClient.flush(true);
+  const achievementDevice = service(achievementServer);
+  await achievementDevice.syncAtStartup();
+  assert.strictEqual(achievementDevice.state.progress.bestCashoutStage, 3);
+  assert(collection.achievementEntries(achievementDevice.state)
+    .filter(item => item.category === 'cashout').every(item => item.unlocked));
+  const oldClientState = plain(achievementDevice.state);
+  delete oldClientState.progress.bestCashoutStage;
+  delete oldClientState.cashout;
+  const achievementOldWrite = await achievementServer.handler({
+    action: 'save', expectedRevision: achievementDevice.revision,
+    mutationId: 'old-client-achievements', state: oldClientState,
+  });
+  assert(achievementOldWrite.ok);
+  assert.strictEqual(achievementOldWrite.player.state.progress.bestCashoutStage, 3);
+  assert.strictEqual(achievementOldWrite.achievementSyncVersion, domain.ACHIEVEMENT_SYNC_VERSION);
+  console.log('Side achievements: reward settlement, new challenge, cross-device persistence and old clients OK');
+
   const cashoutServer = backend();
   const cashoutCache = storage();
   const cashoutNetwork = {};

@@ -5,7 +5,7 @@ import {
   cashoutActive, cashoutStages, cashoutTiles, cashoutTrayInsertion, cashoutWait, createCashoutRun,
   emptyCashoutStock, settleCashout, startCashout, takeCashoutTile,
 } from '../data/CashoutData';
-import {selectBombTargets} from '../data/GameData';
+import {INGREDIENTS, selectBombTargets} from '../data/GameData';
 import type {LevelData} from '../data/GameData';
 import {GameSave, regionPath, validateGameSave} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
@@ -14,9 +14,9 @@ import {HotPotDesignResults} from './HotPotDesignResults';
 import {
   DesignRect, designButton, designFooter, designHeader, designHit, designIcon,
   designNode, designOnBackground, designOverlay, designSurface, designText, fitDesignPage, paintBackpackIcon,
-  paintToolIcon, TOOL_ICON_SIZE,
+  designPersonalSurface, paintToolIcon, TOOL_ICON_SIZE,
 } from './HotPotDesignUi';
-import {GameArtRole, paintGameArt} from './HotPotGameArt';
+import {GameArtRole, paintCollectionArt, paintGameArt} from './HotPotGameArt';
 import {TRAY_SPACING} from './HotPotUi';
 
 const MODE_OVERLAY = 'CashoutOverlay';
@@ -35,14 +35,14 @@ type SettingsEntry = {
   action: () => void;
 };
 
-const SETTINGS_APPEARANCE = {
+const MENU_APPEARANCE = {
   1: {
     ingredients: ['mushroom', 'beef'] as const,
     features: [
       {fill: '#782A22', trim: '#C79A50', badge: '#5A231A', ink: '#FFF0BC'},
       {fill: '#225447', trim: '#C79A50', badge: '#163D34', ink: '#FFF0BC'},
     ],
-    radius: 18, highlight: '#E9C986', heading: '#F8DFAB', divider: '#9B7944',
+    radius: 18, highlight: '#E9C986',
     row: {fill: '#214C3E', edge: '#BC955B', badge: '#D8AB60', ink: '#FFF2D0', muted: '#E7CE9B'},
     footer: {fill: '#9A3024', base: '#57291D', edge: '#E3B86F', ink: '#FFF3CF'},
   },
@@ -52,7 +52,7 @@ const SETTINGS_APPEARANCE = {
       {fill: '#F3F7DF', trim: '#ACC080', badge: '#E3EDBD', ink: '#41653B'},
       {fill: '#FFF0D3', trim: '#E9AE6C', badge: '#FFDBA4', ink: '#8C4E25'},
     ],
-    radius: 31, highlight: '#FFFFFFC8', heading: '#533A24', divider: '#DDBB86',
+    radius: 31, highlight: '#FFFFFFC8',
     row: {fill: '#FFF9EB', edge: '#E6C38C', badge: '#E8EFCF', ink: '#653C22', muted: '#826445'},
     footer: {fill: '#48733C', base: '#304F2B', edge: '#B8CB81', ink: '#FFF8E7'},
   },
@@ -62,7 +62,7 @@ const SETTINGS_APPEARANCE = {
       {fill: '#DDE9D9', trim: '#93AF9E', badge: '#C6DCC9', ink: '#285344'},
       {fill: '#FBF5DD', trim: '#C6B580', badge: '#EBDEB0', ink: '#66522D'},
     ],
-    radius: 32, highlight: '#FFFCED', heading: '#294F41', divider: '#B4A479',
+    radius: 32, highlight: '#FFFCED',
     row: {fill: '#FBFAEC', edge: '#BAC9AC', badge: '#DCE9D8', ink: '#264E40', muted: '#58725E'},
     footer: {fill: '#396553', base: '#224638', edge: '#D5C08A', ink: '#FFFBE8'},
   },
@@ -72,14 +72,13 @@ const SETTINGS_APPEARANCE = {
       {fill: '#F8EBD0', trim: '#BD925B', badge: '#EBD9AF', ink: '#522E24'},
       {fill: '#F7E1CC', trim: '#BD925B', badge: '#EDD0B2', ink: '#942F26'},
     ],
-    radius: 8, highlight: '#FFFAE8', heading: '#692F24', divider: '#C29B6C',
+    radius: 8, highlight: '#FFFAE8',
     row: {fill: '#FFF6E3', edge: '#C6A879', badge: '#F0D8BD', ink: '#362A21', muted: '#7D6550'},
     footer: {fill: '#98352A', base: '#672B22', edge: '#D8AA77', ink: '#FFF3D8'},
   },
 };
 
 export abstract class HotPotCashout extends HotPotDesignResults {
-  private cashoutMyPage = false;
   private assistedRun: {key: string; used: number; runId: string} | null = null;
 
   private cashoutKey(): string {
@@ -93,7 +92,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
   private writeCashout(key: string, save: CashoutSave): boolean {
     if (key !== this.cashoutKey()) {
       this.closeCashout();
-      this.showToast('玩家已切换，请重新打开道具页', '#A24A3C');
+      this.showToast('玩家已切换，请重新打开背包', '#A24A3C');
       return false;
     }
     try {
@@ -116,72 +115,39 @@ export abstract class HotPotCashout extends HotPotDesignResults {
   }
 
   protected showPlayerProfile(): void {
-    if (this.cashoutMyPage) return this.showCashoutMy();
     const style = getPageTheme().id;
     const close = () => this.dismissPlayerMenu('PlayerOverlay');
     const panel = this.designPage('PlayerOverlay', '系统设置', close, 'game-ui/bg-0' + style);
     if (!panel) return;
     const open = (action: () => void) => () => { close(); action(); };
-    const profile = open(() => this.showCashoutMy());
-    const tools = open(() => this.showCashoutHome());
     const entries: SettingsEntry[] = [
       {name: '地域榜单', icon: 'rank', detail: '查看家乡排名', action: open(() => this.showRegionPicker([], true))},
       {name: '页面换肤', icon: 'palette', detail: '挑选小馆风格', action: open(() => this.showPageStyles())},
       {name: '分享', icon: 'share', detail: '邀请好友来捞锅', action: () => this.shareGame()},
       {name: '游戏圈', icon: 'community', detail: '去圈里逛逛', action: () => { void this.openGameClub(); }},
     ];
-    this.drawSettingsMenu(panel, profile, tools, entries, close);
+    this.drawSettingsMenu(panel, entries, close);
   }
 
   private drawSettingsMenu(
-    panel: Node, profile: () => void, tools: () => void, entries: SettingsEntry[], close: () => void,
+    panel: Node, entries: SettingsEntry[], close: () => void,
   ): void {
     const t = getPageTheme();
-    const {ingredients, features: colors, radius, highlight, heading, divider, row: rowColors, footer} =
-      SETTINGS_APPEARANCE[t.id];
+    const {radius, row: rowColors, footer} = MENU_APPEARANCE[t.id];
     const paper = t.id === 9;
     const cream = t.id === 4;
-    const menu = this.cashoutArt(panel, 'panel', [30, 318, 660, 730], true);
-    const features = [
-      {name: '我的', detail: '资料 · 图鉴 · 成就', action: profile},
-      {name: '道具', detail: '库存 · 捞到就收', action: tools},
-    ];
-    features.forEach(({name, detail, action}, i) => {
-      const {fill, trim, badge, ink} = colors[i];
-      const card = designHit(designNode(menu, 'Button_' + name, [40 + 300 * i, 39, 280, 225]), action);
-      designSurface(card, trim, radius, trim, !paper);
-      const face = designNode(card, 'CardFace', [2, cream ? 0 : 2, 276, cream ? 215 : 220]);
-      designSurface(face, fill, radius - 1, highlight, false);
-      const medallion = designNode(face, 'IllustrationMedallion', [157, 18, 101, 101]);
-      designSurface(medallion, badge, paper ? 12 : 50, cream ? '' : trim, false);
-      if (i === 0) {
-        this.addIngredientImage(designNode(face, 'RearIngredient', [131, 16, 86, 84]),
-          ingredients[0], false, 86, 84);
-        this.addIngredientImage(designNode(face, 'FrontIngredient', [171, 33, 95, 91]),
-          ingredients[1], false, 95, 91);
-      } else {
-        this.cashoutArt(face, 'gift', [148, 14, 114, 105]);
-      }
-      designText(face, name, [21, 112, 180, 50], 42, ink, true, true);
-      designText(face, detail, [22, 165, 194, 35], 23, cream ? t.ink : ink, false, true);
-      const arrow = designNode(face, 'ArrowBadge', [217, 157, 40, 40]);
-      designSurface(arrow, badge, paper ? 6 : 20, cream ? '' : trim, false);
-      designIcon(arrow, 'arrow', [8, 8, 24, 24], ink);
-    });
-
-    designText(menu, '更多功能', [44, 287, 190, 42], 29, heading, true, true);
-    designSurface(designNode(menu, 'SectionDivider', [196, 308, 424, 2]), divider, 0, '', false);
+    const menu = this.cashoutArt(panel, 'panel', [30, 445, 660, 476], true);
     entries.forEach(({name, icon, detail, action}, i) => {
-      const row = designHit(designNode(menu, 'Button_' + name, [40, 342 + i * 83, 580, 69]), action);
+      const row = designHit(designNode(menu, 'Button_' + name, [40, 46 + i * 100, 580, 84]), action);
       designSurface(row, rowColors.fill, radius - 3, rowColors.edge, !paper);
-      const badge = designNode(row, 'IconBadge', [14, 9, 51, 51]);
+      const badge = designNode(row, 'IconBadge', [14, 16, 52, 52]);
       const warmClay = cream && i % 2 === 1;
       const ink = warmClay ? '#99532B' : t.dark;
       designSurface(badge, warmClay ? '#FFE5BF' : rowColors.badge, paper ? 6 : 24, '', false);
       designIcon(badge, icon, [9, 9, 33, 33], ink);
-      designText(row, name, [81, 4, 240, 61], 31, rowColors.ink, true, true);
-      designText(row, detail, [313, 4, 199, 61], 22, rowColors.muted);
-      designIcon(row, 'arrow', [535, 21, 27, 27], rowColors.muted);
+      designText(row, name, [81, 8, 240, 68], 31, rowColors.ink, true, true);
+      designText(row, detail, [313, 8, 199, 68], 22, rowColors.muted);
+      designIcon(row, 'arrow', [535, 29, 27, 27], rowColors.muted);
     });
 
     const sync = designHit(designNode(panel, 'Button_同步', [52, 1124, 218, 80]),
@@ -197,45 +163,99 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     designText(face, '返回游戏', [136, 5, 146, 62], 32, footer.ink, true);
   }
 
-  private showCashoutMy(): void {
-    const close = () => {
-      this.cashoutMyPage = false;
-      this.dismissPlayerMenu('PlayerOverlay');
-      this.showPlayerProfile();
-    };
-    const panel = this.designPage('PlayerOverlay', '我的', close);
+  protected showMyMenu(): void {
+    const close = () => this.dismissPlayerMenu('MyOverlay');
+    const t = getPageTheme();
+    const panel = this.designPage('MyOverlay', '我的', close, 'game-ui/bg-0' + t.id);
     if (!panel) return;
-    this.cashoutMyPage = true;
-    const service = this.playerService!, t = getPageTheme(), state = service.state;
+    const service = this.playerService!, state = service.state;
     void service.refreshRuntimeConfig();
-    const profile = designNode(panel, 'CashoutProfile', [52, 326, 616, 170]);
-    designSurface(profile);
-    const address = regionPath(service.regions, state.profile.regionCodes).map(region => region.name).join(' · ');
+    const {ingredients, features, row, radius, highlight, footer} = MENU_APPEARANCE[t.id];
+    const menu = this.cashoutArt(panel, 'panel', [30, 302, 660, 772], true);
+    const profile = designNode(menu, 'MyProfile', [36, 36, 588, 170]);
+    designPersonalSurface(profile, row.fill, radius, row.edge);
+    const avatar = designNode(profile, 'MyAvatar', [23, 25, 124, 124]);
+    designPersonalSurface(avatar, row.badge, t.id === 9 ? 14 : 62, highlight, false);
+    this.addIngredientImage(designNode(avatar, 'RearIngredient', [11, 17, 68, 68]),
+      ingredients[0], false, 68, 68);
+    this.addIngredientImage(designNode(avatar, 'FrontIngredient', [41, 40, 76, 76]),
+      ingredients[1], false, 76, 76);
     designText(profile, service.playerId ? '玩家 ' + service.playerId.slice(0, 8) : '本机玩家',
-      [25, 15, 566, 49], 31, t.ink, true, true);
-    designText(profile, address || '尚未选择地区', [25, 62, 566, 41], 25, t.muted, false, true);
-    const achievements = achievementEntries(state).filter(entry => entry.unlocked).length;
-    designText(profile, '通关 ' + this.designStats().total + '  ·  食材 ' + state.progress.discovered.length
-      + '  ·  成就 ' + achievements, [25, 109, 566, 42], 26, t.accent, true, true);
-    const open = (action: () => void) => () => {
-      this.dismissPlayerMenu('PlayerOverlay');
-      action();
-    };
-    designButton(panel, 'Button_我的位置', '我的位置', [52, 518, 616, 82], open(() => this.showRegionPicker([])), true);
-    designButton(panel, 'Button_图鉴', '图鉴', [52, 614, 616, 82], open(() => this.showCollection()), true);
-    designButton(panel, 'Button_成就', '成就', [52, 710, 616, 82], open(() => this.showCollection('achievements')), true);
-    designFooter(panel, '返回菜单', close);
+      [170, 33, 383, 57], 39, row.ink, true, true);
+    designText(profile, '累计通关 ' + this.designStats().total + ' 次',
+      [171, 98, 370, 41], 26, row.muted, false, true);
+
+    const open = (action: () => void) => () => { close(); action(); };
+    const achievements = achievementEntries(state);
+    const unlocked = achievements.filter(entry => entry.unlocked).length;
+    const stock = Object.values(this.readCashout().stock).reduce((sum, count) => sum + count, 0);
+    const cards = [
+      {name: '图鉴', detail: '已收录 ' + state.progress.discovered.length + ' / ' + INGREDIENTS.length,
+        action: () => this.showCollection()},
+      {name: '成就', detail: '已达成 ' + unlocked + ' / ' + achievements.length,
+        action: () => this.showCollection('achievements')},
+    ];
+    cards.forEach(({name, detail, action}, i) => {
+      const color = features[i];
+      const card = designHit(designNode(menu, 'Button_' + name, [36 + i * 304, 230, 284, 217]), open(action));
+      designSurface(card, color.trim, radius, color.trim);
+      const face = designNode(card, 'CardFace', [2, 0, 280, 211]);
+      designPersonalSurface(face, color.fill, radius - 1, highlight, false);
+      const art = designNode(face, 'EntryIllustration', [160, 15, 103, 103]);
+      designPersonalSurface(art, color.badge, t.id === 9 ? 12 : 51, '', false);
+      if (i === 0) {
+        const fallback = designIcon(art, 'book', [22, 22, 59, 59], color.ink);
+        paintCollectionArt(designNode(art, 'CollectionBook', [0, 0, 103, 103]), t.id, fallback);
+      } else {
+        designIcon(art, 'trophy', [16, 16, 71, 71], color.ink);
+      }
+      designText(face, name, [20, 110, 160, 49], 40, color.ink, true, true);
+      designText(face, detail, [21, 162, 188, 33], 24, color.ink, false, true);
+      designIcon(face, 'arrow', [227, 166, 27, 27], color.ink);
+    });
+
+    const next = achievements.find(item => !item.unlocked && item.category === 'cashout')
+      ?? achievements.find(item => !item.unlocked);
+    const nextCard = designHit(designNode(menu, 'Button_下一枚成就', [36, 466, 588, 65]),
+      open(() => this.showCollection('achievements', {achievementId: next?.id})));
+    const warm = features[1];
+    designPersonalSurface(nextCard, warm.fill, radius, warm.trim, false);
+    designIcon(nextCard, 'trophy', [22, 15, 35, 35], warm.ink);
+    designText(nextCard, next ? '下一枚 · ' + next.title : '全部成就已达成',
+      [74, 4, 442, 57], 27, warm.ink, true, true);
+    designIcon(nextCard, 'arrow', [539, 19, 27, 27], warm.ink);
+
+    const inventory = designHit(designNode(menu, 'Button_背包', [36, 550, 588, 101]),
+      open(() => this.showCashoutHome()));
+    designPersonalSurface(inventory, row.fill, radius, row.edge);
+    const bagBadge = designNode(inventory, 'EntryIllustration', [14, 10, 80, 80]);
+    designSurface(bagBadge, row.badge, t.id === 9 ? 10 : 40, '', false);
+    const bag = designNode(bagBadge, 'BackpackIllustration', [16, 16, 48, 48]);
+    bag.setScale(1.35, 1.35, 1);
+    paintBackpackIcon(bag, t.id);
+    designText(inventory, '背包', [111, 8, 165, 45], 35, row.ink, true, true);
+    designText(inventory, '库存道具 · 捞到就收', [112, 55, 253, 36], 23, row.muted, false, true);
+    const countTag = designNode(inventory, 'EntryCount', [410, 28, 114, 46]);
+    designSurface(countTag, row.badge, radius, '', false);
+    designText(countTag, stock + ' 件', [4, 0, 106, 46], 26, t.dark, true);
+    designIcon(inventory, 'arrow', [540, 37, 27, 27], row.ink);
+
+    const address = regionPath(service.regions, state.profile.regionCodes).map(region => region.name).join(' · ');
+    const place = designHit(designNode(menu, 'Button_我的位置', [36, 670, 588, 65]),
+      open(() => this.showRegionPicker([])));
+    designPersonalSurface(place, row.fill, radius, row.edge, false);
+    designIcon(place, 'pin', [21, 13, 40, 40], row.ink);
+    designText(place, '我的位置', [73, 5, 162, 55], 28, row.ink, true, true);
+    designText(place, address || '尚未选择地区', [244, 5, 280, 55], 24, row.muted);
+    designIcon(place, 'arrow', [539, 19, 28, 28], row.muted);
+    designPersonalSurface(designFooter(panel, '返回游戏', close), footer.fill, radius + 4, footer.edge);
   }
 
-  protected returnFromCollection(tab: 'ingredients' | 'achievements'): void {
-    if (this.cashoutMyPage) this.showCashoutMy();
-    else super.returnFromCollection(tab);
-  }
-
-  private cashoutPage(title: string): {overlay: Node; panel: Node} {
+  private cashoutPage(title: string, back?: () => void): {overlay: Node; panel: Node} {
     this.closeCashout();
     const page = designOverlay(this.node, MODE_OVERLAY, this.viewportHeight, false, 'game-ui/bg-0' + getPageTheme().id);
     designHeader(page.panel, title);
+    if (back) designHit(designNode(page.panel, 'HeaderBack', [22, 204, 132, 88]), back);
     fitDesignPage(page.panel);
     return page;
   }
@@ -263,23 +283,24 @@ export abstract class HotPotCashout extends HotPotDesignResults {
 
   private showCashoutHome(): void {
     const key = this.cashoutKey(), save = this.readCashout(), run = save.run;
-    const {overlay, panel} = this.cashoutPage('道具');
+    const back = () => { this.closeCashout(); this.showMyMenu(); };
+    const {overlay, panel} = this.cashoutPage('背包', back);
     const ongoing = cashoutActive(run);
     const wait = cashoutWait(save, Date.now());
     designText(panel, '道具库存', [42, 307, 636, 58], 35, designOnBackground(), true);
     this.showStock(panel, save.stock, 376);
     designText(panel, '赚到的道具可在主线第三关使用', [45, 561, 630, 46], 25, designOnBackground());
-    const card = designNode(panel, 'CashoutEntry', [40, 630, 640, 340]);
+    const card = designNode(panel, 'CashoutEntry', [40, 630, 640, 360]);
     designSurface(card);
     this.cashoutArt(card, 'gift', [269, 15, 102, 94]);
     designText(card, '捞到就收', [25, 115, 590, 58], 38, undefined, true);
     designText(card, ongoing
       ? this.cashoutStageTitle(run) + (run.status === 'decision' ? ' · 待收锅' : ' · 已暂停')
-      : '清盘可收 1 / 2 / 4 个道具', [24, 175, 592, 41], 27);
-    designText(card, '每小时限开一锅 · 从开锅时计时', [24, 217, 592, 33], 22, getPageTheme().muted);
+      : '清盘可收 1 / 2 / 4 个道具', [24, 181, 592, 41], 27);
+    designText(card, '每小时限开一锅 · 从开锅时计时', [24, 228, 592, 33], 22, getPageTheme().muted);
     const start = designButton(card, 'Button_赚道具',
       ongoing ? '继续捞锅' : wait ? this.cashoutCooldownLabel(wait) : '开捞',
-      [36, 253, 568, 68], () => {
+      [36, 271, 568, 68], () => {
         const current = this.readCashout();
         if (cashoutActive(current.run)) return this.showCashoutRun();
         const next = startCashout(current, Date.now());
@@ -297,14 +318,14 @@ export abstract class HotPotCashout extends HotPotDesignResults {
       overlay.once(Node.EventType.NODE_DESTROYED, () => this.unschedule(refresh));
     }
     if (ongoing) {
-      designButton(panel, 'Button_放弃副本', '放弃这锅', [157, 981, 406, 64], () =>
+      designButton(panel, 'Button_放弃副本', '放弃这锅', [157, 1006, 406, 64], () =>
         this.cashoutConfirm('放弃这锅？', '本轮进度与未结算奖励将清空。冷却时间照常计算。', '确认放弃', () => {
           if (this.writeCashout(key, {...this.readCashout(), run: null})) this.showCashoutHome();
         }), true);
     } else if (run) {
-      designButton(panel, 'Button_查看结算', '查看上次结算', [174, 981, 372, 64], () => this.showCashoutRun(), true);
+      designButton(panel, 'Button_查看结算', '查看上次结算', [174, 1006, 372, 64], () => this.showCashoutRun(), true);
     }
-    designFooter(panel, '返回菜单', () => { this.closeCashout(); this.showPlayerProfile(); });
+    designFooter(panel, '返回我的', back);
   }
 
   private cashoutCooldownLabel(wait: number): string {
@@ -449,7 +470,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     designText(modeTag, '捞到就收 · 道具挑战', [10, 0, 315, 58], 25, t.ink, true);
     designButton(panel, 'Button_暂停', '暂停', [484, 1137, 188, 80], () => {
       if (moving) return;
-      this.cashoutConfirm('副本已暂停', '返回后可以继续这锅。', '返回道具页',
+      this.cashoutConfirm('副本已暂停', '返回后可以继续这锅。', '返回背包',
         () => this.showCashoutHome(), '继续捞');
     }, true);
     if (run.status === 'decision') this.showCashoutDecision(run, () => advance(settleCashout(save, run)),
@@ -518,7 +539,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
       designText(body, '托盘已满，本轮没获得道具。\n背包原有道具仍保留。', [35, 116, 582, 143], 30);
     }
     const y = won ? 471 : 273;
-    designButton(body, 'Button_返回道具页', '返回道具页', [48, y, 556, 68], () => this.showCashoutHome());
+    designButton(body, 'Button_返回背包', '返回背包', [48, y, 556, 68], () => this.showCashoutHome());
   }
 
   protected isInventoryAssisted(): boolean {
@@ -577,7 +598,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     const key = this.cashoutKey(), record = this.readCashout();
     const used = this.assistedRun?.key === key ? this.assistedRun.used : 0;
     const t = getPageTheme();
-    const {row: colors, footer, radius} = SETTINGS_APPEARANCE[t.id];
+    const {row: colors, footer, radius} = MENU_APPEARANCE[t.id];
     const body = this.cashoutDialog('背包', 700, true);
     const bag = designNode(body, 'InventoryIcon', [228, 42, 48, 48]);
     paintBackpackIcon(bag, t.id);

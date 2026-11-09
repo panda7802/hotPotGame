@@ -14,11 +14,13 @@ export function gameInterfaceLayout(area:GameViewport,first:boolean,reserve:bool
   const rowTop=brand[1]+brand[3]+8*c,touchHeight=Math.max(100,44/scale);
   const collection:GameBox=[left,rowTop,132,touchHeight];
   const settings:GameBox=[720-right-132,rowTop,132,touchHeight];
-  const stage:GameBox=[360-185*c,rowTop+(touchHeight-54*c)/2,370*c,54*c];
+  const stageHeight=62*c;
+  const stage:GameBox=[360-185*c,rowTop+(touchHeight-stageHeight)/2,370*c,stageHeight];
   const progress:GameBox=[80,settings[1]+settings[3]+7*c,560,29*c];
   const meter:GameBox=[100,progress[1]+progress[3]+9*c,495,13*c];
-  const controlsY=h-safeBottom-18-82*c;
-  const controls:GameBox[]=[[76,controlsY,262,82*c],[382,controlsY,262,82*c]];
+  const controlHeight=92*c;
+  const controlsY=h-safeBottom-18-controlHeight;
+  const controls:GameBox[]=[[64,controlsY,286,controlHeight],[370,controlsY,286,controlHeight]];
   const toolsY=controlsY-22*c-112*c;
   const trayY=(first?controlsY:toolsY)-20*c-120*c;
   const boardTop=meter[1]+meter[3]+30*c,boardEnd=trayY-20*c;

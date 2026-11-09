@@ -32,6 +32,7 @@ export {
   PROGRESS_VERSION,
   PLAY_SESSION_VERSION,
   CASHOUT_SYNC_VERSION,
+  ACHIEVEMENT_SYNC_VERSION,
   clone,
   emptyProgress,
   emptyPlayerState,
@@ -96,6 +97,8 @@ export function validateProgress(value: any): CollectionProgress {
   check(value && value.version === PROGRESS_VERSION, '图鉴成就版本不兼容');
   check(typeof value.regionChosen === 'boolean', '地区成就记录错误');
   check(value.thirdLevelEntered === undefined || typeof value.thirdLevelEntered === 'boolean', '第三关首次记录错误');
+  check(value.bestCashoutStage === undefined || integer(value.bestCashoutStage, 0, 3),
+    '副本成就记录错误');
   /**
    * 将当前条目转换为后续处理所需的值。
    */
@@ -180,6 +183,7 @@ export function validateProgress(value: any): CollectionProgress {
     cleanWins,
     regionChosen: value.regionChosen,
     thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
+    ...(value.bestCashoutStage ? {bestCashoutStage: value.bestCashoutStage} : {}),
   };
 }
 /**
@@ -189,6 +193,7 @@ export function mergeProgress(
   a: CollectionProgress,
   b: CollectionProgress,
 ): CollectionProgress {
+  const bestCashoutStage = Math.max(a.bestCashoutStage || 0, b.bestCashoutStage || 0);
   return {
     version: 1,
     /**
@@ -227,7 +232,19 @@ export function mergeProgress(
     ),
     regionChosen: a.regionChosen || b.regionChosen,
     thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
+    ...(bestCashoutStage ? {bestCashoutStage} : {}),
   };
+}
+
+export function recordCashoutProgress(
+  progress: CollectionProgress,
+  cashout?: CashoutSave,
+): CollectionProgress {
+  const run = cashout?.run;
+  if (run?.status !== 'won' || run.stage + 1 <= (progress.bestCashoutStage || 0)) {
+    return progress;
+  }
+  return {...progress, bestCashoutStage: run.stage + 1};
 }
 /**
  * 根据当前对局更新发现食材与关卡成就。
@@ -618,6 +635,7 @@ export function validatePlayerState(
   check(value && value.profile, '玩家档案格式错误');
   const path = regionPath(regions, value.profile.regionCodes);
   const save = value.save === null ? null : validateGameSave(value.save);
+  const cashout = value.cashout === undefined ? undefined : validateCashoutSave(value.cashout);
   const progress = validateProgress(value.progress);
   if (path.length) {
     progress.regionChosen = true;
@@ -628,8 +646,8 @@ export function validatePlayerState(
      */
     profile: {regionCodes: path.map((item) => item.code)},
     save,
-    progress: recordProgress(progress, save),
+    progress: recordCashoutProgress(recordProgress(progress, save), cashout),
     playDate: validatePlayDate(value.playDate),
-    ...(value.cashout === undefined ? {} : {cashout: validateCashoutSave(value.cashout)}),
+    ...(cashout === undefined ? {} : {cashout}),
   };
 }

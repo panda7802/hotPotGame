@@ -24,7 +24,7 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     if(!this.playerService||!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded))return null;
     const {panel}=designOverlay(this.node,name,this.viewportHeight,false,background);designHeader(panel,title);
     designHit(designNode(panel,'HeaderBack',[22,204,132,88]),back);
-    if(name!=='PlayerOverlay')designHit(designNode(panel,'HeaderSettings',[566,204,132,88]),()=>{this.dismissPlayerMenu(name);this.showPlayerProfile()});
+    if(name!=='PlayerOverlay'&&name!=='MyOverlay')designHit(designNode(panel,'HeaderSettings',[566,204,132,88]),()=>{this.dismissPlayerMenu(name);this.showPlayerProfile()});
     fitDesignPage(panel);
     return panel;
   }

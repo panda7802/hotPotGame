@@ -1,10 +1,13 @@
+import type {Node} from 'cc';
 import {getPageTheme} from '../data/PageTheme';
 import {getIngredient, INGREDIENTS, NORMAL_INGREDIENTS, HIDDEN_INGREDIENTS, IngredientType} from '../data/GameData';
 import {achievementEntries, INGREDIENT_STORIES} from '../data/CollectionData';
+import type {AchievementEntry} from '../data/CollectionData';
 import {RegionNode} from '../data/PlayerData';
 import {hex, TOOL_NAMES, ToolType} from './HotPotUi';
 import {HotPotDesignMenus} from './HotPotDesignMenus';
 import {paintPremiumGlow} from './HotPotCeladonGlow';
+import {paintGameArt} from './HotPotGameArt';
 import {
   designButton,
   designFooter,
@@ -12,32 +15,66 @@ import {
   designIcon,
   designNode,
   designOnBackground,
+  designPersonalSurface,
   designScroll,
   designSurface,
   designText
 } from './HotPotDesignUi';
+import type {DesignRect} from './HotPotDesignUi';
+
+type CollectionEntry = {headingTaps?: number; ingredientTaps?: number; achievementId?: string};
+const ACHIEVEMENT_MEDALS = {
+  main: {icon: 'trophy', fill: '#F9E2B7', ink: '#8A5026'},
+  collection: {icon: 'book', fill: '#E3ECC8', ink: '#466740'},
+  cashout: {icon: 'gift', fill: '#F9DDC9', ink: '#984F35'},
+  tavern: {icon: 'pin', fill: '#EEE4CF', ink: '#755B3F'},
+};
+const ACHIEVEMENT_APPEARANCE = {
+  1: {
+    summary: '#792F26', earned: '#285648', pending: '#1C4539', ink: '#FFF1CF', muted: '#E5CD9D',
+    medal: '#DCB774', medalInk: '#55341F', medalRadius: 17,
+    track: '#123429', summaryTrack: '#55241E', fill: '#E6BC75',
+    earnedStatus: '#963B2D', pendingStatus: '#16352C', statusRadius: 10,
+  },
+  4: {
+    summary: '#FFF5DF', earned: '#FFEFCC', pending: '#FFF5DF', ink: '#653C22', muted: '#826445',
+    medal: '#FFE1A6', medalInk: '#905522', medalRadius: 41,
+    track: '#D7B98B', summaryTrack: '#D7B98B', fill: '#4C7D3F',
+    earnedStatus: '#4C7D3F', pendingStatus: '#FFF0CF', statusRadius: 18,
+  },
+  8: {
+    summary: '#E2EFE3', earned: '#EAF2E4', pending: '#FFFAE8', ink: '#264E40', muted: '#527062',
+    medal: '#C5DFD0', medalInk: '#2B604C', medalRadius: 41,
+    track: '#C6D6BE', summaryTrack: '#B5D0BD', fill: '#4D8068',
+    earnedStatus: '#366B53', pendingStatus: '#E8EFE0', statusRadius: 18,
+  },
+  9: {
+    summary: '#F6E7CD', earned: '#F9EBD0', pending: '#FFF6E4', ink: '#392B22', muted: '#725641',
+    medal: '#EFD9BA', medalInk: '#953C2D', medalRadius: 7,
+    track: '#DCC3A0', summaryTrack: '#DCC3A0', fill: '#A44435',
+    earnedStatus: '#A3372B', pendingStatus: '#F2E2C8', statusRadius: 4,
+  },
+};
 
 export abstract class HotPotDesignCollection extends HotPotDesignMenus {
   private designOffsets = {ingredients: 0, hidden: 0, achievements: 0};
   private designIngredientGroup: 'ingredients' | 'hidden' = 'ingredients';
   private designCollectionTab: 'ingredients' | 'achievements' = 'ingredients';
 
-  protected returnFromCollection(tab: 'ingredients' | 'achievements'): void {
-    if (tab === 'achievements') this.showPlayerProfile();
-  }
-
-  protected showCollection(tab: 'ingredients' | 'achievements' = 'ingredients', entry?: any): void {
+  protected showCollection(tab: 'ingredients' | 'achievements' = 'ingredients', entry?: CollectionEntry): void {
     let saveOffset = () => {
     };
     const back = () => {
       saveOffset();
       this.dismissPlayerMenu('CollectionOverlay');
-      this.returnFromCollection(tab);
+      this.showMyMenu();
     };
-    const p = this.designPage('CollectionOverlay', tab === 'ingredients' ? '食材图鉴' : '我的成就', back);
+    const t = getPageTheme();
+    const p = this.designPage('CollectionOverlay', tab === 'ingredients' ? '食材图鉴' : '我的成就',
+      back, tab === 'achievements' ? 'game-ui/bg-0' + t.id : undefined);
     if (!p) return;
     this.designCollectionTab = tab;
-    const state = this.playerService!.state, t = getPageTheme();
+    const state = this.playerService!.state;
     const taps = {
       heading: entry?.headingTaps || 0,
       food: entry?.ingredientTaps || 0
@@ -107,37 +144,61 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
       });
       designText(p, '向上滑动，看看更多食材', [80, 1080, 560, 28], 20, designOnBackground());
     } else {
-      const entries = achievementEntries(state),
-        unlocked = entries.filter(a => a.unlocked).length;
-      designText(p, '已达成 ' + unlocked + ' 项 · 每一步都值得记下', [50, 290, 620, 44], 24, designOnBackground());
-      const {
-        content,
-        view
-      } = designScroll(p, 'CollectionViewport', [40, 354, 640, 746], entries.length * 220, this.designOffsets.achievements);
-      saveOffset = () => {
-        this.designOffsets.achievements = Math.max(0, view.getScrollOffset().y)
-      };
-      entries.forEach((item, i) => {
-        const card = designNode(content, 'Achievement_' + item.id, [0, i * 220, 640, 202]);
-        designSurface(card);
-        const medal = designNode(card, 'Medal', [24, 26, 84, 84]);
-        designSurface(medal, t.panel, 42);
-        designIcon(medal, 'trophy', [21, 21, 42, 42], item.unlocked ? t.accent : t.muted);
-        designText(card, item.title, [130, 22, 478, 50], 30, t.ink, true, true);
-        designText(card, item.description, [130, 78, 478, 70], 23, t.muted, false, true);
-        const bar = designNode(card, 'AchievementProgress', [26, 164, 390, 10]);
-        const g = designSurface(bar, t.line, 5, '', false);
-        const width = Math.min(1, item.current / item.target) * 390;
-        if (width > 0) {
-          g.fillColor = hex(t.success);
-          g.roundRect(-195, -5, Math.max(1, width), 10, 5);
-          g.fill()
-        }
-        designText(card, item.current + ' / ' + item.target, [426, 145, 110, 38], 21, t.muted);
-        designText(card, item.unlocked ? '已达成' : '进行中', [540, 145, 80, 38], 21, t.accent, true);
-      });
+      saveOffset = this.drawAchievementShelf(p, achievementEntries(state), entry?.achievementId);
     }
     designFooter(p, '返回', back);
+  }
+
+  private drawAchievementShelf(panel: Node, entries: AchievementEntry[], focusId?: string): () => void {
+    const t = getPageTheme();
+    const cream = t.id === 4;
+    const appearance = ACHIEVEMENT_APPEARANCE[t.id];
+    const unlocked = entries.filter(item => item.unlocked).length;
+    const board = designNode(panel, 'AchievementBoard', [28, 298, 664, 790]);
+    paintGameArt(designNode(board, 'AchievementFrame', [0, 0, 664, 790]), 'panel', t.id, true);
+    const bar = (parent: Node, box: DesignRect, current: number, target: number, track: string) => {
+      const g = designSurface(designNode(parent, 'AchievementProgress', box), track, 6, '', false);
+      const w = box[2] * current / target, h = box[3];
+      if (w > 0) {
+        g.fillColor = hex(appearance.fill);
+        g.roundRect(-box[2] / 2, -h / 2, w, h, Math.min(h / 2, w / 2));
+        g.fill();
+      }
+    };
+    const summary = designNode(board, 'AchievementSummary', [36, 31, 592, 159]);
+    designPersonalSurface(summary, appearance.summary);
+    const trophy = designNode(summary, 'AchievementHeroMedal', [21, 22, 114, 114]);
+    designPersonalSurface(trophy, appearance.medal, Math.round(appearance.medalRadius * 114 / 82), t.edge, false);
+    designIcon(trophy, 'trophy', [23, 23, 68, 68], appearance.medalInk);
+    designText(summary, '成就进度', [156, 13, 388, 46], 31, appearance.ink, true, true);
+    designText(summary, '已达成 ' + unlocked + ' / ' + entries.length + ' 项',
+      [157, 64, 404, 39], 25, appearance.muted, false, true);
+    bar(summary, [157, 121, 385, 12], unlocked, entries.length, appearance.summaryTrack);
+
+    const stride = 151;
+    const focused = entries.findIndex(item => item.id === focusId);
+    const offset = focused < 0 ? this.designOffsets.achievements : focused * stride;
+    const {content, view} = designScroll(board, 'CollectionViewport', [36, 208, 592, 541],
+      entries.length * stride, offset);
+    entries.forEach((item, i) => {
+      const card = designNode(content, 'Achievement_' + item.id, [0, i * stride, 592, 139]);
+      designPersonalSurface(card, item.unlocked ? appearance.earned : appearance.pending,
+        undefined, i === focused ? appearance.fill : t.edge);
+      const medal = designNode(card, 'Medal', [17, 28, 82, 82]);
+      const colors = ACHIEVEMENT_MEDALS[item.category];
+      designPersonalSurface(medal, cream ? colors.fill : appearance.medal, appearance.medalRadius, '', false);
+      designIcon(medal, colors.icon, [16, 16, 50, 50], cream ? colors.ink : appearance.medalInk);
+      designText(card, item.title, [113, 10, 318, 44], 32, appearance.ink, true, true);
+      designText(card, item.description, [114, 54, 450, 40], 23, appearance.muted, false, true);
+      const status = designNode(card, 'AchievementStatus', [456, 16, 111, 36]);
+      designSurface(status, item.unlocked ? appearance.earnedStatus : appearance.pendingStatus,
+        appearance.statusRadius, t.id === 9 && item.unlocked ? '#C68665' : '', false);
+      designText(status, item.unlocked ? '已达成' : '进行中', [3, 0, 105, 36], 21,
+        item.unlocked ? t.onAccent : appearance.muted, true);
+      bar(card, [114, 112, 334, 10], item.current, item.target, appearance.track);
+      designText(card, item.current + ' / ' + item.target, [454, 100, 115, 34], 21, appearance.muted);
+    });
+    return () => { this.designOffsets.achievements = Math.max(0, view.getScrollOffset().y); };
   }
 
   protected showIngredientDetail(type: IngredientType): void {
@@ -170,7 +231,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     }
     const back = () => {
       this.dismissPlayerMenu('RegionOverlay');
-      this.showPlayerProfile()
+      this.showMyMenu()
     }, p = this.designPage('RegionOverlay', '所在地选择', back);
     if (!p) return;
     const service = this.playerService!, t = getPageTheme(),

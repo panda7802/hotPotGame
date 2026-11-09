@@ -76,9 +76,7 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.refMeter=gameArtNode(this.referenceRoot,'ReferenceProgressMeter');
     const settings=hit(this.referenceRoot,'Button_设置',[0,0,.1,.1],1280,()=>this.showPlayerProfile());
     this.profileButtonLabel=text(settings,'',[0,0,0,0],1280,1);this.profileButtonLabel.node.active=false;
-    const library=hit(this.referenceRoot,'Button_食材图鉴',[0,0,.1,.1],1280,()=>this.showCollection());
-    const libraryLabel=text(library,'图鉴',[-.5,-.5,1,1],24,21,getPageTheme().ink,true);
-    libraryLabel.node.name='LibraryLabel';
+    hit(this.referenceRoot,'Button_我的',[0,0,.1,.1],1280,()=>this.showMyMenu());
     this.board=gameArtNode(this.referenceRoot,'Board');
     this.trayNode=gameArtNode(this.referenceRoot,'Tray');
     this.reserveNode=gameArtNode(this.referenceRoot,'ReviveReserve');this.reserveNode.active=false;
@@ -135,18 +133,11 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     this.positionArt(this.trayArt,'tray',l.tray,t.id,true);
     this.positionArt(this.giftArt,'gift',[l.meter[0]+l.meter[2]+14,l.meter[1]-22*l.c,54*l.c,52*l.c],t.id,false,true);
     const settings=this.referenceRoot.getChildByName('Button_设置')!;
-    const library=this.referenceRoot.getChildByName('Button_食材图鉴')!;
-    this.positionBox(library,l.collection);
-    const libraryLabel=library.getChildByName('LibraryLabel')!;
-    transform(libraryLabel,112*l.c,32*l.c);libraryLabel.setPosition(0,-33*l.c);
-    libraryLabel.getComponent(Label)!.color=hex(t.ink);
-    libraryLabel.getComponent(Label)!.fontSize=26*l.c;
+    const my=this.referenceRoot.getChildByName('Button_我的')!;
+    this.positionBox(my,l.collection);
+    paintThemeHeaderButton(my,'我的','profile',l.c);
     this.positionBox(settings,l.settings);
     paintThemeHeaderButton(settings,'设置','settings',l.c);
-    paintThemeHeaderButton(library,'图鉴','book',l.c);
-    library.active=false;
-    libraryLabel.active=false;
-    const book=library.getChildByName('CollectionBook');if(book)book.active=false;
     this.positionBox(this.levelLabel.node,[l.stage[0]+18,l.stage[1]+2,l.stage[2]-36,l.stage[3]-4]);
     this.levelLabel.fontSize=26*l.c;this.levelLabel.lineHeight=40*l.c;this.levelLabel.color=hex(t.id===9?'#FFF0CE':t.id===1?'#365842':t.ink);
     this.positionBox(this.progressLabel.node,l.progress);this.progressLabel.fontSize=24*l.c;this.progressLabel.lineHeight=30*l.c;
@@ -217,8 +208,17 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
       }
     }
     for(const [i,name] of ['Button_重新开始','Button_声音'].entries()){
-      const button=this.referenceRoot.getChildByName(name)!,b=l.controls[i];this.positionArt(button,i===0?'restart':'sound',b,t.id);
-      const label=button.getChildByName('Label')!;transform(label,148,b[3]*.75);label.setPosition(43,0);
+      const button=this.referenceRoot.getChildByName(name)!,b=l.controls[i];
+      this.positionBox(button,b);
+      const role=i===0?'restart':'sound';
+      const [, , width, height]=GAME_ART_RECTS[t.id][role];
+      const scale=Math.min(b[2]/width,b[3]/height);
+      const artwork=button.getChildByName('ControlArtwork')||gameArtNode(button,'ControlArtwork');
+      artwork.setSiblingIndex(0);
+      transform(artwork,width*scale,height*scale);
+      paintGameArt(artwork,role,t.id);
+      const label=button.getChildByName('Label')!;
+      transform(label,148,b[3]*.75);label.setPosition(width*scale*.165,0);
       const component=label.getComponent(Label)!;component.fontSize=27*l.c;component.lineHeight=38*l.c;component.color=hex('#FFF4DF');
     }
     this.firstLevelBottom.active=first;this.toolBar.active=!first;this.updateSoundMark();
@@ -244,11 +244,13 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   }
   private updateSoundMark():void{
     const sound=this.referenceRoot?.getChildByName('Button_声音'),mark=sound?.getChildByName('MutedMark');if(!mark)return;
-    const b=sound!.getComponent(UITransform)!;transform(mark,46,46);mark.setPosition(-b.width*.28,0);mark.active=!this.soundEnabled;
+    const art=sound?.getChildByName('ControlArtwork')?.getComponent(UITransform);if(!art)return;
+    transform(mark,46,46);mark.setPosition(-art.width*.28,0);mark.active=!this.soundEnabled;
     const g=mark.getComponent(Graphics)||mark.addComponent(Graphics);g.clear();g.strokeColor=hex('#9D281D');g.lineWidth=6;g.moveTo(-17,-17);g.lineTo(17,17);g.stroke();
   }
   protected toggleSound():void{super.toggleSound();this.updateSoundMark()}
   protected showInventoryTools():void {}
+  protected abstract showMyMenu():void;
   protected updateToolButtons():void{
     if(this.toolBar)this.toolBar.active=this.levelIndex>0;
     for(const type of ['undo','bomb','shuffle'] as ToolType[]){

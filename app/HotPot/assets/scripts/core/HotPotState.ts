@@ -294,6 +294,7 @@ export abstract class HotPotState extends HotPotFields {
       this.discardPageStylePreview();
       for (const name of [
         'PlayerOverlay',
+        'MyOverlay',
         'RegionOverlay',
         'RegionConfirmOverlay',
         'StyleOverlay',
@@ -408,6 +409,7 @@ export abstract class HotPotState extends HotPotFields {
   protected hasPlayerMenu(): boolean {
     return [
       'PlayerOverlay',
+      'MyOverlay',
       'RegionOverlay',
       'CollectionOverlay',
       'CollectionDetailOverlay',

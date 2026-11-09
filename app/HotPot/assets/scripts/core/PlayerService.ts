@@ -2,6 +2,7 @@ import {validateDevelopmentConfig} from '../data/CloudConfig';
 import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
 import {CashoutSave, emptyCashoutStock} from '../data/CashoutData';
 import {
+  ACHIEVEMENT_SYNC_VERSION,
   CASHOUT_SYNC_VERSION,
   clone,
   CloudPlayer,
@@ -10,6 +11,7 @@ import {
   PLAY_SESSION_VERSION,
   PlayerState,
   PROGRESS_VERSION,
+  recordCashoutProgress,
   validateCashoutSave,
   validatePlayerState,
   validateRegions,
@@ -28,7 +30,9 @@ export class PlayerService extends RegionLeaderboardService {
   }
 
   setCashout(value: CashoutSave): boolean {
-    return this.commitState({...this.local.state, cashout: validateCashoutSave(value)}, true);
+    const cashout = validateCashoutSave(value);
+    const progress = recordCashoutProgress(this.local.state.progress, cashout);
+    return this.commitState({...this.local.state, cashout, progress}, true);
   }
 
   async syncAtStartup(): Promise<void> {
@@ -381,6 +385,10 @@ export class PlayerService extends RegionLeaderboardService {
       && response.result.cashoutSyncVersion !== CASHOUT_SYNC_VERSION) {
       throw new Error('CASHOUT_UPGRADE_REQUIRED');
     }
+    if (['load', 'save'].includes(data.action)
+      && response.result.achievementSyncVersion !== ACHIEVEMENT_SYNC_VERSION) {
+      throw new Error('ACHIEVEMENT_UPGRADE_REQUIRED');
+    }
     return response.result;
   }
 
@@ -411,6 +419,7 @@ export class PlayerService extends RegionLeaderboardService {
       INVALID_STATE: '当前存档校验失败',
       CLOUD_UPGRADE_REQUIRED: '请先更新云函数再同步图鉴与成就',
       CASHOUT_UPGRADE_REQUIRED: '请先更新云函数再同步副本与背包',
+      ACHIEVEMENT_UPGRADE_REQUIRED: '请先更新云函数再同步副本成就',
       DAILY_UPGRADE_REQUIRED:
         '请先更新云函数再同步每日关卡、随机牌阵与食材组合',
     };

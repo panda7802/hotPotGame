@@ -1,6 +1,6 @@
-import {INGREDIENTS, IngredientType} from './GameData';
+import type {IngredientType} from './GameData';
 import {PlayerState} from './PlayerData';
-import {NORMAL_INGREDIENTS} from './GameConfig';
+import {HIDDEN_INGREDIENTS, NORMAL_INGREDIENTS} from './GameConfig';
 
 /**
  * 图鉴复用游戏中的食材 SpriteFrame，不增加图片资源。
@@ -152,11 +152,14 @@ export const INGREDIENT_STORIES: Record<
 /**
  * AchievementEntry 的数据结构；字段说明见各成员。
  */
+export type AchievementCategory = 'main' | 'collection' | 'cashout' | 'tavern';
+
 export interface AchievementEntry {
   /**
    * 实体的唯一编号。
    */
   id: string;
+  category: AchievementCategory;
   /**
    * 界面显示的标题。
    */ title: string;
@@ -180,12 +183,16 @@ export interface AchievementEntry {
 export function achievementEntries(state: PlayerState): AchievementEntry[] {
   const p = state.progress;
   const best = Math.max(...p.bestCleared);
+  const seen = new Set(p.discovered);
+  const rare = HIDDEN_INGREDIENTS.filter(food => seen.has(food.id)).length;
+  const settled = p.bestCashoutStage || 0;
   const result: AchievementEntry[] = [];
   const add =
     /**
      * 处理 add 对应的游戏逻辑。
      */ (
       id: string,
+      category: AchievementCategory,
       title: string,
       description: string,
       current: number,
@@ -193,6 +200,7 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
     ): void => {
       result.push({
         id,
+        category,
         title,
         description,
         current: Math.min(current, target),
@@ -202,33 +210,37 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
     };
   add(
     'first-taste',
+    'collection',
     '开锅尝鲜',
     '拿取食材，点亮第一份图鉴',
     p.discovered.length,
     1,
   );
-  add('first-clear', '初次开席', '在一局中消除至少3份食材', best, 3);
+  add('first-clear', 'main', '初次开席', '在一局中消除至少3份食材', best, 3);
   add(
     'hometown',
+    'tavern',
     '家乡有味',
     '为小馆选择自己的地区',
     p.regionChosen ? 1 : 0,
     1,
   );
-  add('five-flavors', '五味俱全', '发现5种不同食材', p.discovered.length, 5);
-  add('ten-flavors', '十全食客', '发现10种不同食材', p.discovered.length, 10);
+  add('five-flavors', 'collection', '五味俱全', '发现5种不同食材', p.discovered.length, 5);
+  add('ten-flavors', 'collection', '十全食客', '发现10种不同食材', p.discovered.length, 10);
   add(
     'full-menu',
+    'collection',
     '满汉小馆',
     `点亮全部${NORMAL_INGREDIENTS.length}种普通食材图鉴`,
-    p.discovered.filter(id => !INGREDIENTS.find(item => item.id === id)!.hidden).length,
+    NORMAL_INGREDIENTS.filter(food => seen.has(food.id)).length,
     NORMAL_INGREDIENTS.length,
   );
-  add('clear-30', '热锅熟手', '在一局中消除至少30份食材', best, 30);
-  add('clear-100', '百味入锅', '在一局中消除至少100份食材', best, 100);
-  add('clear-300', '火候大师', '在一局中消除至少300份食材', best, 300);
+  add('clear-30', 'main', '热锅熟手', '在一局中消除至少30份食材', best, 30);
+  add('clear-100', 'main', '百味入锅', '在一局中消除至少100份食材', best, 100);
+  add('clear-300', 'main', '火候大师', '在一局中消除至少300份食材', best, 300);
   add(
     'win-1',
+    'main',
     '第一锅香',
     '通关第1关',
     p.completedLevels.indexOf(0) >= 0 ? 1 : 0,
@@ -236,6 +248,7 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
   );
   add(
     'win-2',
+    'main',
     '热锅行家',
     '通关第2关',
     p.completedLevels.indexOf(1) >= 0 ? 1 : 0,
@@ -243,6 +256,7 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
   );
   add(
     'win-3',
+    'main',
     '千层掌勺',
     '通关第3关',
     p.completedLevels.indexOf(2) >= 0 ? 1 : 0,
@@ -250,12 +264,22 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
   );
   add(
     'clean-win',
+    'main',
     '一气呵成',
     '不使用复活通关任意一关',
     p.cleanWins.length ? 1 : 0,
     1,
   );
-  add('all-wins', '三锅圆满', '完成全部3关', p.completedLevels.length, 3);
+  add('all-wins', 'main', '三锅圆满', '完成全部3关', p.completedLevels.length, 3);
+  add('rare-first', 'collection', '珍味初遇', '收录第一种珍藏食材', rare, 1);
+  add('rare-five', 'collection', '珍味半席', '收录5种珍藏食材', rare, 5);
+  add('rare-all', 'collection', '珍馐满席', `集齐全部${HIDDEN_INGREDIENTS.length}种珍藏食材`,
+    rare, HIDDEN_INGREDIENTS.length);
+  add('clear-600', 'main', '炉火纯青', '在一局中消除至少600份食材', best, 600);
+  add('clean-win-3', 'main', '稳过千层', '不使用复活通关第3关', p.cleanWins.includes(2) ? 1 : 0, 1);
+  add('cashout-first', 'cashout', '初次收锅', '在捞到就收中完成结算并领取奖励', settled, 1);
+  add('cashout-second', 'cashout', '趁热再捞', '完成副本第2段或以上并领取奖励', settled, 2);
+  add('cashout-final', 'cashout', '满锅而归', '完成副本第3段并领取奖励', settled, 3);
   return result;
 }
 

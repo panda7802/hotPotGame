@@ -1,10 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.CASHOUT_SYNC_VERSION = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
+exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.ACHIEVEMENT_SYNC_VERSION = exports.CASHOUT_SYNC_VERSION = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
 exports.localPlayDate = localPlayDate;
 exports.enterPlayDay = enterPlayDay;
 exports.validateProgress = validateProgress;
 exports.mergeProgress = mergeProgress;
+exports.recordCashoutProgress = recordCashoutProgress;
 exports.validateGameSave = validateGameSave;
 exports.restoreLevel = restoreLevel;
 exports.shouldUpgradeUnstartedLevelThree = shouldUpgradeUnstartedLevelThree;
@@ -23,6 +24,7 @@ Object.defineProperty(exports, "BOARD_VERSION", { enumerable: true, get: functio
 Object.defineProperty(exports, "PROGRESS_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.PROGRESS_VERSION; } });
 Object.defineProperty(exports, "PLAY_SESSION_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.PLAY_SESSION_VERSION; } });
 Object.defineProperty(exports, "CASHOUT_SYNC_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.CASHOUT_SYNC_VERSION; } });
+Object.defineProperty(exports, "ACHIEVEMENT_SYNC_VERSION", { enumerable: true, get: function () { return PlayerTypes_2.ACHIEVEMENT_SYNC_VERSION; } });
 Object.defineProperty(exports, "clone", { enumerable: true, get: function () { return PlayerTypes_2.clone; } });
 Object.defineProperty(exports, "emptyProgress", { enumerable: true, get: function () { return PlayerTypes_2.emptyProgress; } });
 Object.defineProperty(exports, "emptyPlayerState", { enumerable: true, get: function () { return PlayerTypes_2.emptyPlayerState; } });
@@ -71,6 +73,7 @@ function validateProgress(value) {
     (0, PlayerTypes_1.check)(value && value.version === PlayerTypes_1.PROGRESS_VERSION, '图鉴成就版本不兼容');
     (0, PlayerTypes_1.check)(typeof value.regionChosen === 'boolean', '地区成就记录错误');
     (0, PlayerTypes_1.check)(value.thirdLevelEntered === undefined || typeof value.thirdLevelEntered === 'boolean', '第三关首次记录错误');
+    (0, PlayerTypes_1.check)(value.bestCashoutStage === undefined || (0, PlayerTypes_1.integer)(value.bestCashoutStage, 0, 3), '副本成就记录错误');
     /**
      * 将当前条目转换为后续处理所需的值。
      */
@@ -134,12 +137,14 @@ function validateProgress(value) {
         cleanWins,
         regionChosen: value.regionChosen,
         thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
+        ...(value.bestCashoutStage ? { bestCashoutStage: value.bestCashoutStage } : {}),
     };
 }
 /**
  * 合并两份永久进度中的集合和最大值。
  */
 function mergeProgress(a, b) {
+    const bestCashoutStage = Math.max(a.bestCashoutStage || 0, b.bestCashoutStage || 0);
     return {
         version: 1,
         /**
@@ -169,7 +174,15 @@ function mergeProgress(a, b) {
         cleanWins: GameData_1.LEVELS.map((_, i) => i).filter((i) => a.cleanWins.indexOf(i) >= 0 || b.cleanWins.indexOf(i) >= 0),
         regionChosen: a.regionChosen || b.regionChosen,
         thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
+        ...(bestCashoutStage ? { bestCashoutStage } : {}),
     };
+}
+function recordCashoutProgress(progress, cashout) {
+    const run = cashout === null || cashout === void 0 ? void 0 : cashout.run;
+    if ((run === null || run === void 0 ? void 0 : run.status) !== 'won' || run.stage + 1 <= (progress.bestCashoutStage || 0)) {
+        return progress;
+    }
+    return { ...progress, bestCashoutStage: run.stage + 1 };
 }
 /**
  * 根据当前对局更新发现食材与关卡成就。
@@ -474,6 +487,7 @@ function validatePlayerState(value, regions) {
     (0, PlayerTypes_1.check)(value && value.profile, '玩家档案格式错误');
     const path = (0, RegionData_1.regionPath)(regions, value.profile.regionCodes);
     const save = value.save === null ? null : validateGameSave(value.save);
+    const cashout = value.cashout === undefined ? undefined : validateCashoutSave(value.cashout);
     const progress = validateProgress(value.progress);
     if (path.length) {
         progress.regionChosen = true;
@@ -484,8 +498,8 @@ function validatePlayerState(value, regions) {
          */
         profile: { regionCodes: path.map((item) => item.code) },
         save,
-        progress: recordProgress(progress, save),
+        progress: recordCashoutProgress(recordProgress(progress, save), cashout),
         playDate: validatePlayDate(value.playDate),
-        ...(value.cashout === undefined ? {} : { cashout: validateCashoutSave(value.cashout) }),
+        ...(cashout === undefined ? {} : { cashout }),
     };
 }

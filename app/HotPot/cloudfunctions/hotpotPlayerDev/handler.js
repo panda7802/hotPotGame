@@ -162,6 +162,7 @@ exports.createHandler = function createHandler(
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
             cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
+            achievementSyncVersion: domain.ACHIEVEMENT_SYNC_VERSION,
             player: expose(current),
           };
         }
@@ -171,6 +172,7 @@ exports.createHandler = function createHandler(
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
             cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
+            achievementSyncVersion: domain.ACHIEVEMENT_SYNC_VERSION,
             player: expose(current),
           };
         }
@@ -180,6 +182,7 @@ exports.createHandler = function createHandler(
             progressVersion: domain.PROGRESS_VERSION,
             playSessionVersion: domain.PLAY_SESSION_VERSION,
             cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
+            achievementSyncVersion: domain.ACHIEVEMENT_SYNC_VERSION,
             conflict: true,
             player: expose(current),
           };
@@ -208,6 +211,7 @@ exports.createHandler = function createHandler(
           progressVersion: domain.PROGRESS_VERSION,
           playSessionVersion: domain.PLAY_SESSION_VERSION,
           cashoutSyncVersion: domain.CASHOUT_SYNC_VERSION,
+          achievementSyncVersion: domain.ACHIEVEMENT_SYNC_VERSION,
           player: expose(next),
         };
       });

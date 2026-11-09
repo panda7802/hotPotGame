@@ -34,6 +34,43 @@ export function designSurface(n:Node,fill=getPageTheme().card,radius=designRadiu
   if(border){g.strokeColor=hex(border);g.lineWidth=getPageTheme().id===9?1:2;g.roundRect(-w/2+1,-h/2+1,w-2,h-2,Math.max(0,radius-1));g.stroke()}
   return g;
 }
+
+/** Inlays for personal pages, drawn independently of their text and icons. */
+export function designPersonalSurface(
+  node: Node, fill: string, radius = designRadius(), edge = getPageTheme().edge, shadow = true,
+): void {
+  const style = getPageTheme().id;
+  const g = designSurface(node, fill, radius, edge, shadow);
+  if (style === 4) return;
+  const {width, height} = node.getComponent(UITransform)!;
+  const x = width / 2 - 6, y = height / 2 - 6;
+  if (style === 9) {
+    g.lineWidth = 1.2;
+    g.strokeColor = hex('#AE764A91');
+    for (const side of [-1, 1]) {
+      g.moveTo(side * (x - 14), y);
+      g.lineTo(side * x, y);
+      g.lineTo(side * x, y - 14);
+      g.moveTo(side * (x - 14), -y);
+      g.lineTo(side * x, -y);
+      g.lineTo(side * x, -y + 14);
+    }
+    g.stroke();
+    return;
+  }
+  g.lineWidth = style === 1 ? 1.2 : 1.8;
+  g.strokeColor = hex(style === 1 ? '#E7C68598' : '#FFFFE9D9');
+  g.roundRect(-x, -y, x * 2, y * 2, Math.max(1, Math.min(radius - 6, y - 1)));
+  g.stroke();
+  if (style === 1) {
+    g.fillColor = hex('#F0D19A');
+    for (const side of [-1, 1]) {
+      g.circle(side * (x - 6), y - 6, 2);
+      g.circle(side * (x - 6), -y + 6, 2);
+    }
+    g.fill();
+  }
+}
 export function designText(parent:Node,value:string,box:DesignRect,size=28,color=getPageTheme().ink,bold=false,left=false):Label {
   const n=designNode(parent,'Text_'+value.slice(0,18),box),label=n.addComponent(Label);
   label.string=value;label.fontSize=size;label.lineHeight=Math.round(size*1.45);
@@ -127,6 +164,9 @@ function paintThemeHeaderIcon(node:Node,icon:string,ink:string,paper:string,gold
     g.lineWidth=1;polygon(points);
     g.fillColor=hex(paper);g.circle(0,0,8);g.fill();
     g.strokeColor=hex(gold);g.lineWidth=1.5;g.circle(0,0,8);g.stroke();
+  }else if(icon==='profile'){
+    g.circle(0,9,7);g.fill();
+    g.roundRect(-13,-15,26,16,8);g.fill();
   }else{
     g.lineWidth=5;g.moveTo(-3,12);g.lineTo(-16,0);g.lineTo(-3,-12);g.stroke();
     g.moveTo(-15,0);g.lineTo(17,0);g.stroke();
@@ -328,6 +368,7 @@ export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageT
   if(type==='book'){line([[4,4],[18,4],[18,20],[4,20],[4,4]]);line([[8,4],[8,20]]);line([[11,8],[15,8]])}
   else if(type==='pin'){g.circle(0,3*s,6*s);g.stroke();g.circle(0,3*s,2*s);g.stroke();line([[7,13],[12,21],[17,13]])}
   else if(type==='trophy'){line([[7,3],[17,3],[17,10],[15,14],[9,14],[7,10]],true);line([[7,5],[3,5],[3,9],[7,12]]);line([[17,5],[21,5],[21,9],[17,12]]);line([[12,14],[12,20]]);line([[8,21],[16,21]])}
+  else if(type==='gift'){line([[3,8],[21,8],[21,20],[3,20]],true);line([[3,12],[21,12]]);line([[12,8],[12,20]]);line([[12,8],[7,7],[6,4],[9,3],[12,8],[15,3],[18,4],[17,7],[12,8]])}
   else if(type==='palette'){g.circle(0,0,9*s);g.stroke();for(const [x,y] of [[-4,4],[3,5],[-5,-2],[3,-3]]){g.circle(x*s,y*s,1.3*s);g.fill()}}
   else if(type==='share'){line([[12,16],[12,3]]);line([[7,8],[12,3],[17,8]]);line([[5,12],[5,21],[19,21],[19,12]])}
   else if(type==='community'){line([[3,4],[21,4],[21,16],[12,16],[6,21],[6,16],[3,16]],true);for(const x of [-5,0,5]){g.circle(x*s,2*s,.9*s);g.fill()}}

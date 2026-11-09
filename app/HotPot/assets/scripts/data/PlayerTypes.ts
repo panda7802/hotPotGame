@@ -5,6 +5,7 @@ export const BOARD_VERSION = 'hotpot-20260929';
 export const PROGRESS_VERSION = 1;
 export const PLAY_SESSION_VERSION = 7;
 export const CASHOUT_SYNC_VERSION = 1;
+export const ACHIEVEMENT_SYNC_VERSION = 1;
 export type SaveStatus = 'playing' | 'lost' | 'won';
 /**
  * SavedMove 的数据结构；字段说明见各成员。
@@ -136,6 +137,8 @@ export interface CollectionProgress {
   regionChosen: boolean;
   /** 兼容早期版本的第三关经历记录；珍藏保底现在只看 discovered。 */
   thirdLevelEntered?: boolean;
+  /** Highest side challenge stage whose reward was collected. */
+  bestCashoutStage?: number;
 }
 /**
  * PlayerState 的数据结构；字段说明见各成员。
