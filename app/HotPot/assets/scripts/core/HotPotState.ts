@@ -42,7 +42,7 @@ const PLAYER_UPLOAD_INTERVAL = 30;
  */
 export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
-  private readonly wechatSharing = new WechatShareService();
+  protected readonly wechatSharing = new WechatShareService();
   private readonly wechatGameClub = new WechatGameClubService();
   protected readonly rewardedVideo = new WechatRewardedVideoService();
   private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
@@ -73,8 +73,8 @@ export abstract class HotPotState extends HotPotFields {
     this.rewardedVideo.dispose();
   }
 
-  protected shareGame(title?: string): void {
-    const result = this.wechatSharing.share(title);
+  protected shareGame(title?: string, recipe?: string): void {
+    const result = this.wechatSharing.share(title, recipe);
     if (result === 'unsupported') {
       this.showToast('请在微信小游戏中使用“分享给好友”', '#A24A3C');
     } else if (result === 'failed') {
@@ -309,6 +309,7 @@ export abstract class HotPotState extends HotPotFields {
         'CollectionOverlay',
         'CollectionDetailOverlay',
         'BackdoorOverlay',
+        'NicknameOverlay',
       ])
         this.dismissPlayerMenu(name);
       this.loadLevel(0);
@@ -423,6 +424,7 @@ export abstract class HotPotState extends HotPotFields {
       'CollectionDetailOverlay',
       'BackdoorOverlay',
       'StyleOverlay',
+      'NicknameOverlay',
     ].some(
       /**
        * 按条件筛选或判断条目：!!this.node?.getChildByName?.(name)。

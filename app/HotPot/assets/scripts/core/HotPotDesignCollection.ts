@@ -3,6 +3,7 @@ import {getPageTheme} from '../data/PageTheme';
 import {getIngredient, INGREDIENTS, NORMAL_INGREDIENTS, HIDDEN_INGREDIENTS, IngredientType} from '../data/GameData';
 import {achievementEntries, INGREDIENT_STORIES} from '../data/CollectionData';
 import type {AchievementEntry} from '../data/CollectionData';
+import {COOKING_UNLOCK} from '../data/CookingData';
 import {RegionNode} from '../data/PlayerData';
 import {hex, TOOL_NAMES, ToolType} from './HotPotUi';
 import {HotPotDesignMenus} from './HotPotDesignMenus';
@@ -22,7 +23,8 @@ import {
 } from './HotPotDesignUi';
 import type {DesignRect} from './HotPotDesignUi';
 
-type CollectionEntry = {headingTaps?: number; ingredientTaps?: number; achievementId?: string};
+type CollectionEntry = {headingTaps?: number; ingredientTaps?: number; achievementId?: string;
+  back?: () => void; backLabel?: string};
 const ACHIEVEMENT_MEDALS = {
   main: {icon: 'trophy', fill: '#F9E2B7', ink: '#8A5026'},
   collection: {icon: 'book', fill: '#E3ECC8', ink: '#466740'},
@@ -67,7 +69,8 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     const back = () => {
       saveOffset();
       this.dismissPlayerMenu('CollectionOverlay');
-      this.showMyMenu();
+      if (entry?.back) entry.back();
+      else this.showMyMenu();
     };
     const t = getPageTheme();
     const p = this.designPage('CollectionOverlay', tab === 'ingredients' ? '食材图鉴' : '我的成就',
@@ -114,7 +117,7 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         saveOffset();
         this.designIngredientGroup = next;
         this.dismissPlayerMenu('CollectionOverlay');
-        this.showCollection('ingredients', {headingTaps: taps.heading, ingredientTaps: taps.food});
+        this.showCollection('ingredients', {...entry, headingTaps: taps.heading, ingredientTaps: taps.food});
       };
       for (const [key, title, pool, x] of [
         ['ingredients', '普通食材', NORMAL_INGREDIENTS, 40],
@@ -124,7 +127,8 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         designButton(p, 'IngredientGroup_' + key, title + '  ' + count + '/' + pool.length,
           [x, 352, 312, 64], () => switchGroup(key), group !== key);
       }
-      designText(p, group === 'hidden' ? '每次相遇，都有新的惊喜。' : '烟火百味，收集每一份好滋味',
+      designText(p, state.progress.discovered.length >= COOKING_UNLOCK ? '烹饪已解锁'
+        : `烹饪解锁 ${state.progress.discovered.length}/${COOKING_UNLOCK}`,
         [40, 426, 640, 32], 21, designOnBackground());
       const height = Math.ceil(foods.length / 3) * 230 + 6;
       const {
@@ -148,14 +152,14 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
         designHit(card, () => {
           saveOffset();
           this.dismissPlayerMenu('CollectionOverlay');
-          this.showIngredientDetail(food.id)
+          this.showIngredientDetail(food.id, () => this.showCollection('ingredients', entry))
         });
       });
       designText(p, '向上滑动，看看更多食材', [80, 1080, 560, 28], 20, designOnBackground());
     } else {
       saveOffset = this.drawAchievementShelf(p, achievementEntries(state), entry?.achievementId);
     }
-    designFooter(p, '返回', back);
+    designFooter(p, entry?.backLabel ?? '返回', back);
   }
 
   private drawAchievementShelf(panel: Node, entries: AchievementEntry[], focusId?: string): () => void {
@@ -210,10 +214,11 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
     return () => { this.designOffsets.achievements = Math.max(0, view.getScrollOffset().y); };
   }
 
-  protected showIngredientDetail(type: IngredientType): void {
+  protected showIngredientDetail(type: IngredientType, returnTo?: () => void): void {
     const back = () => {
       this.dismissPlayerMenu('CollectionDetailOverlay');
-      this.showCollection(this.designCollectionTab)
+      if (returnTo) returnTo();
+      else this.showCollection(this.designCollectionTab);
     }, p = this.designPage('CollectionDetailOverlay', '食材详情', back);
     if (!p) return;
     const item = getIngredient(type),

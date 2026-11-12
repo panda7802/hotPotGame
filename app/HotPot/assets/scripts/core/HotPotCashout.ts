@@ -9,6 +9,7 @@ import {INGREDIENTS, selectBombTargets} from '../data/GameData';
 import type {LevelData} from '../data/GameData';
 import {GameSave, regionPath, validateGameSave} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
+import {cookingClearCount} from '../data/CookingProgress';
 import {getPageTheme} from '../data/PageTheme';
 import {HotPotDesignResults} from './HotPotDesignResults';
 import {
@@ -180,10 +181,16 @@ export abstract class HotPotCashout extends HotPotDesignResults {
       ingredients[0], false, 68, 68);
     this.addIngredientImage(designNode(avatar, 'FrontIngredient', [41, 40, 76, 76]),
       ingredients[1], false, 76, 76);
-    designText(profile, service.playerId ? '玩家 ' + service.playerId.slice(0, 8) : '本机玩家',
-      [170, 33, 383, 57], 39, row.ink, true, true);
-    designText(profile, '累计通关 ' + this.designStats().total + ' 次',
-      [171, 98, 370, 41], 26, row.muted, false, true);
+    const displayName = () => service.state.profile.nickname
+      || (service.playerId ? '玩家 ' + service.playerId.slice(0, 8) : '本机玩家');
+    const nickname = designText(profile, displayName(), [170, 42, 270, 57], 35, row.ink, true, true);
+    designButton(profile, 'Button_改名', '改名', [448, 43, 106, 54], () => {
+      this.showNicknameEditor(() => {
+        if (panel.parent?.parent === this.node && nickname.isValid) nickname.string = displayName();
+      });
+    }, true);
+    designText(profile, `三消通关 ${this.designStats().total}  ·  烹饪通关 ${cookingClearCount(state.progress.cooking)}`,
+      [171, 100, 390, 37], 24, row.muted, false, true);
 
     const open = (action: () => void) => () => { close(); action(); };
     const achievements = achievementEntries(state);

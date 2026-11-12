@@ -1,6 +1,8 @@
 import {validateDevelopmentConfig} from '../data/CloudConfig';
 import {normalizeRuntimeConfig} from '../data/RuntimeConfig';
 import {CashoutSave, emptyCashoutStock} from '../data/CashoutData';
+import {CookingProgress, validateCooking} from '../data/CookingProgress';
+import {mergePlayerNickname, normalizePlayerNickname} from '../data/PlayerTypes';
 import {
   ACHIEVEMENT_SYNC_VERSION,
   CASHOUT_SYNC_VERSION,
@@ -25,6 +27,41 @@ export type {PlayerStorage, SyncStatus} from './PlayerServiceBase';
  * 云端连接、同步队列与本地存储实现。
  */
 export class PlayerService extends RegionLeaderboardService {
+  get cooking() { return clone(this.local.state.progress.cooking ?? null); }
+  get discoveredIngredients() { return this.local.state.progress.discovered.slice(); }
+
+  setCooking(cooking: CookingProgress): boolean {
+    const state = this.local.state;
+    return this.commitState({...state, progress: {...state.progress, cooking: validateCooking(cooking)}}, true);
+  }
+
+  async renamePlayer(value: string): Promise<void> {
+    const nickname = normalizePlayerNickname(value);
+    if (!nickname) throw new Error('INVALID_NICKNAME');
+    if (!this.cloud || !this.playerId) await this.retryCloudSync();
+    const owner = this.playerId;
+    if (!this.cloud || !owner) throw new Error('NICKNAME_OFFLINE');
+    const result = await this.request({action: 'renamePlayer', nickname});
+    if (owner !== this.playerId || result.playerId !== owner) throw new Error('IDENTITY_REQUIRED');
+    const confirmed = normalizePlayerNickname(result.nickname);
+    if (!confirmed || !Number.isSafeInteger(result.nicknameRevision) || result.nicknameRevision < 1) {
+      throw new Error('NICKNAME_RESPONSE_INVALID');
+    }
+    const profile = this.local.state.profile;
+    this.local.state.profile = mergePlayerNickname(profile, {
+      ...profile, nickname: confirmed, nicknameRevision: result.nicknameRevision,
+    });
+    this.persist();
+    this.changed();
+  }
+
+  async cookingLeaderboard(scope: number): Promise<{playerId: string; at: number; nickname?: string}[]> {
+    if (!this.cloud || !this.playerId) throw new Error('云端未连接');
+    const response = await this.request({action: 'cookingLeaderboard', scope});
+    if (!response.ok || !Array.isArray(response.rows)) throw new Error('餐谱榜暂不可用');
+    return response.rows;
+  }
+
   get cashout(): CashoutSave {
     return clone(this.local.state.cashout || {version: 1, stock: emptyCashoutStock(), run: null});
   }
@@ -123,6 +160,7 @@ export class PlayerService extends RegionLeaderboardService {
         && (this.cloud.platform === 'web' || (adoptGuest && this.local.dirty));
       if (importGuest) {
         this.local = this.blank(remote.playerId, remote.revision, this.local.state);
+        this.local.state.profile = mergePlayerNickname(this.local.state.profile, remote.state.profile);
         this.local.dirty = true;
         this.local.mutationId = this.newMutationId();
         this.status = 'pending';
@@ -146,6 +184,17 @@ export class PlayerService extends RegionLeaderboardService {
 
   private acceptRemote(remote: CloudPlayer, cached: LocalPlayer | null): void {
     this.remote = null;
+    if (cached?.owner === remote.playerId) {
+      cached.state.profile = mergePlayerNickname(cached.state.profile, remote.state.profile);
+      remote.state.profile = mergePlayerNickname(remote.state.profile, cached.state.profile);
+    }
+    if (cached?.dirty && cached.mutationId === remote.lastMutationId
+      && cached.state.progress.cooking && !remote.state.progress.cooking) {
+      // The old function accepted a request whose response was lost.
+      cached.baseRevision = remote.revision;
+      cached.mutationId = this.newMutationId();
+      delete cached.attemptedMutationId;
+    }
     if (cached?.dirty && cached.mutationId !== remote.lastMutationId) {
       this.local = cached;
       if (cached.attemptedMutationId === remote.lastMutationId
@@ -254,6 +303,14 @@ export class PlayerService extends RegionLeaderboardService {
           this.changed();
           return;
         }
+        if (sent.state.progress.cooking && response.cookingSyncVersion !== 1) {
+          // The old cloud function can accept the save while dropping this optional field.
+          this.local.baseRevision = remote.revision;
+          delete this.local.attemptedMutationId;
+          this.local.mutationId = this.newMutationId();
+          this.persist();
+          throw new Error('COOKING_UPGRADE_REQUIRED');
+        }
         delete this.local.attemptedMutationId;
         this.local.baseRevision = remote.revision;
         if (this.local.mutationId === sent.mutationId) {
@@ -262,6 +319,7 @@ export class PlayerService extends RegionLeaderboardService {
           this.status = 'synced';
         } else {
           // 云端可能合并了另一设备的永久记录，保留同步期间新操作及云端图鉴。
+          this.local.state.profile = mergePlayerNickname(this.local.state.profile, remote.state.profile);
           this.local.state.progress = mergeProgress(
             this.local.state.progress,
             remote.state.progress,
@@ -420,6 +478,7 @@ export class PlayerService extends RegionLeaderboardService {
       CLOUD_UPGRADE_REQUIRED: '请先更新云函数再同步图鉴与成就',
       CASHOUT_UPGRADE_REQUIRED: '请先更新云函数再同步副本与背包',
       ACHIEVEMENT_UPGRADE_REQUIRED: '请先更新云函数再同步副本成就',
+      COOKING_UPGRADE_REQUIRED: '请先更新云函数再同步餐谱进度',
       DAILY_UPGRADE_REQUIRED:
         '请先更新云函数再同步每日关卡、随机牌阵与食材组合',
     };
@@ -539,7 +598,11 @@ export class PlayerService extends RegionLeaderboardService {
       typeof record.lastMutationId !== 'string') {
       throw new Error('云端档案格式错误');
     }
-    return {...record, state: validatePlayerState(record.state, this.regions)};
+    const state = validatePlayerState(record.state, this.regions);
+    if (this.local.owner === record.playerId) {
+      state.profile = mergePlayerNickname(state.profile, this.local.state.profile);
+    }
+    return {...record, state};
   }
 
   /**

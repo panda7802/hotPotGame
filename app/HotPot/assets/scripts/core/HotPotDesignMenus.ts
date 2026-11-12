@@ -1,4 +1,4 @@
-import {Label,Node,sys} from 'cc';
+import {EditBox,Label,Node,sys,UITransform} from 'cc';
 import {getPageTheme,PageStyle,PAGE_THEMES} from '../data/PageTheme';
 import {regionPath} from '../data/PlayerData';
 import {achievementEntries} from '../data/CollectionData';
@@ -43,7 +43,8 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     const address=regionPath(service.regions,state.profile.regionCodes).map(r=>r.name).join(' · ')||'尚未选择地区';
     const card=designNode(p,'ProfileCard',[40,290,640,184]);designSurface(card);
     const avatar=designNode(card,'Avatar',[30,44,96,96]);designSurface(avatar,t.panel,48,t.edge,false);this.addIngredientImage(avatar,'toufu',false,82,82);
-    designText(card,service.playerId?'玩家 '+service.playerId.slice(0,8):'本机玩家',[146,20,456,52],34,t.ink,true,true);
+    const displayName = state.profile.nickname || (service.playerId ? '玩家 ' + service.playerId.slice(0,8) : '本机玩家');
+    designText(card,displayName,[146,20,456,52],34,t.ink,true,true);
     designText(card,address,[146,76,456,60],24,t.muted,false,true);
     designText(card,'一锅烟火，收藏日常好滋味',[146,138,456,30],23,t.muted,false,true);
     const stats=designNode(p,'ProfileStats',[40,494,640,124]);designSurface(stats);
@@ -103,11 +104,14 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
     const available=[true,!!province?.children?.length,!!city?.children?.length];
     if(!available[scope])scope=0;
     const back=()=>{this.dismissPlayerMenu('RegionOverlay');this.showPlayerProfile()},p=this.designPage('RegionOverlay','地域榜单',back);if(!p)return;
-    const tabs=designNode(p,'RankTabs',[40,290,640,82]);designSurface(tabs,t.panel);
-    ['全国','省内','市内'].forEach((caption,i)=>designButton(tabs,'RankScope_'+i,caption,[8+i*210,8,204,66],()=>{
+    designButton(p,'Button_通关','通关',[40,292,312,60],()=>{});
+    designButton(p,'Button_餐谱五星','餐谱五星',[368,292,312,60],()=>{
+      this.dismissPlayerMenu('RegionOverlay');this.showCookingRanking(scope);
+    },true);
+    const tabs=designNode(p,'RankTabs',[40,365,640,68]);designSurface(tabs,t.panel);
+    ['全国','省内','市内'].forEach((caption,i)=>designButton(tabs,'RankScope_'+i,caption,[8+i*210,4,204,60],()=>{
       this.dismissPlayerMenu('RegionOverlay');this.showDesignRanking(i);
     },scope!==i,!available[i]));
-    designText(p,'第三关通关次数 · 为家乡添一席',[50,382,620,34],24,designOnBackground());
     const regions=scope===0?service.regions:scope===1?province!.children!:city!.children!;
     const table=designNode(p,'RankingRows',[40,450,640,492]);designSurface(table);
     designText(table,'排名',[12,10,96,48],25,t.ink,true);
@@ -145,5 +149,59 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
       fitDesignPage(p);
     };render();void service.refreshLeaderboard().then(render).catch(()=>{});
     designFooter(p,'返回',back);
+  }
+
+  protected showCookingRanking(_scope: number): void {}
+
+  protected showNicknameEditor(onSaved: () => void): void {
+    const service = this.playerService;
+    const overlayName = 'NicknameOverlay';
+    if (!service || this.node.getChildByName(overlayName)) return;
+    const {overlay, panel} = designOverlay(this.node, overlayName, this.viewportHeight, true);
+    const theme = getPageTheme();
+    const card = designNode(panel, 'NicknameDialog', [62, 388, 596, 410]);
+    designSurface(card);
+    designText(card, '修改昵称', [24, 25, 548, 62], 40, theme.ink, true);
+    designText(card, '2–12 个中文、英文字母、数字或下划线',
+      [24, 96, 548, 50], 24, theme.muted);
+
+    const field = designNode(card, 'NicknameField', [40, 156, 516, 75]);
+    designSurface(field, theme.panel, undefined, theme.line, false);
+    const value = designText(field, '', [20, 0, 476, 75], 29, theme.ink, false, true);
+    const placeholder = designText(field, '输入昵称', [20, 0, 476, 75], 29, theme.muted, false, true);
+    value.node.getComponent(UITransform)!.setAnchorPoint(0, 1);
+    placeholder.node.getComponent(UITransform)!.setAnchorPoint(0, 1);
+    field.active = false;
+    const input = field.addComponent(EditBox);
+    input.textLabel = value;
+    input.placeholderLabel = placeholder;
+    input.placeholder = '输入昵称';
+    input.inputMode = EditBox.InputMode.SINGLE_LINE;
+    input.maxLength = 12;
+    input.string = service.state.profile.nickname ?? '';
+    field.active = true;
+
+    const status = designText(card, '', [40, 246, 516, 48], 24, theme.accent);
+    let pending = false;
+    const close = () => this.dismissPlayerMenu(overlayName);
+    designButton(card, 'Button_取消改名', '取消', [40, 317, 246, 70], close, true);
+    designButton(card, 'Button_保存昵称', '保存', [310, 317, 246, 70], () => {
+      if (pending) return;
+      pending = true;
+      status.string = '正在保存…';
+      void service.renamePlayer(input.string).then(() => {
+        if (overlay.parent === this.node) close();
+        onSaved();
+      }).catch(error => {
+        if (overlay.parent !== this.node) return;
+        const messages: Record<string, string> = {
+          INVALID_NICKNAME: '请输入符合要求的昵称',
+          NICKNAME_TAKEN: '这个昵称已被使用，换一个试试',
+          NICKNAME_OFFLINE: '连接云端后才能保存昵称',
+          INVALID_ACTION: '请先更新云函数再修改昵称',
+        };
+        status.string = messages[error?.message] ?? '昵称保存失败，请稍后重试';
+      }).finally(() => { pending = false; });
+    });
   }
 }

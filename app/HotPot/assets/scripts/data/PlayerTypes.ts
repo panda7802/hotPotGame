@@ -1,5 +1,6 @@
 import {IngredientType, LEVELS} from './GameData';
 import type {CashoutSave} from './CashoutData';
+import type {CookingProgress} from './CookingProgress';
 export const SAVE_VERSION = 1;
 export const BOARD_VERSION = 'hotpot-20260929';
 export const PROGRESS_VERSION = 1;
@@ -107,6 +108,25 @@ export interface RegionNode {
    */
   children?: RegionNode[];
 }
+
+export interface PlayerProfile {
+  regionCodes: string[];
+  nickname?: string;
+  nicknameRevision?: number;
+}
+
+export function normalizePlayerNickname(value: unknown): string | undefined {
+  if (typeof value !== 'string' || value.length > 48) return undefined;
+  const name = value.normalize('NFKC').trim();
+  return /^[\u3400-\u4dbf\u4e00-\u9fffA-Za-z0-9_]{2,12}$/.test(name)
+    ? name : undefined;
+}
+
+/** Merge server-owned nickname metadata without changing the region selection. */
+export function mergePlayerNickname(profile: PlayerProfile, incoming: PlayerProfile): PlayerProfile {
+  if ((incoming.nicknameRevision ?? 0) <= (profile.nicknameRevision ?? 0)) return profile;
+  return {...profile, nickname: incoming.nickname, nicknameRevision: incoming.nicknameRevision};
+}
 /**
  * CollectionProgress 的数据结构；字段说明见各成员。
  */
@@ -139,6 +159,7 @@ export interface CollectionProgress {
   thirdLevelEntered?: boolean;
   /** Highest side challenge stage whose reward was collected. */
   bestCashoutStage?: number;
+  cooking?: CookingProgress;
 }
 /**
  * PlayerState 的数据结构；字段说明见各成员。
@@ -150,7 +171,7 @@ export interface PlayerState {
   /**
    * regionCodes 对应的状态或配置。
    */
-  profile: {regionCodes: string[]};
+  profile: PlayerProfile;
   /**
    * 当前对局存档。
    */

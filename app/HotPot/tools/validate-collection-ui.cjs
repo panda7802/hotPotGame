@@ -413,7 +413,7 @@ collection.panel
   .getChildByName('Button_我的成就')
   .emit(Node.EventType.TOUCH_END);
 collection = scrollOf(game, 'CollectionOverlay', 'CollectionViewport');
-assert.strictEqual(collection.scroll.content.children.length, 22);
+assert.strictEqual(collection.scroll.content.children.length, 25);
 collection.panel
   .getChildByName('Button_食材图鉴')
   .emit(Node.EventType.TOUCH_END);
@@ -430,7 +430,7 @@ scrollOf(game, 'RegionOverlay', 'RegionViewport');
 game.dismissPlayerMenu('RegionOverlay');
 console.log(
   'Collection UI: preview Mask enabled, 6' +
-    '0 cards, 22 achievements, tab/detail n' +
+    '0 cards, 25 achievements, tab/detail n' +
     'avigation and clipped vertical region ' +
     'scrolling: OK',
 );

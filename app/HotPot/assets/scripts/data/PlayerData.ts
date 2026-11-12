@@ -1,4 +1,5 @@
 import {regionPath} from './RegionData';
+import {mergeCooking, validateCooking} from './CookingProgress';
 import {CASHOUT_TOOLS, cashoutStages} from './CashoutData';
 import type {CashoutRun, CashoutSave, CashoutStock} from './CashoutData';
 export {regionPath, validateRegions} from './RegionData';
@@ -25,6 +26,7 @@ import {
   emptyProgress,
   check,
   integer,
+  normalizePlayerNickname,
 } from './PlayerTypes';
 export {
   SAVE_VERSION,
@@ -36,6 +38,7 @@ export {
   clone,
   emptyProgress,
   emptyPlayerState,
+  normalizePlayerNickname,
 } from './PlayerTypes';
 export type {
   SaveStatus,
@@ -154,6 +157,7 @@ export function validateProgress(value: any): CollectionProgress {
   };
   const completedLevels = levels(value.completedLevels);
   const cleanWins = levels(value.cleanWins);
+  const cooking = validateCooking(value.cooking);
   /**
    * 按条件筛选或判断条目：completedLevels.indexOf(index) >= 0。
    */
@@ -184,6 +188,7 @@ export function validateProgress(value: any): CollectionProgress {
     regionChosen: value.regionChosen,
     thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
     ...(value.bestCashoutStage ? {bestCashoutStage: value.bestCashoutStage} : {}),
+    ...(cooking ? {cooking} : {}),
   };
 }
 /**
@@ -194,6 +199,7 @@ export function mergeProgress(
   b: CollectionProgress,
 ): CollectionProgress {
   const bestCashoutStage = Math.max(a.bestCashoutStage || 0, b.bestCashoutStage || 0);
+  const cooking = mergeCooking(a.cooking, b.cooking);
   return {
     version: 1,
     /**
@@ -233,6 +239,7 @@ export function mergeProgress(
     regionChosen: a.regionChosen || b.regionChosen,
     thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
     ...(bestCashoutStage ? {bestCashoutStage} : {}),
+    ...(cooking ? {cooking} : {}),
   };
 }
 
@@ -634,6 +641,8 @@ export function validatePlayerState(
 ): PlayerState {
   check(value && value.profile, '玩家档案格式错误');
   const path = regionPath(regions, value.profile.regionCodes);
+  const nickname = normalizePlayerNickname(value.profile.nickname);
+  const nicknameRevision = value.profile.nicknameRevision;
   const save = value.save === null ? null : validateGameSave(value.save);
   const cashout = value.cashout === undefined ? undefined : validateCashoutSave(value.cashout);
   const progress = validateProgress(value.progress);
@@ -644,7 +653,11 @@ export function validatePlayerState(
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    profile: {regionCodes: path.map((item) => item.code)},
+    profile: {
+      regionCodes: path.map(item => item.code),
+      ...(nickname && integer(nicknameRevision, 1, Number.MAX_SAFE_INTEGER)
+        ? {nickname, nicknameRevision} : {}),
+    },
     save,
     progress: recordCashoutProgress(recordProgress(progress, save), cashout),
     playDate: validatePlayDate(value.playDate),

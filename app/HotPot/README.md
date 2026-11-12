@@ -1,5 +1,21 @@
 # 锅里捞啥 V0.1
 
+「我的」页可修改昵称，支持 2–12 个中文、英文字母、数字或下划线。微信和网页玩家在同一云环境共用昵称占用记录，统一规范化全角字符，英文大小写视为同名。改名成功后释放旧昵称，餐谱五星榜显示新昵称。启用改名前需要重新部署开发环境 `cloud1-d2gc9q7cobffff893` 的 `hotpotPlayerDev`，本地上传目录为 `cloudfunctions/hotpotPlayerDev`。
+
+## 烹饪与餐谱
+
+首页「烹饪」在图鉴收录 10 种食材后解锁。餐谱包含 13 道正式菜和可反复游玩的小馆双拼。正式菜达到 3 星点亮出品，两道不同的菜达标后解锁进阶。点按或倾斜接料，退出烹饪后回到原三消对局。烹饪进度和重做冷却随玩家存档同步。重做使用现有微信激励视频广告位。
+
+餐谱五星榜需要重新部署 `hotpotPlayerDev` 到开发环境 `cloud1-d2gc9q7cobffff893`，本地上传目录为 `cloudfunctions/hotpotPlayerDev`。在 `hotpot_players_dev` 创建下列升序组合索引，供三个地域范围查询使用。[CloudBase 索引管理](https://docs.cloudbase.net/database/data-index)
+
+| 范围 | 索引字段（按顺序） |
+| --- | --- |
+| 全国 | `cookingCatalog`, `cookingRankAt`, `playerId` |
+| 省内 | `cookingCatalog`, `cookingProvince`, `cookingRankAt`, `playerId` |
+| 市内 | `cookingCatalog`, `cookingCity`, `cookingRankAt`, `playerId` |
+
+榜单显示当前餐谱版本全部五星的前 30 名，达标时间以云端首次收到达标记录为准。使用 `node tools/validate-cooking.cjs` 验证出料、计分、存档合并和模拟云函数。微信真机验收覆盖倾斜、分享卡片和激励视频。完整规则见[《烹饪与餐谱系统方案》](../../doc/烹饪与餐谱系统方案.md)。
+
 2026-11-04 本地版 `20261104-centered-header`：图鉴画面缩小约三分之一、标题按屏幕中线居中，四主题统一。24 组实际运行与点击、12 组安全区布局及微信构建检查通过，本机 `build/wechatgame-cloud-dev` 已同步。未提交 Git，见 [本轮说明](../../doc/图鉴尺寸与标题居中调整-2026-11-04.md)。
 
 2026-11-04 本地版 `20261104-large-collection`：四套大图鉴入口已接入，宽度约放大 1.7 倍，铭牌字更大，顶部标题按剩余空间重新居中。24 组运行与点击、12 组安全区布局、微信构建检查通过。本机 `build/wechatgame-cloud-dev` 已同步，未提交 Git。见 [本轮说明](../../doc/四主题大图鉴入口与顶部布局-2026-11-04.md)。

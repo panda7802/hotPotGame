@@ -8,8 +8,8 @@ import {gameArtNode,paintGameArt,paintGameBackdrop,GameArtRole} from './HotPotGa
 import {gameInterfaceLayout,GameBox} from './HotPotGameLayout';
 import {GAME_ART_RECTS} from '../data/GameInterfaceAssets';
 import {
-  designSurface,designText,fitDesignPage,paintBackpackIcon,paintThemeHeaderButton,
-  paintToolIcon,TOOL_ICON_SIZE,
+  designSurface,designText,fitDesignPage,paintBackpackIcon,paintHomeEntry,
+  paintThemeHeaderButton,paintToolIcon,TOOL_ICON_SIZE,
 } from './HotPotDesignUi';
 
 const TOOLBAR_PLATES = {
@@ -77,6 +77,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     const settings=hit(this.referenceRoot,'Button_设置',[0,0,.1,.1],1280,()=>this.showPlayerProfile());
     this.profileButtonLabel=text(settings,'',[0,0,0,0],1280,1);this.profileButtonLabel.node.active=false;
     hit(this.referenceRoot,'Button_我的',[0,0,.1,.1],1280,()=>this.showMyMenu());
+    hit(this.referenceRoot,'Button_首页图鉴',[0,0,.1,.1],1280,()=>this.showHomeCollection());
+    hit(this.referenceRoot,'Button_烹饪',[0,0,.1,.1],1280,()=>this.openCooking());
     this.board=gameArtNode(this.referenceRoot,'Board');
     this.trayNode=gameArtNode(this.referenceRoot,'Tray');
     this.reserveNode=gameArtNode(this.referenceRoot,'ReviveReserve');this.reserveNode.active=false;
@@ -124,10 +126,16 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
     const t=getPageTheme(),first=this.levelIndex===0;
     const brandArt=GAME_ART_RECTS[t.id].brand;
     const backpack=this.levelIndex===2;
-    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0,brandArt[2]/brandArt[3],backpack);
+    const l=gameInterfaceLayout(referenceArea(),first,this.reserve.length>0,brandArt[2]/brandArt[3],backpack,true);
     this.shellHeight=l.h;transform(this.referenceRoot,720,l.h);this.referenceRoot.setPosition(0,0);this.referenceRoot.setScale(l.scale,l.scale,1);
     transform(this.foodTransitionLayer,720,l.h);
     this.positionArt(this.brand,'brand',l.brand,t.id,false,true);
+    const collection = this.referenceRoot.getChildByName('Button_首页图鉴')!;
+    const cooking = this.referenceRoot.getChildByName('Button_烹饪')!;
+    this.positionBox(collection,l.homeCollection);
+    this.positionBox(cooking,l.homeCooking);
+    paintHomeEntry(collection,'book');
+    paintHomeEntry(cooking,'pot');
     this.positionArt(this.boardArt,'panel',l.board,t.id,true);
     this.positionArt(this.stageArt,'stage',l.stage,t.id);
     this.positionArt(this.trayArt,'tray',l.tray,t.id,true);
@@ -251,6 +259,8 @@ export abstract class HotPotReferenceShell extends HotPotLegacyGame {
   protected toggleSound():void{super.toggleSound();this.updateSoundMark()}
   protected showInventoryTools():void {}
   protected abstract showMyMenu():void;
+  protected showHomeCollection(): void { this.showCollection(); }
+  protected openCooking(): void {}
   protected updateToolButtons():void{
     if(this.toolBar)this.toolBar.active=this.levelIndex>0;
     for(const type of ['undo','bomb','shuffle'] as ToolType[]){

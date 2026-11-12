@@ -1,9 +1,51 @@
 'use strict';
 
 const crypto = require('crypto');
-const {handleLeaderboard} = require('./leaderboard');
+const {handleLeaderboard, cookingLeaderboard} = require('./leaderboard');
+const {COOKING_CATALOG, RECIPES} = require('./CookingData');
+const {cookingRankTime, stampCookingRecords} = require('./CookingProgress');
 const {readRuntimeConfig} = require('./runtime-config');
 const RELEASE_ENVIRONMENT_ID = 'hotpot-d9g7g17ifb99bdd1b';
+
+async function readDocument(reference) {
+  try {
+    const response = await reference.get();
+    return Array.isArray(response.data) ? response.data[0] : response.data;
+  } catch (error) {
+    // A missing document is expected, but permission and connection errors are not.
+    if (!/document.*(not exist|not found)|doc.*does not exist/i.test(
+      String(error.errMsg || error.message || ''),
+    )) throw error;
+    return undefined;
+  }
+}
+
+const nicknameDocument = nickname => 'nickname_' + crypto.createHash('sha256')
+  .update(nickname.toLowerCase()).digest('hex');
+
+async function reserveNickname(collection, reference, current, nickname, owner) {
+  const profile = current.state.profile;
+  const nextKey = nicknameDocument(nickname);
+  const claimReference = collection.doc(nextKey);
+  const claim = await readDocument(claimReference);
+  if (claim && claim.playerId !== current.playerId) {
+    return {ok: false, code: 'NICKNAME_TAKEN'};
+  }
+  if (profile.nickname === nickname && claim) {
+    return {ok: true, playerId: current.playerId, nickname,
+      nicknameRevision: profile.nicknameRevision};
+  }
+  const oldKey = profile.nickname && nicknameDocument(profile.nickname);
+  const oldReference = oldKey && oldKey !== nextKey ? collection.doc(oldKey) : undefined;
+  const oldClaim = oldReference && await readDocument(oldReference);
+  const nicknameRevision = (profile.nicknameRevision || 0) + 1;
+  const state = {...current.state, profile: {...profile, nickname, nicknameRevision}};
+  const {_id, ...record} = current;
+  await claimReference.set({data: {playerId: current.playerId}});
+  if (oldClaim?.playerId === current.playerId) await oldReference.remove();
+  await reference.set({data: {...record, ...owner, state, nickname, updatedAt: Date.now()}});
+  return {ok: true, playerId: current.playerId, nickname, nicknameRevision};
+}
 
 /**
  * 从平台上下文读取身份；event 中的 openid/playerId/env 永远不用于选取档案。
@@ -39,7 +81,7 @@ exports.createHandler = function createHandler(
     if (!web && (!context.OPENID || context.APPID !== settings.appId)) {
       return {ok: false, code: 'IDENTITY_REQUIRED'};
     }
-    if (!['load', 'save', 'regions', 'leaderboard', 'regionWin', 'config']
+    if (!['load', 'save', 'regions', 'leaderboard', 'regionWin', 'config', 'cookingLeaderboard', 'renamePlayer']
       .includes(event.action)) {
       return {ok: false, code: 'INVALID_ACTION'};
     }
@@ -85,6 +127,8 @@ exports.createHandler = function createHandler(
         event, playerId, domain, regions,
       );
     }
+    const nickname = event.action === 'renamePlayer' ? domain.normalizePlayerNickname(event.nickname) : undefined;
+    if (event.action === 'renamePlayer' && !nickname) return {ok: false, code: 'INVALID_NICKNAME'};
     let state;
     if (event.action === 'save') {
       if (!Number.isSafeInteger(event.expectedRevision)
@@ -103,29 +147,18 @@ exports.createHandler = function createHandler(
       }
     }
     const db = cloud.database({env: settings.environmentId});
+    if (event.action === 'cookingLeaderboard') {
+      return {...await cookingLeaderboard(db, playerId, event.scope),
+        progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION};
+    }
     try {
       /**
        * 在数据库事务中读取并更新玩家档案。
        */
       const transactionResult = await db.runTransaction(async (transaction) => {
-        const reference = transaction
-          .collection(settings.collectionName)
-          .doc(playerId);
-        let stored;
-        try {
-          const response = await reference.get();
-          stored = Array.isArray(response.data)
-            ? response.data[0]
-            : response.data;
-        } catch (error) {
-          // 仅忽略文档不存在；集合缺失、权限问题、网络错误必须报告失败。
-          const message = String(error.errMsg || error.message || '');
-          if (!/document.*(not exist|not found)|doc.*does not exist/i.test(
-              message,
-            )) {
-            throw error;
-          }
-        }
+        const collection = transaction.collection(settings.collectionName);
+        const reference = collection.doc(playerId);
+        const stored = await readDocument(reference);
         const current = stored
           ? {
               ...stored,
@@ -142,6 +175,10 @@ exports.createHandler = function createHandler(
           : stored._openid !== context.OPENID)) {
           throw new Error('Owner mismatch');
         }
+        const owner = web ? {_webUid: context.UID} : {_openid: context.OPENID};
+        if (event.action === 'renamePlayer') {
+          return reserveNickname(collection, reference, current, nickname, owner);
+        }
         /**
          * 处理 expose 对应的游戏逻辑。
          */
@@ -154,8 +191,7 @@ exports.createHandler = function createHandler(
         });
         if (event.action === 'load') {
           if (!stored) {
-            await reference.set({data: {...current, ...(web
-              ? {_webUid: context.UID} : {_openid: context.OPENID})}});
+            await reference.set({data: {...current, ...owner}});
           }
           return {
             ok: true,
@@ -190,6 +226,7 @@ exports.createHandler = function createHandler(
         // 兼容仍在运行的旧客户端：其请求没有 progress，也不能清空永久图鉴和成就。
         const nextState = {
           ...state,
+          profile: {...current.state.profile, regionCodes: state.profile.regionCodes},
           ...(state.cashout === undefined && current.state.cashout !== undefined
             ? {cashout: current.state.cashout} : {}),
           progress: domain.mergeProgress(
@@ -197,13 +234,27 @@ exports.createHandler = function createHandler(
             state.progress,
           ),
         };
+        const now = Date.now();
+        const cooking = nextState.progress.cooking;
+        if (cooking) stampCookingRecords(current.state.progress.cooking, cooking, now);
+        const allDiscovered = cooking && RECIPES.every(dish => dish.ingredients.every(
+          ([id]) => nextState.progress.discovered.includes(id),
+        ));
+        const rankTime = allDiscovered ? cookingRankTime(cooking) : 0;
         const next = {
           playerId,
           revision: current.revision + 1,
           state: nextState,
-          updatedAt: Date.now(),
+          updatedAt: now,
           lastMutationId: event.mutationId,
-          ...(web ? {_webUid: context.UID} : {_openid: context.OPENID}),
+          ...owner,
+          ...(nextState.profile.nickname ? {nickname: nextState.profile.nickname} : {}),
+          ...(rankTime ? {
+            cookingCatalog: COOKING_CATALOG,
+            cookingRankAt: rankTime,
+            cookingProvince: nextState.profile.regionCodes[0] || '',
+            cookingCity: nextState.profile.regionCodes[1] || '',
+          } : {}),
         };
         await reference.set({data: next});
         return {
@@ -215,7 +266,8 @@ exports.createHandler = function createHandler(
           player: expose(next),
         };
       });
-      return transactionResult.result || transactionResult;
+      return {...(transactionResult.result || transactionResult), cookingSyncVersion: 1,
+        progressVersion: domain.PROGRESS_VERSION, playSessionVersion: domain.PLAY_SESSION_VERSION};
     } catch {
       // 响应不包含 OpenID、原始异常或数据库内容。
       return {ok: false, code: 'DATABASE_UNAVAILABLE'};

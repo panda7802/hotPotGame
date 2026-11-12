@@ -2,9 +2,19 @@ import {Graphics,Node,Tween} from 'cc';
 import {getPageTheme} from '../data/PageTheme';
 import {HotPotDesignCollection} from './HotPotDesignCollection';
 import {designButton,designHit,designIcon,designNode,designOverlay,designSurface,designText} from './HotPotDesignUi';
+import type {DesignRect} from './HotPotDesignUi';
 import {fitReferenceContent} from './HotPotReferenceLayout';
 import {transform} from './HotPotUi';
 import {paintVictoryArt} from './HotPotVictoryArt';
+
+const VICTORY_TEMPLATE_HEIGHT = 714;
+const VICTORY_DIALOG_HEIGHT = 774;
+
+/** Keep the live controls aligned with the taller background artwork. */
+function victoryBox([x,y,width,height]: DesignRect): DesignRect {
+  const scale = VICTORY_DIALOG_HEIGHT / VICTORY_TEMPLATE_HEIGHT;
+  return [x,y * scale,width,height * scale];
+}
 
 export abstract class HotPotDesignResults extends HotPotDesignCollection {
   protected endGame(won:boolean):void {
@@ -17,23 +27,23 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
     if(!won)return;
     for(const child of panel.children.slice()){child.removeFromParent();child.destroy()}
     panel.getComponent('cc.Graphics')?.destroy();delete (panel as any).pageSkin;
-    const final=this.levelIndex===2,t=getPageTheme(),height=714;
+    const final=this.levelIndex===2,t=getPageTheme(),height=VICTORY_DIALOG_HEIGHT;
     const body=designNode(panel,'WinDialog',[28,(1280-height)/2,664,height]);designSurface(body);
     // One no-text image per theme; all three stages keep live data and controls.
     const artwork=designNode(body,'VictoryArtwork_0'+t.id,[0,0,664,height]);
-    const loading=designText(body,'庆功盛宴准备中…',[74,170,516,80],28,t.muted);
-    const caption=designText(body,final?'满 堂 鲜 香':'开 锅 大 吉',[184,12,296,38],22,t.ink);
+    const loading=designText(body,'庆功盛宴准备中…',victoryBox([74,170,516,80]),28,t.muted);
+    const caption=designText(body,final?'满 堂 鲜 香':'开 锅 大 吉',victoryBox([184,12,296,38]),22,t.ink);
     caption.node.name='VictoryCaption';
-    const title=designText(body,final?'全部通关！':'第 '+(this.levelIndex+1)+' 关完成',[58,363,548,62],48,t.ink,true);
+    const title=designText(body,final?'全部通关！':'第 '+(this.levelIndex+1)+' 关完成',victoryBox([58,363,548,62]),48,t.ink,true);
     title.node.name='VictoryTitle';title.lineHeight=60;
-    const subtitle=designText(body,final?'千层食材尽收锅底，小馆因你热闹非凡。':this.levelIndex===0?'第一锅鲜香，稳稳拿下。':'热锅练手，越捞越顺手。',[52,428,560,30],24,t.muted);
+    const subtitle=designText(body,final?'千层食材尽收锅底，小馆因你热闹非凡。':this.levelIndex===0?'第一锅鲜香，稳稳拿下。':'热锅练手，越捞越顺手。',victoryBox([52,428,560,30]),24,t.muted);
     subtitle.node.name='VictorySubtitle';subtitle.lineHeight=28;
-    const stats=designNode(body,'DialogStats',[90,466,484,50]);designSurface(stats,t.panel,24,t.edge,false);
-    const summary=designText(stats,this.levelData.config.title+'   '+this.levelData.total+' 块已清空',[10,2,464,46],25,t.ink,true);
+    const stats=designNode(body,'DialogStats',victoryBox([90,466,484,50]));designSurface(stats,t.panel,24,t.edge,false);
+    const summary=designText(stats,this.levelData.config.title+'   '+this.levelData.total+' 块已清空',victoryBox([10,2,464,46]),25,t.ink,true);
     summary.node.name='VictoryStats';summary.lineHeight=32;
     const next=()=>this.nextLevel();
-    const primary=designButton(body,final?'Button_再来一轮':'Button_下一关',final?'再来一轮':'下一关',[74,532,516,62],next);
-    const secondary=designButton(body,'Button_返回游戏','返回游戏',[74,615,516,62],next,true);
+    const primary=designButton(body,final?'Button_再来一轮':'Button_下一关',final?'再来一轮':'下一关',victoryBox([74,532,516,62]),next);
+    const secondary=designButton(body,'Button_返回游戏','返回游戏',victoryBox([74,615,516,62]),next,true);
     const surfaces=[stats,primary,secondary];
     let pending=false;
     const load=()=>{

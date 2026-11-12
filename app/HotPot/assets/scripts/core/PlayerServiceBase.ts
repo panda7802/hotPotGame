@@ -1,6 +1,7 @@
 import {CLOUD_CONFIG} from '../data/CloudConfig';
 import {INGREDIENTS} from '../data/GameConfig';
 import {DEFAULT_RUNTIME_CONFIG, RuntimeConfig} from '../data/RuntimeConfig';
+import {mergePlayerNickname} from '../data/PlayerTypes';
 import {
   clone,
   CloudPlayer,
@@ -218,7 +219,7 @@ export abstract class PlayerServiceBase {
    * 更新玩家地区并安排同步。
    */
   setRegion(codes: string[]): void {
-    this.setState({...this.local.state, profile: {regionCodes: codes}});
+    this.setState({...this.local.state, profile: {...this.local.state.profile, regionCodes: codes}});
   }
 
   /**
@@ -271,8 +272,10 @@ export abstract class PlayerServiceBase {
     );
     this.remote = null;
     if (useCloud) {
+      const profile = mergePlayerNickname(remote.state.profile, this.local.state.profile);
       const cashout = remote.state.cashout === undefined ? this.local.state.cashout : undefined;
       this.local = this.blank(this.playerId, remote.revision, remote.state);
+      this.local.state.profile = profile;
       this.local.state.progress = progress;
       if (cashout) {
         this.local.state.cashout = cashout;
@@ -286,6 +289,7 @@ export abstract class PlayerServiceBase {
       this.status = this.local.dirty ? 'pending' : 'synced';
     } else {
       this.local.state.progress = progress;
+      this.local.state.profile = mergePlayerNickname(this.local.state.profile, remote.state.profile);
       this.local.baseRevision = remote.revision;
       delete this.local.attemptedMutationId;
       this.local.dirty = true;

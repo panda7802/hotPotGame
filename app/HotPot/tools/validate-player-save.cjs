@@ -381,10 +381,11 @@ assert.deepStrictEqual(plain(collected.progress.completedLevels), [0, 1, 2]);
 assert.deepStrictEqual(plain(collected.progress.cleanWins), [0, 1, 2]);
 assert.deepStrictEqual(plain(collected.progress.bestCleared), [18, 30, 888]);
 const goals = collection.achievementEntries(collected);
-assert.strictEqual(goals.length, 22);
+assert.strictEqual(goals.length, 25);
 assert.deepStrictEqual(Array.from(goals.filter(item => !item.unlocked), item => item.id), [
   'hometown', 'full-menu', 'rare-first', 'rare-five', 'rare-all',
   'cashout-first', 'cashout-second', 'cashout-final',
+  'cooking-first', 'cooking-perfect', 'cooking-rare',
 ]);
 assert.deepStrictEqual(new Set(Array.from(goals, item => item.category)),
   new Set(['main', 'collection', 'cashout', 'tavern']));
@@ -505,7 +506,7 @@ assert.deepStrictEqual(
 );
 console.log(
   'Collection/achievements: all 13 ingred' +
-    'ients and 22 goals, legacy migration, ' +
+    'ients and 25 goals, legacy migration, ' +
     'invalid progress, restore/restart/undo' +
     ' idempotency: OK',
 );

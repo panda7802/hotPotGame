@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.ACHIEVEMENT_SYNC_VERSION = exports.CASHOUT_SYNC_VERSION = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
+exports.normalizePlayerNickname = exports.emptyPlayerState = exports.emptyProgress = exports.clone = exports.ACHIEVEMENT_SYNC_VERSION = exports.CASHOUT_SYNC_VERSION = exports.PLAY_SESSION_VERSION = exports.PROGRESS_VERSION = exports.BOARD_VERSION = exports.SAVE_VERSION = exports.validateRegions = exports.regionPath = void 0;
 exports.localPlayDate = localPlayDate;
 exports.enterPlayDay = enterPlayDay;
 exports.validateProgress = validateProgress;
@@ -12,6 +12,7 @@ exports.shouldUpgradeUnstartedLevelThree = shouldUpgradeUnstartedLevelThree;
 exports.validateCashoutSave = validateCashoutSave;
 exports.validatePlayerState = validatePlayerState;
 const RegionData_1 = require("./RegionData");
+const CookingProgress_1 = require("./CookingProgress");
 const CashoutData_1 = require("./CashoutData");
 var RegionData_2 = require("./RegionData");
 Object.defineProperty(exports, "regionPath", { enumerable: true, get: function () { return RegionData_2.regionPath; } });
@@ -28,6 +29,7 @@ Object.defineProperty(exports, "ACHIEVEMENT_SYNC_VERSION", { enumerable: true, g
 Object.defineProperty(exports, "clone", { enumerable: true, get: function () { return PlayerTypes_2.clone; } });
 Object.defineProperty(exports, "emptyProgress", { enumerable: true, get: function () { return PlayerTypes_2.emptyProgress; } });
 Object.defineProperty(exports, "emptyPlayerState", { enumerable: true, get: function () { return PlayerTypes_2.emptyPlayerState; } });
+Object.defineProperty(exports, "normalizePlayerNickname", { enumerable: true, get: function () { return PlayerTypes_2.normalizePlayerNickname; } });
 /**
  * 使用设备本地自然日，不用 UTC 日期，避免本地午夜前后误判。
  */
@@ -113,6 +115,7 @@ function validateProgress(value) {
     };
     const completedLevels = levels(value.completedLevels);
     const cleanWins = levels(value.cleanWins);
+    const cooking = (0, CookingProgress_1.validateCooking)(value.cooking);
     /**
      * 按条件筛选或判断条目：completedLevels.indexOf(index) >= 0。
      */
@@ -138,6 +141,7 @@ function validateProgress(value) {
         regionChosen: value.regionChosen,
         thirdLevelEntered: !!value.thirdLevelEntered || value.bestCleared[2] > 0,
         ...(value.bestCashoutStage ? { bestCashoutStage: value.bestCashoutStage } : {}),
+        ...(cooking ? { cooking } : {}),
     };
 }
 /**
@@ -145,6 +149,7 @@ function validateProgress(value) {
  */
 function mergeProgress(a, b) {
     const bestCashoutStage = Math.max(a.bestCashoutStage || 0, b.bestCashoutStage || 0);
+    const cooking = (0, CookingProgress_1.mergeCooking)(a.cooking, b.cooking);
     return {
         version: 1,
         /**
@@ -175,6 +180,7 @@ function mergeProgress(a, b) {
         regionChosen: a.regionChosen || b.regionChosen,
         thirdLevelEntered: !!(a.thirdLevelEntered || b.thirdLevelEntered),
         ...(bestCashoutStage ? { bestCashoutStage } : {}),
+        ...(cooking ? { cooking } : {}),
     };
 }
 function recordCashoutProgress(progress, cashout) {
@@ -486,6 +492,8 @@ function validateCashoutSave(value) {
 function validatePlayerState(value, regions) {
     (0, PlayerTypes_1.check)(value && value.profile, '玩家档案格式错误');
     const path = (0, RegionData_1.regionPath)(regions, value.profile.regionCodes);
+    const nickname = (0, PlayerTypes_1.normalizePlayerNickname)(value.profile.nickname);
+    const nicknameRevision = value.profile.nicknameRevision;
     const save = value.save === null ? null : validateGameSave(value.save);
     const cashout = value.cashout === undefined ? undefined : validateCashoutSave(value.cashout);
     const progress = validateProgress(value.progress);
@@ -496,7 +504,11 @@ function validatePlayerState(value, regions) {
         /**
          * 将当前条目转换为后续处理所需的值。
          */
-        profile: { regionCodes: path.map((item) => item.code) },
+        profile: {
+            regionCodes: path.map(item => item.code),
+            ...(nickname && (0, PlayerTypes_1.integer)(nicknameRevision, 1, Number.MAX_SAFE_INTEGER)
+                ? { nickname, nicknameRevision } : {}),
+        },
         save,
         progress: recordCashoutProgress(recordProgress(progress, save), cashout),
         playDate: validatePlayDate(value.playDate),

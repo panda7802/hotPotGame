@@ -35,6 +35,71 @@ export function designSurface(n:Node,fill=getPageTheme().card,radius=designRadiu
   return g;
 }
 
+const COOKING_PLATE_STYLE = {
+  1: {rim: '#F3C474', trim: '#784328', well: '#234D3F', body: '#9E4934',
+    ring: '#DCA55C', light: '#FFF0AD', lip: 17, depth: 20},
+  4: {rim: '#FFF5DF', trim: '#518B43', well: '#FFF0CF', body: '#E4B57C',
+    ring: '#D7B98B', light: '#FFF8E7', lip: 16, depth: 19},
+  8: {rim: '#DCEDE2', trim: '#477B69', well: '#9BC8B4', body: '#629982',
+    ring: '#F3F8E9', light: '#FAFFF3', lip: 18, depth: 21},
+  9: {rim: '#FCF0D6', trim: '#604839', well: '#FFF8E6', body: '#B89C78',
+    ring: '#B58C66', light: '#FFFDF0', lip: 14, depth: 16},
+};
+
+export function paintCookingPlate(node: Node): void {
+  const theme = getPageTheme().id;
+  const style = COOKING_PLATE_STYLE[theme];
+  const radius = node.getComponent(UITransform)!.width / 2 - 1;
+  const g = node.addComponent(Graphics);
+  g.fillColor = hex('#37291935');
+  g.ellipse(0, -15, radius * .91, 8);
+  g.fill();
+
+  g.fillColor = hex(style.body);
+  g.moveTo(-radius, 1);
+  g.bezierCurveTo(-radius, -12, -radius * .56, -style.depth, 0, -style.depth);
+  g.bezierCurveTo(radius * .56, -style.depth, radius, -12, radius, 1);
+  g.close();
+  g.fill();
+
+  g.fillColor = hex(style.rim);
+  g.strokeColor = hex(style.trim);
+  g.lineWidth = 2;
+  g.ellipse(0, 1, radius, style.lip);
+  g.fill();
+  g.stroke();
+
+  g.fillColor = hex(style.well);
+  g.strokeColor = hex(style.ring);
+  g.lineWidth = 1.4;
+  g.ellipse(0, 1, radius * .76, 10);
+  g.fill();
+  g.stroke();
+
+  g.strokeColor = hex(style.light);
+  g.lineCap = Graphics.LineCap.ROUND;
+  g.lineWidth = 2.5;
+  g.moveTo(-radius * .83, 8);
+  g.bezierCurveTo(-radius * .68, 12, -radius * .47, 14, -radius * .23, 14);
+  g.stroke();
+
+  if (theme === 1) {
+    g.fillColor = hex(style.trim);
+    g.circle(-radius * .88, 1, 2.3);
+    g.circle(radius * .88, 1, 2.3);
+    g.fill();
+  } else if (theme === 8) {
+    g.strokeColor = hex(style.ring);
+    g.lineWidth = 1.1;
+    g.ellipse(0, 1, radius * .90, 14);
+    g.stroke();
+  } else if (theme === 9) {
+    g.fillColor = hex('#A72E23');
+    g.roundRect(radius * .80, -1, 6, 6, 1);
+    g.fill();
+  }
+}
+
 /** Inlays for personal pages, drawn independently of their text and icons. */
 export function designPersonalSurface(
   node: Node, fill: string, radius = designRadius(), edge = getPageTheme().edge, shadow = true,
@@ -139,6 +204,46 @@ export function paintThemeHeaderButton(node:Node,caption:string,icon:string,c=1)
   transform(label.node,w*.55,44*c);label.node.setPosition(w*.13,0);
 }
 
+/** The title-side shortcuts use a full-width label below their icon. */
+const HOME_ENTRY_STYLE = {
+  1: {plate:'#792F25', edge:'#DFB373', radius:15, ink:'#FFF1CC',
+    emblem:'#21483C', trim:'#D2A464', emblemRadius:12, glyph:'#FFDC95'},
+  4: {plate:'#FFF5DF', edge:'#E4B57C', radius:34, ink:'#653C22',
+    emblem:'#FFF0CF', trim:'#D7B98B', emblemRadius:26, glyph:'#518B43'},
+  8: {plate:'#F9F8E8', edge:'#8DAD9B', radius:25, ink:'#264E40',
+    emblem:'#E2EEE4', trim:'#A4B9A6', emblemRadius:26, glyph:'#376A56'},
+  9: {plate:'#FFF5E1', edge:'#B88A58', radius:9, ink:'#492C22',
+    emblem:'#A72E23', trim:'#B5573C', emblemRadius:6, glyph:'#FFF3D8'},
+};
+
+export function paintHomeEntry(node: Node, entry: 'book' | 'pot'): void {
+  const theme = getPageTheme();
+  const style = HOME_ENTRY_STYLE[theme.id];
+  const key = 'home-entry:' + theme.id;
+  const themed = node as Node & {gameArtKey?: string};
+  if (themed.gameArtKey === key) {
+    return;
+  }
+  themed.gameArtKey = key;
+  const previous = node.getChildByName('HomeEntryFace');
+  previous?.removeFromParent();
+  previous?.destroy();
+
+  const {width, height} = node.getComponent(UITransform)!;
+  const face = designNode(node, 'HomeEntryFace', [0, (height - 94) / 2, width, 94]);
+  designPersonalSurface(face, style.plate, style.radius, style.edge);
+  const emblem = designNode(face, 'HomeEntryIconDisc', [width / 2 - 26, 8, 52, 52]);
+  designSurface(emblem, style.emblem, style.emblemRadius, style.trim, false);
+  const icon = designNode(emblem, 'HomeEntryIcon', [6, 6, 40, 40]);
+  icon.addComponent(Graphics);
+  const glyph = theme.id === 8 && entry === 'pot' ? 'ceramic-pot' : entry;
+  paintThemeHeaderIcon(icon, glyph, style.glyph, style.emblem, style.trim);
+  const caption = designText(face, entry === 'book' ? '图鉴' : '烹饪',
+    [8, 62, width - 16, 27], 26, style.ink, true);
+  caption.node.name = 'HomeEntryCaption';
+  caption.enableWrapText = false;
+}
+
 /** Filled silhouettes survive downscaling to a 320px-wide phone. */
 function paintThemeHeaderIcon(node:Node,icon:string,ink:string,paper:string,gold:string):void {
   const g=node.getComponent(Graphics)!;g.clear();
@@ -155,6 +260,23 @@ function paintThemeHeaderIcon(node:Node,icon:string,ink:string,paper:string,gold
     polygon([[3,7],[8,10],[14,10],[14,-9],[8,-9],[3,-11]]);
     g.strokeColor=hex(gold);g.lineWidth=1.8;
     for(const side of [-1,1])for(const y of [4,-2]){g.moveTo(side*6,y);g.lineTo(side*12,y+1);g.stroke()}
+  }else if(icon==='pot'||icon==='ceramic-pot'){
+    g.lineWidth=3.2;
+    g.moveTo(-6,18);g.bezierCurveTo(-12,14,-2,12,-7,8);g.stroke();
+    g.moveTo(5,18);g.bezierCurveTo(-1,14,9,12,4,8);g.stroke();
+    g.moveTo(-19,-3);g.lineTo(-13,-3);
+    g.moveTo(13,-3);g.lineTo(19,-3);g.stroke();
+    if(icon==='ceramic-pot'){
+      g.moveTo(-15,-1);g.bezierCurveTo(-15,-10,-9,-16,0,-16);
+      g.bezierCurveTo(9,-16,15,-10,15,-1);g.close();g.fill();
+      g.strokeColor=hex(paper);g.lineWidth=1.5;
+      g.moveTo(-10,-5);g.bezierCurveTo(-5,-9,5,-9,10,-5);g.stroke();
+    }else{
+      g.roundRect(-14,-15,28,14,5);g.fill();
+      g.strokeColor=hex(paper);g.lineWidth=1.8;
+      g.moveTo(-8,-6);g.lineTo(-8,-10);g.stroke();
+    }
+    g.roundRect(-16,1,32,4,2);g.fill();
   }else if(icon==='settings'){
     const points:number[][]=[];
     for(let i=0;i<32;i++){

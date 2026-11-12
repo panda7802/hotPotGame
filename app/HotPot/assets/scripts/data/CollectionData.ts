@@ -1,6 +1,8 @@
 import type {IngredientType} from './GameData';
 import {PlayerState} from './PlayerData';
 import {HIDDEN_INGREDIENTS, NORMAL_INGREDIENTS} from './GameConfig';
+import {RECIPES, recipeKey} from './CookingData';
+import {cookingPerfectCount, distinctCookingClears} from './CookingProgress';
 
 /**
  * 图鉴复用游戏中的食材 SpriteFrame，不增加图片资源。
@@ -280,6 +282,11 @@ export function achievementEntries(state: PlayerState): AchievementEntry[] {
   add('cashout-first', 'cashout', '初次收锅', '在捞到就收中完成结算并领取奖励', settled, 1);
   add('cashout-second', 'cashout', '趁热再捞', '完成副本第2段或以上并领取奖励', settled, 2);
   add('cashout-final', 'cashout', '满锅而归', '完成副本第3段并领取奖励', settled, 3);
+  add('cooking-first', 'tavern', '第一道菜', '任意正式餐谱达到3星', distinctCookingClears(p.cooking), 1);
+  add('cooking-perfect', 'tavern', '三道五星菜', '三道不同的正式餐谱达到5星', cookingPerfectCount(p.cooking), 3);
+  const rareDish = RECIPES.some(dish => p.cooking?.dishes[recipeKey(dish)]?.firstClear
+    && dish.ingredients.some(([id]) => HIDDEN_INGREDIENTS.some(food => food.id === id)));
+  add('cooking-rare', 'tavern', '珍藏上桌', '一道含珍藏食材的正式餐谱达到3星', Number(rareDish), 1);
   return result;
 }
 

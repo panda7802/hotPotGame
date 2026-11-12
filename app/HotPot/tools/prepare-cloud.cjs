@@ -81,6 +81,8 @@ function prepareCloud({
     'PlayerTypes',
     'RegionData',
     'CashoutData',
+    'CookingData',
+    'CookingProgress',
     'PlayerData',
   ];
   const domainModules = new Map();

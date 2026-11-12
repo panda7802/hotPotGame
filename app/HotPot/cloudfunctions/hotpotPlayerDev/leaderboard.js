@@ -1,7 +1,29 @@
 'use strict';
 const crypto = require('crypto');
+const {COOKING_CATALOG} = require('./CookingData');
 // 复用已配置为仅管理员可读写的开发集合，独立文档不覆盖任何玩家档案。
 const COLLECTION = 'hotpot_players_dev';
+
+exports.cookingLeaderboard = async function (db, playerId, scope) {
+  if (![0, 1, 2].includes(scope)) return {ok: false, code: 'INVALID_REQUEST'};
+  try {
+    const collection = db.collection(COLLECTION);
+    const filter = {cookingCatalog: COOKING_CATALOG};
+    if (scope) {
+      const player = await read(collection.doc(playerId));
+      const region = player?.state?.profile?.regionCodes?.[scope - 1];
+      if (!region) return {ok: false, code: 'REGION_REQUIRED'};
+      filter[scope === 1 ? 'cookingProvince' : 'cookingCity'] = region;
+    }
+    const result = await collection.where(filter)
+      .orderBy('cookingRankAt', 'asc').orderBy('playerId', 'asc').limit(30)
+      .field({playerId: true, cookingRankAt: true, nickname: true}).get();
+    return {ok: true, rows: result.data.map(row => ({playerId: row.playerId,
+      at: row.cookingRankAt, ...(row.nickname ? {nickname: row.nickname} : {})}))};
+  } catch {
+    return {ok: false, code: 'DATABASE_UNAVAILABLE'};
+  }
+};
 
 async function read(reference) {
   try {
