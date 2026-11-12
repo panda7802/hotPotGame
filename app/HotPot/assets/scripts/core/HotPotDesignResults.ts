@@ -50,20 +50,25 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
   protected drawFailurePanel(panel:Node):void {
     transform(panel,720,1280);(panel as any).referenceHeight=1280;
     const t=getPageTheme(),body=designNode(panel,'ReviveDialog',[56,239,608,802]);designSurface(body);
+    const adRevive=this.levelIndex===2&&this.reviveUsed;
+    const exhausted=this.reviveUsed&&!adRevive;
     const circle=designNode(body,'WarningCircle',[238,46,132,132]);designSurface(circle,t.panel,66);designIcon(circle,'warning',[30,30,72,72]);
     designButton(body,'MenuClose','×',[526,16,64,64],()=>this.dismissOverlay(),true);
     designText(body,'托盘满啦',[42,202,524,74],44,t.ink,true);
-    designText(body,this.reviveUsed?'本局的免费复活已使用，\n重新开锅，再试一次吧。':'把前三张食材移入寄存区，\n腾出三格，继续捞！',[42,294,524,104],27,t.muted);
+    designText(body,exhausted?'本局的免费复活已使用，\n重新开锅，再试一次吧。':adRevive?'看完激励视频，将前三张移入寄存区，\n腾出三格，继续捞！':'把前三张食材移入寄存区，\n腾出三格，继续捞！',[42,294,524,104],27,t.muted);
     this.tray.slice(0,3).forEach((type,i)=>{
       const card=designNode(body,'ReservedPreview_'+i,[134+i*118,422,104,100]);designSurface(card,t.panel,14);
       this.addIngredientImage(card,type,false,94,90);
     });
-    designText(body,'每局免费复活一次 · 无需广告',[42,542,524,46],23,t.muted);
-    designButton(body,this.reviveUsed?'Button_免费复活已用完':'Button_免费复活，继续捞',this.reviveUsed?'免费复活已用完':'↻  免费复活，继续捞',[42,600,524,84],()=>this.revive(),false,this.reviveUsed);
+    designText(body,adRevive?'本局免费次数已用 · 每次看完视频可复活':'每局免费复活一次 · 无需广告',[42,542,524,46],23,t.muted);
+    const name=exhausted?'Button_免费复活已用完':adRevive?'Button_看视频复活':'Button_免费复活，继续捞';
+    const caption=exhausted?'免费复活已用完':adRevive?'▶  看视频复活':'↻  免费复活，继续捞';
+    designButton(body,name,caption,[42,600,524,84],()=>{void this.revive()},false,exhausted);
     designButton(body,'Button_重新开始','重新开始',[42,706,524,84],()=>this.showRestartConfirmation(),true);
   }
   protected showRestartConfirmation():void {
     if(!this.levelData||this.hasPlayerMenu()||(this.locked&&!this.gameEnded)||this.node.getChildByName('RestartConfirmOverlay'))return;
+    this.rewardedVideo.cancel();
     const {panel}=designOverlay(this.node,'RestartConfirmOverlay',this.viewportHeight,true),t=getPageTheme();
     const body=designNode(panel,'RestartDialog',[56,320,608,640]);designSurface(body);
     const cancel=()=>this.dismissRestartConfirmation();designButton(body,'MenuClose','×',[526,16,64,64],cancel,true);

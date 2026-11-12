@@ -381,6 +381,7 @@ export abstract class HotPotTools extends HotPotToolActions {
    * 关闭当前结果弹窗。
    */
   protected dismissOverlay(): void {
+    this.rewardedVideo.cancel();
     this.node.getChildByName('ResultOverlay')?.destroy();
   }
 }

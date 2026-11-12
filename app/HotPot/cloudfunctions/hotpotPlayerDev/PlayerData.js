@@ -308,7 +308,7 @@ function validateGameSave(value) {
         (0, PlayerTypes_1.check)(Array.isArray(move.tray) &&
             move.tray.length <= 7 &&
             Array.isArray(move.reserve) &&
-            move.reserve.length <= 3 &&
+            move.reserve.length <= (value.levelIndex === 2 ? level.total : 3) &&
             /**
              * 按条件筛选或判断条目：allowed.has(type)。
              */

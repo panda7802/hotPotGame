@@ -5,6 +5,7 @@ import {IngredientType} from '../data/GameData';
 import {
   drawTavernPanel,
   hex,
+  makeButton,
   makeLabel,
   opacity,
   transform,
@@ -16,10 +17,14 @@ import {
 
 import {HotPotBoardActions} from './HotPotBoardActions';
 
+const RESERVE_PAGE_SIZE = 3;
+
 /**
  * HotPotBoard：棋盘、托盘与消除。
  */
 export abstract class HotPotBoard extends HotPotBoardActions {
+  private reservePage = 0;
+
   /** 按逻辑槽位排序；绘制层级不作为食材顺序。 */
   protected trayItems(tray = this.trayNode): Node[] {
     return tray.children
@@ -297,15 +302,32 @@ export abstract class HotPotBoard extends HotPotBoardActions {
   /**
    * 执行复活并恢复可继续操作的状态。
    */
-  protected revive(): void {
+  protected async revive(): Promise<void> {
     if (!this.gameEnded
-      || this.reviveUsed ||
+      || (this.reviveUsed && this.levelIndex !== 2) ||
       this.tray.length < this.levelData.config.traySize) {
       return;
     }
+    if (this.reviveUsed) {
+      const level = this.levelData;
+      const overlay = this.node.getChildByName('ResultOverlay');
+      if (!overlay || !this.enabledInHierarchy) return;
+      const result = await this.rewardedVideo.show();
+      if (!this.enabledInHierarchy || this.levelData !== level || !this.gameEnded
+        || !overlay.isValid || this.node.getChildByName('ResultOverlay') !== overlay) return;
+      if (result !== 'completed') {
+        if (result === 'busy') return;
+        const hint = result === 'cancelled' ? '看完整段视频后才能复活'
+          : result === 'unsupported' ? '请在微信小游戏中观看广告'
+            : '广告暂不可用，请稍后重试';
+        this.showToast(hint, '#A24A3C');
+        return;
+      }
+    }
     this.reviveUsed = true;
     this.clearMatchEffects();
-    this.reserve = this.tray.splice(0, 3);
+    this.reserve.push(...this.tray.splice(0, RESERVE_PAGE_SIZE));
+    this.reservePage = Math.floor((this.reserve.length - 1) / RESERVE_PAGE_SIZE);
     this.lastMoveSnapshot = null;
     this.dismissOverlay();
     this.gameEnded = false;
@@ -375,26 +397,42 @@ export abstract class HotPotBoard extends HotPotBoardActions {
     const scale = this.reserve.length > 0 ? 0.86 : 1;
     this.board.setScale(scale, scale, 1);
     if (!this.reserve.length) {
+      this.reservePage = 0;
       return;
     }
+    const pages = Math.ceil(this.reserve.length / RESERVE_PAGE_SIZE);
+    this.reservePage = Math.min(this.reservePage, pages - 1);
+    const offset = this.reservePage * RESERVE_PAGE_SIZE;
     drawTavernPanel(this.reserveNode, 560, 90, 'wood');
     makeLabel(
       this.reserveNode,
-      '寄存食材\n点击取回',
+      pages > 1 ? `寄存 ${this.reserve.length} 张  ${this.reservePage + 1}/${pages}` : '寄存食材\n点击取回',
       22,
       '#FFF8E7',
-      new Vec3(-174, 0),
+      new Vec3(-174, pages > 1 ? 20 : 0),
       170,
-      66,
+      pages > 1 ? 32 : 66,
       true,
     );
-    this.reserve.forEach(
+    if (pages > 1) {
+      const flip = (delta: number) => {
+        if (this.locked || this.gameEnded || this.hasPlayerMenu()) return;
+        this.reservePage += delta;
+        this.renderReserve();
+      };
+      if (this.reservePage > 0)
+        makeButton(this.reserveNode, '‹', new Vec3(-216, -19), 68, 39, '#B88261', () => flip(-1));
+      if (this.reservePage + 1 < pages)
+        makeButton(this.reserveNode, '›', new Vec3(-132, -19), 68, 39, '#B88261', () => flip(1));
+    }
+    this.reserve.slice(offset, offset + RESERVE_PAGE_SIZE).forEach(
       /**
        * 依次处理集合中的每个条目。
-       */ (type, index) => {
+       */ (type, slot) => {
+        const index = offset + slot;
         const item = new Node(`Reserved_${index}`);
         this.reserveNode.addChild(item);
-        item.setPosition(-20 + index * 96, 0);
+        item.setPosition(-20 + slot * 96, 0);
         item.setScale(0.75, 0.75, 1);
         this.drawTile(item, type, false);
         item.on(

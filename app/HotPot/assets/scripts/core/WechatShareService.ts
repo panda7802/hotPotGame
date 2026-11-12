@@ -29,9 +29,12 @@ export class WechatShareService {
       (globalThis as {wx?: WechatShareHost}).wx,
   ) {}
 
-  private message(source: 'menu' | 'button' | 'timeline'): ShareMessage {
+  private message(
+    source: 'menu' | 'button' | 'timeline',
+    title = '锅里捞啥｜一起来捞一锅，看看谁能通关！',
+  ): ShareMessage {
     return {
-      title: '锅里捞啥｜一起来捞一锅，看看谁能通关！',
+      title,
       query: 'source=share&entry=' + source,
     };
   }
@@ -59,12 +62,12 @@ export class WechatShareService {
     }
   }
 
-  share(): ShareResult {
+  share(title?: string): ShareResult {
     if (!this.host?.shareAppMessage) {
       return 'unsupported';
     }
     try {
-      this.host.shareAppMessage(this.message('button'));
+      this.host.shareAppMessage(this.message('button', title));
       return 'opened';
     } catch {
       return 'failed';

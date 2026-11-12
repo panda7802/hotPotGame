@@ -142,6 +142,7 @@ export abstract class HotPotDesignMenus extends HotPotReferenceShell {
       ownName.string=regions.find(region=>region.code===own)?.name||'尚未选择地区';
       ownRank.string=rank<0?'未上榜':'第 '+(rank+1)+' 名';
       ownCount.string=(own?service.regionCount(own):0).toLocaleString()+' 次';
+      fitDesignPage(p);
     };render();void service.refreshLeaderboard().then(render).catch(()=>{});
     designFooter(p,'返回',back);
   }

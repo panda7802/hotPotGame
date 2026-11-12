@@ -174,6 +174,12 @@ function paintThemeHeaderIcon(node:Node,icon:string,ink:string,paper:string,gold
 }
 
 /** Header/footer use screen width; only the middle composition fits its space. */
+export interface DesignPageLayout {
+  bodyTop: number;
+  footerTop: number;
+  height: number;
+}
+
 export function fitDesignPage(panel:Node):void {
   if(!(panel as any).designPage)return;
   const area=referenceArea(),scale=area.width/720,h=area.height/scale;
@@ -198,6 +204,9 @@ export function fitDesignPage(panel:Node):void {
   const available=Math.max(1,footerTop-24-bodyTop),s=Math.min(1,available/832);
   body.setScale(s,s,1);body.setPosition(0,h/2-bodyTop-available/2);
   footer.setPosition(0,h/2-footerTop-78);
+  (panel as Node & {
+    layoutNativeAd?: (layout: DesignPageLayout) => void;
+  }).layoutNativeAd?.({bodyTop, footerTop, height: h});
 }
 export function designOverlay(parent:Node,name:string,viewport:number,modal=false,background?:string):{overlay:Node,panel:Node} {
   const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,viewport);overlay.addComponent(BlockInputEvents);

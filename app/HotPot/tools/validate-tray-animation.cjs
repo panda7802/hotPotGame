@@ -1641,3 +1641,52 @@ for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
 }
 console.log('iOS memory: hidden faces culled, full solution visible, '
   + 'legacy/random saves restored in one board pass: OK');
+
+async function validateRewardedRevival() {
+  const g = makeGame(['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish']);
+  g.levelIndex = 2;
+  g.enabledInHierarchy = true;
+  g.gameEnded = true;
+  const overlay = new Node('ResultOverlay');
+  overlay.isValid = true;
+  g.node.addChild(overlay);
+  let requests = 0;
+  let complete;
+  g.rewardedVideo.show = () => {
+    requests++;
+    return new Promise(resolve => {complete = resolve;});
+  };
+  await g.revive();
+  assert.equal(requests, 0, 'first revive must be free');
+  const originalReserve = g.reserve.slice();
+  g.tray = ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish'];
+  g.gameEnded = true;
+  const pending = g.revive();
+  assert.equal(requests, 1);
+  assert.equal(g.tray.length, 7, 'showing an ad cannot grant revival');
+  complete('completed');
+  await pending;
+  assert.equal(g.reserve.length, 6, 'older reserved food must be preserved');
+  assert.deepEqual(g.reserve.slice(0, 3), originalReserve);
+  assert.equal(g.tray.length, 4);
+  assert(!g.gameEnded);
+
+  for (const result of ['cancelled', 'failed', 'unsupported', 'busy']) {
+    g.gameEnded = true;
+    g.tray = ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish'];
+    const before = JSON.stringify({tray: g.tray, reserve: g.reserve});
+    g.rewardedVideo.show = async () => result;
+    await g.revive();
+    assert.equal(JSON.stringify({tray: g.tray, reserve: g.reserve}), before);
+    assert(g.gameEnded);
+  }
+  g.rewardedVideo.show = () => new Promise(resolve => {complete = resolve;});
+  const stale = g.revive();
+  g.levelData = {config: {traySize: 7}};
+  complete('completed');
+  await stale;
+  assert.equal(g.tray.length, 7, 'an old ad cannot revive a new board');
+  console.log('Third-level rewarded revives: first free, repeat reward, reserve conservation, '
+    + 'failed/cancelled ads and stale board isolation OK');
+}
+validateRewardedRevival().catch(error => {console.error(error); process.exitCode = 1;});

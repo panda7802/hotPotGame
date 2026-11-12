@@ -24,6 +24,7 @@ import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
 import {WechatShareService} from './WechatShareService';
 import {WechatGameClubService} from './WechatGameClubService';
+import {WechatRewardedVideoService} from './WechatRewardedVideoService';
 import {GAME_CLUB_OPENLINK} from '../data/GameClubConfig';
 
 import {
@@ -43,6 +44,7 @@ export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
   private readonly wechatSharing = new WechatShareService();
   private readonly wechatGameClub = new WechatGameClubService();
+  protected readonly rewardedVideo = new WechatRewardedVideoService();
   private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
   private manualPlayerSync = false;
 
@@ -64,10 +66,15 @@ export abstract class HotPotState extends HotPotFields {
     if (message) this.showToast(message, '#A24A3C');
   }
 
-  onDisable(): void { this.wechatGameClub.dispose(); }
+  onEnable(): void { this.rewardedVideo.prepare(); }
 
-  protected shareGame(): void {
-    const result = this.wechatSharing.share();
+  onDisable(): void {
+    this.wechatGameClub.dispose();
+    this.rewardedVideo.dispose();
+  }
+
+  protected shareGame(title?: string): void {
+    const result = this.wechatSharing.share(title);
     if (result === 'unsupported') {
       this.showToast('请在微信小游戏中使用“分享给好友”', '#A24A3C');
     } else if (result === 'failed') {
@@ -135,6 +142,7 @@ export abstract class HotPotState extends HotPotFields {
    * 释放事件监听与音频。
    */
   onDestroy(): void {
+    this.rewardedVideo.dispose();
     this.wechatSharing.dispose();
     this.unbindGameClubEntry();
     this.releasePageBackdrop();

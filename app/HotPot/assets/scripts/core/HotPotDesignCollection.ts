@@ -74,7 +74,8 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
       back, tab === 'achievements' ? 'game-ui/bg-0' + t.id : undefined);
     if (!p) return;
     this.designCollectionTab = tab;
-    const state = this.playerService!.state;
+    const service = this.playerService!;
+    const state = service.state;
     const taps = {
       heading: entry?.headingTaps || 0,
       food: entry?.ingredientTaps || 0
@@ -98,7 +99,15 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
           }
         })
       }
-      designText(p, '已发现 ' + state.progress.discovered.length + ' / ' + INGREDIENTS.length, [330, 290, 350, 44], 28, designOnBackground(), true);
+      designText(p, '已发现 ' + state.progress.discovered.length + ' / ' + INGREDIENTS.length, [300, 290, 244, 44], 28, designOnBackground(), true);
+      designButton(p, 'Button_分享珍藏', '分享', [564, 280, 116, 64], () => {
+        const discovered = service.state.progress.discovered;
+        const count = HIDDEN_INGREDIENTS.filter(food =>
+          discovered.includes(food.id)).length;
+        this.shareGame(
+          `锅里捞啥｜我已收集 ${count}/${HIDDEN_INGREDIENTS.length} 种珍藏食材！`,
+        );
+      }, true);
       const group = this.designIngredientGroup;
       const foods = group === 'hidden' ? HIDDEN_INGREDIENTS : NORMAL_INGREDIENTS;
       const switchGroup = (next: 'ingredients' | 'hidden') => {
