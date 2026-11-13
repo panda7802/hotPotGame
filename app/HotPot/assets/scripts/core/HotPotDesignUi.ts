@@ -503,6 +503,7 @@ export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageT
   else if(type==='palette'){g.circle(0,0,9*s);g.stroke();for(const [x,y] of [[-4,4],[3,5],[-5,-2],[3,-3]]){g.circle(x*s,y*s,1.3*s);g.fill()}}
   else if(type==='share'){line([[12,16],[12,3]]);line([[7,8],[12,3],[17,8]]);line([[5,12],[5,21],[19,21],[19,12]])}
   else if(type==='community'){line([[3,4],[21,4],[21,16],[12,16],[6,21],[6,16],[3,16]],true);for(const x of [-5,0,5]){g.circle(x*s,2*s,.9*s);g.fill()}}
+  else if(type==='star')line([[12,2],[15,8],[22,9],[17,14],[18,21],[12,18],[6,21],[7,14],[2,9],[9,8]],true);
   else if(type==='back'){line([[14,5],[7,12],[14,19]]);line([[7,12],[21,12]])}
   else if(type==='close'){line([[5,5],[19,19]]);line([[19,5],[5,19]])}
   else if(type==='warning'){line([[12,3],[22,21],[2,21]],true);line([[12,9],[12,14]]);g.circle(0,-5*s,.8*s);g.fill()}

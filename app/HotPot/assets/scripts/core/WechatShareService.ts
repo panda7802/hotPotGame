@@ -1,7 +1,10 @@
 interface ShareMessage {
   title: string;
   query: string;
+  imageUrl?: string;
 }
+
+const SHARE_CARD_IMAGE = 'share-card.jpg';
 
 interface WechatShareHost {
   shareAppMessage?: (message: ShareMessage) => void;
@@ -40,6 +43,7 @@ export class WechatShareService {
     return {
       title,
       query: 'source=share&entry=' + source,
+      ...(source === 'timeline' ? {} : {imageUrl: SHARE_CARD_IMAGE}),
     };
   }
 

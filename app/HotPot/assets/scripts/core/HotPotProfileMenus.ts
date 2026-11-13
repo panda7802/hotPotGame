@@ -39,7 +39,7 @@ export abstract class HotPotProfileMenus extends HotPotAppearanceMenus {
    * 关闭指定的玩家菜单。
    */
   protected dismissPlayerMenu(name: string): void {
-    if (name === 'PlayerOverlay') this.unbindGameClubEntry();
+    if (name === 'PlayerOverlay') this.disposeSettingsPages();
     const overlay = this.node.getChildByName(name);
     overlay?.removeFromParent();
     overlay?.destroy();

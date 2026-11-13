@@ -144,12 +144,13 @@ export const PAGE_THEMES: PageTheme[] = [
 
 // New numbering must not reinterpret an old 1/2/7/9 preference.
 export const PAGE_STYLE_KEY = 'hotpot.page-style.v2';
-let currentStyle: PageStyle = 1;
+const DEFAULT_PAGE_STYLE: PageStyle = 4;
+let currentStyle: PageStyle = DEFAULT_PAGE_STYLE;
 
 export function normalizePageStyle(value: unknown): PageStyle {
   const id = Number(value);
   return PAGE_THEMES.some((theme) => theme.id === id)
-    ? id as PageStyle : 1;
+    ? id as PageStyle : DEFAULT_PAGE_STYLE;
 }
 
 export function getPageTheme(): PageTheme {
@@ -168,9 +169,9 @@ export function readPageStyle(storage: {
     if (saved !== null) return normalizePageStyle(saved);
     const old = Number(storage.getItem('hotpot.page-style.v1'));
     const migrated: Record<number, PageStyle> = {1: 8, 2: 1, 7: 8, 9: 9, 10: 4};
-    return migrated[old] || 1;
+    return migrated[old] ?? DEFAULT_PAGE_STYLE;
   } catch {
-    return 1;
+    return DEFAULT_PAGE_STYLE;
   }
 }
 

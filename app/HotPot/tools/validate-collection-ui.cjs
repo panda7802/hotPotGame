@@ -767,10 +767,11 @@ cc.sys = {localStorage: {
 }};
 assert.deepStrictEqual(Array.from(themes.PAGE_THEMES, (t) => t.id),
   [1, 4, 8, 9]);
+assert.strictEqual(themes.readPageStyle(cc.sys.localStorage), 4);
 for (const invalid of [null, '', '2', '3', '7', '10', 'NaN', '{}']) {
-  assert.strictEqual(themes.normalizePageStyle(invalid), 1);
+  assert.strictEqual(themes.normalizePageStyle(invalid), 4);
 }
-assert.strictEqual(themes.readPageStyle({getItem() {throw Error();}}), 1);
+assert.strictEqual(themes.readPageStyle({getItem() {throw Error();}}), 4);
 assert.strictEqual(themes.savePageStyle({setItem() {throw Error();}}, 8),
   false);
 const oldLoader = cc.resources.load;

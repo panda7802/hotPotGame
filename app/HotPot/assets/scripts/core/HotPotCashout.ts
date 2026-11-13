@@ -126,6 +126,7 @@ export abstract class HotPotCashout extends HotPotDesignResults {
       {name: '页面换肤', icon: 'palette', detail: '挑选小馆风格', action: open(() => this.showPageStyles())},
       {name: '分享', icon: 'share', detail: '邀请好友来捞锅', action: () => this.shareGame()},
       {name: '游戏圈', icon: 'community', detail: '去圈里逛逛', action: () => { void this.openGameClub(); }},
+      {name: '评价与推荐', icon: 'star', detail: '在微信推荐游戏', action: () => { void this.openGameRecommendation(); }},
     ];
     this.drawSettingsMenu(panel, entries, close);
   }
@@ -139,16 +140,16 @@ export abstract class HotPotCashout extends HotPotDesignResults {
     const cream = t.id === 4;
     const menu = this.cashoutArt(panel, 'panel', [30, 445, 660, 476], true);
     entries.forEach(({name, icon, detail, action}, i) => {
-      const row = designHit(designNode(menu, 'Button_' + name, [40, 46 + i * 100, 580, 84]), action);
+      const row = designHit(designNode(menu, 'Button_' + name, [40, 30 + i * 86, 580, 72]), action);
       designSurface(row, rowColors.fill, radius - 3, rowColors.edge, !paper);
-      const badge = designNode(row, 'IconBadge', [14, 16, 52, 52]);
+      const badge = designNode(row, 'IconBadge', [14, 10, 52, 52]);
       const warmClay = cream && i % 2 === 1;
       const ink = warmClay ? '#99532B' : t.dark;
       designSurface(badge, warmClay ? '#FFE5BF' : rowColors.badge, paper ? 6 : 24, '', false);
       designIcon(badge, icon, [9, 9, 33, 33], ink);
-      designText(row, name, [81, 8, 240, 68], 31, rowColors.ink, true, true);
-      designText(row, detail, [313, 8, 199, 68], 22, rowColors.muted);
-      designIcon(row, 'arrow', [535, 29, 27, 27], rowColors.muted);
+      designText(row, name, [81, 2, 240, 68], 31, rowColors.ink, true, true);
+      designText(row, detail, [313, 2, 199, 68], 22, rowColors.muted);
+      designIcon(row, 'arrow', [535, 23, 27, 27], rowColors.muted);
     });
 
     const sync = designHit(designNode(panel, 'Button_同步', [52, 1124, 218, 80]),

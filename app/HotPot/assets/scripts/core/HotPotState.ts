@@ -24,6 +24,7 @@ import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
 import {WechatShareService} from './WechatShareService';
 import {WechatGameClubService} from './WechatGameClubService';
+import {WechatGameRecommendationService} from './WechatGameRecommendationService';
 import {WechatRewardedVideoService} from './WechatRewardedVideoService';
 import {GAME_CLUB_OPENLINK} from '../data/GameClubConfig';
 
@@ -44,12 +45,14 @@ export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
   protected readonly wechatSharing = new WechatShareService();
   private readonly wechatGameClub = new WechatGameClubService();
+  private readonly wechatGameRecommendation = new WechatGameRecommendationService();
   protected readonly rewardedVideo = new WechatRewardedVideoService();
   private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
   private manualPlayerSync = false;
 
-  protected unbindGameClubEntry(): void {
+  protected disposeSettingsPages(): void {
     this.wechatGameClub.dispose();
+    this.wechatGameRecommendation.dispose();
   }
 
   protected async openGameClub(): Promise<void> {
@@ -66,10 +69,19 @@ export abstract class HotPotState extends HotPotFields {
     if (message) this.showToast(message, '#A24A3C');
   }
 
+  protected async openGameRecommendation(): Promise<void> {
+    const menu = this.node.getChildByName('PlayerOverlay');
+    if (!menu || !this.enabledInHierarchy) return;
+    const message = await this.wechatGameRecommendation.open();
+    if (message && this.node.isValid && menu.isValid && menu.parent === this.node) {
+      this.showToast(message, '#A24A3C');
+    }
+  }
+
   onEnable(): void { this.rewardedVideo.prepare(); }
 
   onDisable(): void {
-    this.wechatGameClub.dispose();
+    this.disposeSettingsPages();
     this.rewardedVideo.dispose();
   }
 
@@ -144,7 +156,7 @@ export abstract class HotPotState extends HotPotFields {
   onDestroy(): void {
     this.rewardedVideo.dispose();
     this.wechatSharing.dispose();
-    this.unbindGameClubEntry();
+    this.disposeSettingsPages();
     this.releasePageBackdrop();
     this.node.off(Node.EventType.TOUCH_START, this.startBgmIfReady, this);
     this.bgmSource?.stop();

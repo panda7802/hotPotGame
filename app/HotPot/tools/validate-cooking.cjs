@@ -67,14 +67,31 @@ round.advance(1);
 assert.deepEqual(round.portions, {shrimp: 1, toufu: 1});
 assert.deepEqual([...round.caught].map(drop => drop.id), ['shrimp', 'toufu']);
 
-const tiltRound = new data.CookingRound(soup, [[
+const touchRound = new data.CookingRound(soup, [[
   {id: 'tomato', lane: 2, arrival: 0.08},
   {id: 'toufu', lane: 3, arrival: 0.2},
 ]]);
-assert.equal(tiltRound.moveTo(3), true);
-assert.equal(tiltRound.moveTo(0), false);
-tiltRound.advance(0.21);
-assert.deepEqual(tiltRound.portions, {toufu: 1}, 'a direct tilt catches only at the destination');
+assert.equal(touchRound.moveTo(3), true);
+assert.equal(touchRound.move(-1), false);
+touchRound.advance(0.21);
+assert.deepEqual(touchRound.portions, {toufu: 1}, 'a direct move catches only at the destination');
+
+const responsive = new data.CookingRound(soup, [[{id: 'tomato', lane: 1, arrival: 0.17}]]);
+assert(responsive.moveTo(2));
+responsive.advance(0.03);
+const position = responsive.plateLane;
+assert(responsive.moveTo(1));
+assert.equal(responsive.plateLane, position, 'changing lanes preserves the current visual position');
+responsive.advance(0.15);
+assert.equal(responsive.plateLane, 1);
+assert.deepEqual(responsive.portions, {tomato: 1});
+
+for (const [arrival, lane] of [[0.02, 2], [0.2, 3]]) {
+  const miss = new data.CookingRound(soup, [[{id: 'tomato', lane, arrival}]]);
+  assert(miss.moveTo(2));
+  miss.advance(0.2);
+  assert(miss.finished && !miss.hasFood);
+}
 
 const at = 1_800_000_000_000;
 const portions = {tomato: 3, toufu: 3};

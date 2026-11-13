@@ -1,4 +1,4 @@
-import {game, Game, Label, Mask, Node, sys, UITransform} from 'cc';
+import {EventTouch, game, Game, Label, Mask, Node, sys, UITransform, Vec3} from 'cc';
 import {
   COOKING_UNLOCK, CookingRound, cookingDrops, cookingFallTime, findRecipe,
   practiceRecipe, Recipe, recipeBatches, recipeKey, recipeMax, RECIPES, scoreCooking,
@@ -10,7 +10,6 @@ import {
 import {getIngredient, IngredientType} from '../data/GameData';
 import {getPageTheme} from '../data/PageTheme';
 import {GameSave, regionPath} from '../data/PlayerData';
-import {CookingTilt} from './CookingTilt';
 import {drawCookingBreakdown} from './CookingResultView';
 import {
   designButton, designFooter, designHit, designNode, designOnBackground,
@@ -22,15 +21,13 @@ const PAGE = 'CookingOverlay';
 const UNLOCK = 'CookingUnlockOverlay';
 const LANE_WIDTH = 148;
 const LANES = 4;
+const LANE_LEFT = 12;
 const DROP_TOP = 32;
 const CATCH_Y = 435;
 const DROP_SIZE = 70;
 const PLATE_FOOD_SIZE = 38;
 const PLATE_FOOD_OFFSETS = [-24, 24, 0];
 const SOURCE_KEY = 'hotpot.cooking.device.v1';
-const CONTROL_KEY = 'hotpot.cooking.control.v1';
-const TILT_DEAD_ZONE = 10;
-const TILT_OUTER_LANE = 45;
 
 interface RoundView {
   field: Node;
@@ -45,7 +42,6 @@ interface RoundView {
 }
 
 export abstract class HotPotCooking extends HotPotNativeAds {
-  private readonly tilt = new CookingTilt();
   private round?: CookingRound;
   private roundView?: RoundView;
   private cooling?: () => void;
@@ -53,10 +49,7 @@ export abstract class HotPotCooking extends HotPotNativeAds {
   private unlockPending = false;
   private sharedRecipe?: Recipe;
   private paused = false;
-  private calibratingTilt = false;
-  private control: 'tap' | 'tilt' = 'tap';
-  private neutral?: number;
-  private tiltOffset = 0;
+  private plateTouch?: number;
   private deviceSource?: string;
 
   private get cooking() { return this.playerService?.cooking ?? emptyCooking(); }
@@ -80,7 +73,6 @@ export abstract class HotPotCooking extends HotPotNativeAds {
 
   onDestroy(): void {
     game.off(Game.EVENT_HIDE, this.pauseCooking, this);
-    this.tilt.stop();
     super.onDestroy();
   }
 
@@ -90,10 +82,9 @@ export abstract class HotPotCooking extends HotPotNativeAds {
 
   protected dismissPlayerMenu(name: string): void {
     if (name === PAGE) {
-      this.tilt.stop();
       this.round = undefined;
       this.roundView = undefined;
-      this.calibratingTilt = false;
+      this.plateTouch = undefined;
       this.cooling = undefined;
       this.adPanel = undefined;
       this.rewardedVideo.cancel();
@@ -128,9 +119,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     }
     this.cooling?.();
     const round = this.round;
-    if (!round || this.paused || this.calibratingTilt || !this.roundView) return;
+    if (!round || this.paused || !this.roundView) return;
     if (round.finished && !this.roundView.drops.size && round.plateLane === round.lane) return;
-    if (!round.finished) this.applyTilt(round);
     round.advance(Math.min(delta, 0.1));
     this.renderCookingRound();
   }
@@ -299,12 +289,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     const duration = dish.practice ? 17 : 25 / batches.length;
     this.cooling = undefined;
     this.round = new CookingRound(dish, batches.map(batch => cookingDrops(dish, batch, discovered, duration)));
-    let saved = 'tap';
-    try { saved = sys.localStorage.getItem(CONTROL_KEY) ?? 'tap'; } catch { /* Defaults to tap. */ }
-    this.control = saved === 'tilt' ? 'tilt' : 'tap';
     this.paused = false;
     this.drawCookingRound();
-    if (this.control === 'tilt') this.startTilt();
   }
 
   private drawCookingRound(): void {
@@ -314,6 +300,7 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     const back = () => { this.dismissPlayerMenu(PAGE); this.showRecipe(round.dish); };
     const panel = this.page(round.dish.name, back);
     if (!panel) return;
+    this.plateTouch = undefined;
     const w = Math.floor(640 / round.batch.length);
     const counts = round.batch.map(([id], i) => {
       const card = designNode(panel, 'Portion_' + id, [40 + i * w, 334, w - 8, 78]);
@@ -323,13 +310,13 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     });
     designText(panel, `第 ${round.batchIndex + 1}/${round.batches.length} 批`,
       [40, 284, 215, 46], 25, designOnBackground(), true, true);
-    designButton(panel, 'Button_点按', '点按', [376, 283, 144, 46], () => this.changeControl('tap'), this.control !== 'tap');
-    designButton(panel, 'Button_倾斜', '倾斜', [536, 283, 144, 46], () => this.changeControl('tilt'), this.control !== 'tilt');
+    designText(panel, '点一列或左右滑动移盘', [266, 284, 414, 46], 25, designOnBackground());
 
     const field = designNode(panel, 'CookingField', [48, 420, 624, 484]);
     designSurface(field, theme.panel);
+    this.bindPlateTouch(field, round);
     for (let lane = 0; lane < LANES; lane++) {
-      const track = designNode(field, 'CookingLane_' + lane, [16 + lane * LANE_WIDTH, 12, LANE_WIDTH - 8, 450]);
+      const track = designNode(field, 'CookingLane_' + lane, [LANE_LEFT + 4 + lane * LANE_WIDTH, 12, LANE_WIDTH - 8, 450]);
       designSurface(track, theme.card, 16, theme.line, false);
     }
     const falling = designNode(field, 'CookingFallingFood', [0, 0, 624, 484]);
@@ -339,13 +326,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     paintCookingPlate(plate);
     const plateContents = designNode(plate, 'CookingPlateContents', [0, 0, plateWidth, 48]);
     const status = designText(panel, '', [40, 904, 640, 48], 25, designOnBackground(), true);
-    if (this.control === 'tap') {
-      designButton(panel, 'Button_左移', '← 左移', [40, 958, 304, 63], () => this.movePlate(-1), true);
-      designButton(panel, 'Button_右移', '右移 →', [376, 958, 304, 63], () => this.movePlate(1), true);
-    } else {
-      designText(panel, '左右倾斜超过 10° 选中间格，超过 45° 选外侧格。',
-        [40, 956, 640, 63], 25, designOnBackground());
-    }
+    designButton(panel, 'Button_左移', '← 左移', [40, 958, 304, 63], () => this.movePlate(-1), true);
+    designButton(panel, 'Button_右移', '右移 →', [376, 958, 304, 63], () => this.movePlate(1), true);
     const action = designButton(panel, 'Button_烹饪操作', '', [40, 1034, 640, 66], () => this.cookingAction());
     designFooter(panel, '退出烹饪', back, 'Button_退出烹饪', false);
     this.roundView = {field, falling, plate, plateContents, renderedCatches: 0,
@@ -354,13 +336,37 @@ export abstract class HotPotCooking extends HotPotNativeAds {
   }
 
   private movePlate(direction: -1 | 1): void {
-    if (!this.paused && this.control === 'tap' && !this.round?.finished) this.round?.move(direction);
+    if (!this.paused && this.plateTouch === undefined && !this.round?.finished) this.round?.move(direction);
+  }
+
+  private bindPlateTouch(field: Node, round: CookingRound): void {
+    const transform = field.getComponent(UITransform)!;
+    const point = new Vec3();
+    const move = (event: EventTouch) => {
+      if (this.round !== round || this.paused || round.finished || event.getID() !== this.plateTouch) return;
+      const {x, y} = event.getUILocation();
+      const local = transform.convertToNodeSpaceAR(point.set(x, y, 0));
+      const lane = Math.floor((local.x + transform.width / 2 - LANE_LEFT) / LANE_WIDTH);
+      round.moveTo(Math.max(0, Math.min(LANES - 1, lane)));
+    };
+    const release = (event: EventTouch) => {
+      if (event.getID() === this.plateTouch) this.plateTouch = undefined;
+    };
+    field.on(Node.EventType.TOUCH_START, (event: EventTouch) => {
+      const id = event.getID();
+      if (id === null || this.round !== round || this.paused || round.finished || this.plateTouch !== undefined) return;
+      this.plateTouch = id;
+      move(event);
+    });
+    field.on(Node.EventType.TOUCH_MOVE, move);
+    field.on(Node.EventType.TOUCH_END, release);
+    field.on(Node.EventType.TOUCH_CANCEL, release);
   }
 
   private renderCookingRound(): void {
     const round = this.round!, ui = this.roundView!, theme = getPageTheme();
     const {height, width} = ui.field.getComponent(UITransform)!;
-    const laneX = (lane: number) => 12 + (lane + .5) * LANE_WIDTH - width / 2;
+    const laneX = (lane: number) => LANE_LEFT + (lane + .5) * LANE_WIDTH - width / 2;
     ui.plate.setPosition(laneX(round.plateLane), height / 2 - CATCH_Y, 0);
     const time = cookingFallTime(round.dish);
     const dropY = (arrival: number) => DROP_TOP + (CATCH_Y - DROP_TOP)
@@ -385,7 +391,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
         node = this.foodIcon(ui.falling, drop.id, 0, 0, DROP_SIZE);
         ui.drops.set(i, node);
       }
-      node.setPosition(laneX(drop.lane), height / 2 - dropY(drop.arrival), 0);
+      const y = Math.min(CATCH_Y, dropY(drop.arrival));
+      node.setPosition(laneX(drop.lane), height / 2 - y, 0);
     }
     this.renderPlateContents(round, ui);
     round.batch.forEach(([id, target], i) => {
@@ -396,14 +403,14 @@ export abstract class HotPotCooking extends HotPotNativeAds {
       const target = round.dish.ingredients.find(([food]) => food === id)?.[1] ?? 0;
       return sum + Math.max(0, count - target);
     }, 0);
-    const status = this.calibratingTilt ? '请保持握姿，正在校准' : this.paused ? '已暂停'
+    const status = this.paused ? '已暂停'
       : round.finished ? '本批出料结束' : excess ? `本盘多出 ${excess} 份` : '按配方接料，已够量可让食材落空';
     this.setCookingText(ui.status, status);
     const next = !round.lastBatch;
-    const caption = this.calibratingTilt ? '校准中…' : this.paused ? '继续接料' : next ? '下一批'
+    const caption = this.paused ? '继续接料' : next ? '下一批'
       : round.finished && !round.hasFood ? '再试一次' : '出锅';
-    const disabled = this.calibratingTilt || (!this.paused && (next
-      ? !(round.exact || round.finished) : !round.hasFood && !round.finished));
+    const disabled = !this.paused && (next
+      ? !(round.exact || round.finished) : !round.hasFood && !round.finished);
     const actionLabel = ui.action.getChildByName('Label')!.getComponent(Label)!;
     this.setCookingText(actionLabel, caption);
     const action = ui.action as Node & {referenceDisabled?: boolean};
@@ -434,11 +441,10 @@ export abstract class HotPotCooking extends HotPotNativeAds {
 
   private cookingAction(): void {
     const round = this.round;
-    if (!round || this.calibratingTilt) return;
+    if (!round) return;
     if (this.paused) {
       this.paused = false;
-      if (this.control === 'tilt' && this.neutral === undefined) this.startTilt();
-      else this.renderCookingRound();
+      this.renderCookingRound();
     } else if (!round.lastBatch) {
       if (round.nextBatch()) {
         this.drawCookingRound();
@@ -446,7 +452,6 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     } else if (round.hasFood) {
       this.finishCooking(round);
     } else if (round.finished) {
-      this.tilt.stop();
       this.beginCooking(round.dish);
     }
   }
@@ -454,68 +459,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
   private pauseCooking(): void {
     if (!this.round) return;
     this.paused = true;
-    this.calibratingTilt = false;
-    this.tilt.stop();
-    this.neutral = undefined;
+    this.plateTouch = undefined;
     if (this.roundView) this.renderCookingRound();
-  }
-
-  private changeControl(control: 'tap' | 'tilt'): void {
-    if (control === this.control) return;
-    this.control = control;
-    this.paused = true;
-    this.calibratingTilt = false;
-    this.tilt.stop();
-    this.neutral = undefined;
-    this.rememberControl();
-    this.drawCookingRound();
-    if (control === 'tilt') this.startTilt();
-  }
-
-  private rememberControl(): void {
-    try { sys.localStorage.setItem(CONTROL_KEY, this.control); } catch { /* Session setting still works. */ }
-  }
-
-  private startTilt(): void {
-    this.calibratingTilt = true;
-    this.neutral = undefined;
-    this.tiltOffset = 0;
-    if (this.roundView) this.renderCookingRound();
-    this.tilt.start(value => {
-      const first = this.neutral === undefined;
-      if (first) {
-        this.neutral = value;
-        this.calibratingTilt = false;
-      }
-      this.tiltOffset = value - this.neutral!;
-      if (first && this.roundView) this.renderCookingRound();
-    }, reason => {
-      this.calibratingTilt = false;
-      this.control = 'tap';
-      this.rememberControl();
-      this.drawCookingRound();
-      const hint = {
-        unsupported: '当前环境无法读取倾斜',
-        permission: '传感器权限未通过',
-        startup: '传感器启动失败',
-        timeout: '未收到倾斜读数',
-      }[reason];
-      this.showToast(hint + '，已切回点按', '#A24A3C');
-    });
-  }
-
-  private applyTilt(round: CookingRound): void {
-    if (this.control !== 'tilt' || this.neutral === undefined) {
-      return;
-    }
-    const angle = this.tiltOffset;
-    const magnitude = Math.abs(angle);
-    if (magnitude <= TILT_DEAD_ZONE) return;
-    if (angle < 0) {
-      round.moveTo(magnitude > TILT_OUTER_LANE ? 0 : 1);
-    } else {
-      round.moveTo(magnitude > TILT_OUTER_LANE ? 3 : 2);
-    }
   }
 
   private finishCooking(round: CookingRound): void {
@@ -530,7 +475,6 @@ export abstract class HotPotCooking extends HotPotNativeAds {
         return;
       }
     }
-    this.tilt.stop();
     this.round = undefined;
     this.roundView = undefined;
     this.showCookingResult(round);

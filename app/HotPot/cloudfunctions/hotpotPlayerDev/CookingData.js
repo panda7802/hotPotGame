@@ -109,13 +109,14 @@ class CookingRound {
         return this.fromLane + (this.lane - this.fromLane) * fraction;
     }
     move(direction) {
+        if (this.elapsed < this.moveStarted + exports.COOKING_MOVE_TIME)
+            return false;
         return this.moveTo(this.lane + direction);
     }
     moveTo(target) {
-        if (!Number.isInteger(target) || target < 0 || target > 3 || target === this.lane
-            || this.elapsed < this.moveStarted + exports.COOKING_MOVE_TIME)
+        if (!Number.isInteger(target) || target < 0 || target > 3 || target === this.lane)
             return false;
-        this.fromLane = this.lane;
+        this.fromLane = this.plateLane;
         this.lane = target;
         this.moveStarted = this.elapsed;
         return true;
@@ -124,9 +125,11 @@ class CookingRound {
         var _a;
         this.elapsed += delta;
         while (this.arrived < this.drops.length && this.drops[this.arrived].arrival <= this.elapsed) {
-            const drop = this.drops[this.arrived++];
+            const drop = this.drops[this.arrived];
             const { id, lane, arrival } = drop;
-            if (lane === this.lane && arrival >= this.moveStarted + exports.COOKING_MOVE_TIME) {
+            const canCatch = lane === this.lane && this.moveStarted + exports.COOKING_MOVE_TIME <= arrival;
+            this.arrived++;
+            if (canCatch) {
                 this.portions[id] = ((_a = this.portions[id]) !== null && _a !== void 0 ? _a : 0) + 1;
                 this.caught.add(drop);
             }
