@@ -1,0 +1,609 @@
+{
+  "build": "20261104-large-collection",
+  "checks": [
+    {
+      "style": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "ordinaryCards": 50,
+      "premiumCards": 10,
+      "locked": true,
+      "unlocked": true,
+      "allOpen": true
+    }
+  ],
+  "iconChecks": [
+    {
+      "style": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 3,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 3,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 3,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 1,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 2,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 390,
+        "height": 844
+      },
+      "level": 3,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 190,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 1,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 3,
+      "frame": "collection-style-01",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 4,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 3,
+      "frame": "collection-style-04",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 8,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 3,
+      "frame": "collection-style-08",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 1,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 2,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    },
+    {
+      "style": 9,
+      "size": {
+        "width": 360,
+        "height": 640
+      },
+      "level": 3,
+      "frame": "collection-style-09",
+      "textureWidth": 320,
+      "logicalWidth": 182.85714285714283,
+      "titleSeparate": true,
+      "settingsSeparate": true,
+      "aboveStage": true,
+      "proportional": true,
+      "fallbackHidden": true,
+      "noOldFood": true,
+      "onScreen": true,
+      "clickable": true
+    }
+  ],
+  "rapidSwitch": true,
+  "detailReturn": true,
+  "picked": {
+    "correctFrame": true,
+    "tray": true
+  },
+  "restarts": [
+    {
+      "index": 0,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "index": 1,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "index": 2,
+      "preserved": true,
+      "layoutChanged": true
+    },
+    {
+      "event": "failure",
+      "refreshed": true
+    },
+    {
+      "event": "win",
+      "refreshed": true
+    },
+    {
+      "event": "daily",
+      "resetToFirst": true
+    }
+  ],
+  "collectionGuarantee": {
+    "firstClean": true,
+    "secondClean": true,
+    "guaranteed": true,
+    "discovered": 0,
+    "restartPreserved": true,
+    "repeatUncollected": true,
+    "failureUncollected": true,
+    "normalCollectionStillGuarantees": true,
+    "laterUsesNormalDraw": true
+  },
+  "formattedShaderStages": 0,
+  "shaderErrors": [],
+  "errors": [],
+  "missing": []
+}

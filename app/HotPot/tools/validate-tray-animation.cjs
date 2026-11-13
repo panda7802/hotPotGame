@@ -4,18 +4,41 @@ const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');
-const creatorRoot = process.env.COCOS_CREATOR_388 || 'C:\\ProgramData\\cocos\\editors\\Creator\\3.8.8';
-const ts = require(path.join(creatorRoot, 'resources', 'app.asar.unpacked', 'node_modules', 'typescript'));
-const sourcePath = path.join(__dirname, '..', 'assets', 'scripts', 'core', 'HotPotGame.ts');
+const creatorRoot =
+  process.env.COCOS_CREATOR_388 ||
+  'C:\\ProgramData\\cocos\\editors\\Creator\\3.8.8';
+const ts = require(
+  path.join(
+    creatorRoot,
+    'resources',
+    'app.asar.unpacked',
+    'node_modules',
+    'typescript',
+  ),
+);
+const sourcePath = path.join(
+  __dirname,
+  '..',
+  'assets',
+  'scripts',
+  'core',
+  'HotPotGame.ts',
+);
 const compiled = ts.transpileModule(fs.readFileSync(sourcePath, 'utf8'), {
-  compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019, experimentalDecorators: true},
-  fileName: sourcePath, reportDiagnostics: true,
+  compilerOptions: {
+    module: ts.ModuleKind.CommonJS,
+    target: ts.ScriptTarget.ES2019,
+    experimentalDecorators: true,
+  },
+  fileName: sourcePath,
+  reportDiagnostics: true,
 });
 assert.strictEqual(compiled.diagnostics.length, 0);
 
 // Keep tween completion pending so multiple matches can run concurrently.
 const completions = [];
 const animatedTargets = [];
+const movements = [];
 
 /**
  * 测试中模拟 Vec3 的最小行为。
@@ -45,6 +68,7 @@ Vec3.ONE = new Vec3(1, 1, 1);
  * 测试中模拟 Node 的最小行为。
  */
 class Node {
+  off() {}
   /**
    * 初始化实例的内部状态和依赖。
    */
@@ -61,6 +85,7 @@ class Node {
      * 节点相对父节点的位置。
      */
     this.position = new Vec3();
+    this.scale = new Vec3(1, 1, 1);
   }
 
   /**
@@ -68,6 +93,14 @@ class Node {
    */
   addChild(child) {
     child.setParent(this);
+  }
+
+  setSiblingIndex(index) {
+    if (this.parent) {
+      const children = this.parent.children;
+      children.splice(children.indexOf(this), 1);
+      children.splice(index, 0, this);
+    }
   }
 
   /**
@@ -86,7 +119,11 @@ class Node {
     /**
      * 按条件筛选或判断条目：child !== this。
      */
-    if (this.parent) this.parent.children = this.parent.children.filter( child => child !== this);
+    if (this.parent) {
+      this.parent.children = this.parent.children.filter(
+        (child) => child !== this,
+      );
+    }
     this.parent = null;
   }
 
@@ -114,21 +151,28 @@ class Node {
     /**
      * 为测试场景提供 fill 所需的模拟行为。
      */
-    return { setContentSize() {},  clear() {},  roundRect() {},  fill() {} };
+    return {setContentSize() {}, clear() {}, roundRect() {}, fill() {}};
   }
 
   /**
    * 在组件替身中查找或添加指定类型的组件。
    */
-  addComponent() {return {};}
+  addComponent() {
+    return {circle() {}, fill() {}, stroke() {}, moveTo() {},
+      bezierCurveTo() {}, roundRect() {}};
+  }
   /**
    * 更新 setPosition 对应的状态。
    */
-  setPosition(x, y, z = 0) {this.position = new Vec3(x, y, z);}
+  setPosition(x, y, z = 0) {
+    this.position = typeof x === 'object' ? x.clone() : new Vec3(x, y, z);
+  }
   /**
    * 更新 setScale 对应的状态。
    */
-  setScale(x, y, z) {this.scale = new Vec3(x, y, z);}
+  setScale(x, y, z) {
+    this.scale = new Vec3(x, y, z);
+  }
 
   /**
    * 读取或查找 getChildByName 对应的数据，供测试使用。
@@ -137,9 +181,10 @@ class Node {
     /**
      * 按条件筛选或判断条目：child.name === name。
      */
-    return this.children.find( child => child.name === name);
+    return this.children.find((child) => child.name === name);
   }
 }
+Node.EventType = {TOUCH_END: 'touch-end'};
 
 const cc = {
   /**
@@ -151,14 +196,26 @@ const cc = {
   /**
    * 测试中模拟 匿名组件 的最小行为。
    */
-  _decorator: {ccclass:  () =>  klass => klass}, Component:  class {
-  /**
-   * 测试中模拟 匿名组件 的最小行为。
-   */
-  /**
-   * 为测试场景提供 fromHEX 所需的模拟行为。
-   */
-  }, Node, Vec3, Color:  class {  fromHEX() {return this;} },
+  _decorator: {ccclass: () => (klass) => klass},
+  Component: class {
+    scheduleOnce(callback) {
+      completions.push(callback);
+    }
+    /**
+     * 测试中模拟 匿名组件 的最小行为。
+     */
+    /**
+     * 为测试场景提供 fromHEX 所需的模拟行为。
+     */
+  },
+  Node,
+  Tween: {stopAllByTarget() {}},
+  Vec3,
+  Color: class {
+    fromHEX() {
+      return this;
+    }
+  },
   /**
    * 为测试场景提供 tween 所需的模拟行为。
    */
@@ -169,14 +226,17 @@ const cc = {
       /**
        * 为测试场景提供 to 所需的模拟行为。
        */
-      to() {
+      to(duration, properties) {
+        movements.push({target, duration, properties});
         return chain;
-      /**
-       * 为测试场景提供 delay 所需的模拟行为。
-       */
-      },  delay() {
+        /**
+         * 为测试场景提供 delay 所需的模拟行为。
+         */
+      },
+      delay() {
         return chain;
       },
+      set() { return chain; },
       /**
        * 为测试场景提供 call 所需的模拟行为。
        */
@@ -188,7 +248,10 @@ const cc = {
        * 创建并清空小游戏的 WebGL 启动画布。
        */
       start() {
-        completions.push(...callbacks);
+        // Match Cocos: hiding a target node pauses its tween callbacks.
+        completions.push(...callbacks.map(callback => () => {
+          if (!(target instanceof Node) || target.active !== false) callback();
+        }));
         return chain;
       },
     };
@@ -202,24 +265,34 @@ const testMath = Object.create(Math);
 /**
  * 为测试场景提供 random 所需的模拟行为。
  */
-testMath.random =  () => fixedRandom === null ? Math.random() : fixedRandom;
+testMath.random = () => (fixedRandom === null ? Math.random() : fixedRandom);
 /**
  * 编译并载入测试依赖模块。
  */
 function loadDependency(name, parent = sourcePath) {
-  if (name === 'cc') return cc;
+  if (name === 'cc') {
+    return cc;
+  }
   const filename = path.resolve(path.dirname(parent), name) + '.ts';
-  if (dependencies[filename]) return dependencies[filename];
+  if (dependencies[filename]) {
+    return dependencies[filename];
+  }
   const result = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
-    compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019},
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2019,
+    },
   });
   const exports = {};
   vm.runInNewContext(result.outputText, {
-    exports, setTimeout, clearTimeout, Math: testMath,
+    exports,
+    setTimeout,
+    clearTimeout,
+    Math: testMath,
     /**
      * 为测试场景提供 require 所需的模拟行为。
      */
-    require:  child => loadDependency(child, filename)
+    require: (child) => loadDependency(child, filename),
   });
   dependencies[filename] = exports;
   return exports;
@@ -228,18 +301,34 @@ vm.runInNewContext(compiled.outputText, {
   exports: moduleObject.exports,
   require: loadDependency,
 });
-const Game = moduleObject.exports.HotPotGame;
+// Exercise the real gameplay layer with the existing rendering stubs. Native
+// skin overlays, transforms and actual clicks are checked in the web engine by
+// verify-design-720.cjs, rather than pretending to render them in this harness.
+const Game = loadDependency('./HotPotLegacyGame').HotPotLegacyGame;
 
-for (const [levelIndex, status, expected] of [[0, 'lost', 0], [1, 'lost', 1], [2, 'lost', 2],
-[2, 'playing', 2], [2, 'won', 2]]) {
+for (const [levelIndex, status, expected] of [
+  [0, 'lost', 0],
+  [1, 'lost', 1],
+  [2, 'lost', 2],
+  [2, 'playing', 2],
+  [2, 'won', 2],
+]) {
   const retry = new Game();
-  retry.levelIndex = levelIndex; retry.lastResult = status; retry.gameEnded = status !== 'playing';
+  retry.levelIndex = levelIndex;
+  retry.lastResult = status;
+  retry.gameEnded = status !== 'playing';
   /**
    * 生成并显示指定关卡，按需保存。
    */
-  retry.loadLevel =  index => {retry.loadedLevel = index;};
+  retry.loadLevel = (index) => {
+    retry.loadedLevel = index;
+  };
   retry.restartLevel();
-  assert.strictEqual(retry.loadedLevel, expected, `retry rule for level ${levelIndex + 1}, ${status}`);
+  assert.strictEqual(
+    retry.loadedLevel,
+    expected,
+    `retry rule for level ${levelIndex + 1}, ${status}`,
+  );
 }
 const dayResume = new Game();
 dayResume.levelData = {};
@@ -250,24 +339,38 @@ dayResume.node = new Node('Game');
 /**
  * 立即执行待处理的同步。
  */
-dayResume.playerService = {beginDailySession:  () => true, flush:  async () => {}, isConflict: false};
+dayResume.playerService = {
+  beginDailySession: () => true,
+  flush: async () => {},
+  isConflict: false,
+};
 /**
  * 显示短暂的文字提示。
  */
-dayResume.dismissPlayerMenu = dayResume.showToast =  () => {};
+dayResume.dismissPlayerMenu = dayResume.showToast = () => {};
 /**
  * 生成并显示指定关卡，按需保存。
  */
-dayResume.loadLevel =  index => {dayResume.resumedLevel = index;};
+dayResume.loadLevel = (index) => {
+  dayResume.resumedLevel = index;
+};
 dayResume.resumePlayerDay();
-assert.strictEqual(dayResume.resumedLevel, 0, 'foreground entry on a new day resets the visible board');
+assert.strictEqual(
+  dayResume.resumedLevel,
+  0,
+  'foreground entry on a new day resets the visible board',
+);
 /**
  * 进入本地自然日对应的新对局。
  */
-dayResume.playerService.beginDailySession =  () => false;
+dayResume.playerService.beginDailySession = () => false;
 dayResume.resumedLevel = 2;
 dayResume.resumePlayerDay();
-assert.strictEqual(dayResume.resumedLevel, 2, 'same-day foreground entry must not reset the visible board');
+assert.strictEqual(
+  dayResume.resumedLevel,
+  2,
+  'same-day foreground entry must not reset the visible board',
+);
 
 /**
  * 建立托盘动画测试所用的游戏实例。
@@ -281,26 +384,23 @@ function makeGame(tray) {
   /**
    * 统计棋盘上尚未移除的牌。
    */
-  game.remainingTiles =  () => 20;
+  game.remainingTiles = () => 20;
   /**
    * 在托盘指定位置播放消除粒子效果。
    */
-  game.playEffect = game.showToast = game.createTrayMatchBurst =  () => {
-  };
+  game.playEffect = game.showToast = game.createTrayMatchBurst = () => {};
   /**
    * 关闭当前结果弹窗。
    */
-  game.renderReserve = game.dismissOverlay =  () => {
-  };
+  game.renderReserve = game.dismissOverlay = () => {};
   /**
    * 刷新道具可用状态与次数。
    */
-  game.updateProgress = game.updateToolButtons =  () => {
-  };
+  game.updateProgress = game.updateToolButtons = () => {};
   /**
    * 处理通关或失败，并保存本局结果。
    */
-  game.endGame =  won => {
+  game.endGame = (won) => {
     game.result = won;
     game.gameEnded = true;
     game.locked = true;
@@ -310,18 +410,23 @@ function makeGame(tray) {
   /**
    * 依据托盘数据重新绘制食材节点。
    */
-  game.renderTray =  () => {
+  game.renderTray = () => {
     /**
      * 按条件筛选或判断条目：child.name !== 'MatchEffects'。
      */
     /**
      * 依次处理集合中的每个条目。
      */
-    game.trayNode.children.slice().filter( child => child.name !== 'MatchEffects').forEach( child => child.destroy());
+    game.trayNode.children
+      .slice()
+      .filter((child) => child.name !== 'MatchEffects')
+      .forEach((child) => child.destroy());
     /**
      * 依次处理集合中的每个条目。
      */
-    game.tray.forEach((_, i) => game.trayNode.addChild(new Node(`TrayItem_${i}`)));
+    game.tray.forEach((_, i) =>
+      game.trayNode.addChild(new Node(`TrayItem_${i}`)),
+    );
   };
   return game;
 }
@@ -330,14 +435,18 @@ function makeGame(tray) {
  * 模拟选择一张可取的棋盘牌。
  */
 function pick(game, type) {
-  assert(!game.locked && !game.gameEnded, 'next pick must be allowed during match animation');
+  assert(
+    !game.locked && !game.gameEnded,
+    'next pick must be allowed during match animation',
+  );
   game.locked = true;
   game.insertIntoTray(type);
   game.resolveTray();
 }
 
 const game = makeGame(['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'fish']);
-pick(game, 'beef'); // Seventh tile completes a triple: only four occupied slots.
+// Seventh tile completes a triple: only four occupied slots.
+pick(game, 'beef');
 assert.deepStrictEqual(game.tray, ['shrimp', 'shrimp', 'corn', 'fish']);
 assert.strictEqual(game.result, undefined);
 assert(!game.locked);
@@ -346,14 +455,25 @@ assert.deepStrictEqual(game.tray, ['corn', 'fish']);
 /**
  * 按条件筛选或判断条目：child.name === 'MatchEffects'。
  */
-assert.strictEqual(game.trayNode.children.filter( child => child.name === 'MatchEffects').length, 2);
+assert.strictEqual(
+  game.trayNode.children.filter((child) => child.name === 'MatchEffects')
+    .length,
+  2,
+);
 pick(game, 'egg');
 const settled = game.tray.slice();
 /**
  * 依次处理集合中的每个条目。
  */
-completions.splice(0).reverse().forEach( callback => callback());
-assert.deepStrictEqual(game.tray, settled, 'old animation callbacks must not delete new tiles');
+completions
+  .splice(0)
+  .reverse()
+  .forEach((callback) => callback());
+assert.deepStrictEqual(
+  game.tray,
+  settled,
+  'old animation callbacks must not delete new tiles',
+);
 assert.strictEqual(game.result, undefined);
 
 const restart = makeGame(['beef', 'beef']);
@@ -364,7 +484,7 @@ restart.locked = true; // A new move after restart/undo must keep its own lock.
 /**
  * 依次处理集合中的每个条目。
  */
-completions.splice(0).forEach( callback => callback());
+completions.splice(0).forEach((callback) => callback());
 assert.deepStrictEqual(restart.tray, ['corn']);
 assert.strictEqual(restart.locked, true);
 
@@ -375,13 +495,25 @@ const win = makeGame(['beef', 'beef']);
 /**
  * 统计棋盘上尚未移除的牌。
  */
-win.remainingTiles =  () => 0;
+win.remainingTiles = () => 0;
 pick(win, 'beef');
 assert.strictEqual(win.result, true);
 assert.strictEqual(win.tray.length, 0);
-console.log('Concurrent matches, seventh-slot match, stale callbacks, full tray and victory: OK');
+console.log(
+  'Concurrent matches, seventh-slot match' +
+    ', stale callbacks, full tray and victo' +
+    'ry: OK',
+);
 
-const revival = makeGame(['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish']);
+const revival = makeGame([
+  'beef',
+  'beef',
+  'shrimp',
+  'shrimp',
+  'corn',
+  'corn',
+  'fish',
+]);
 revival.levelData.tiles = [];
 revival.gameEnded = true;
 revival.locked = true;
@@ -389,12 +521,20 @@ const original = revival.tray.slice().sort();
 revival.revive();
 assert.strictEqual(revival.tray.length, 4);
 assert.strictEqual(revival.reserve.length, 3);
-assert.deepStrictEqual([...revival.tray, ...revival.reserve].sort(), original,
-  'reviving must preserve every ingredient');
+assert.deepStrictEqual(
+  [...revival.tray, ...revival.reserve].sort(),
+  original,
+  'reviving must preserve every ingredient',
+);
 assert(revival.reviveUsed && !revival.gameEnded && !revival.locked);
 revival.revive();
-assert.strictEqual(revival.reserve.length, 3, 'double click must not grant another revive');
+assert.strictEqual(
+  revival.reserve.length,
+  3,
+  'double click must not grant another revive',
+);
 revival.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 assert.strictEqual(revival.reserve.length, 2);
 assert.strictEqual(revival.tray.length, 5);
 revival.levelIndex = 1;
@@ -402,33 +542,101 @@ revival.toolUses.undo = 1;
 /**
  * 刷新道具可用状态与次数。
  */
-revival.rebuildBoardTiles = revival.updateProgress = revival.updateToolButtons =  () => {
-};
+revival.rebuildBoardTiles =
+  revival.updateProgress =
+  revival.updateToolButtons =
+    () => {};
 revival.useUndoTool();
-assert.strictEqual(revival.reserve.length, 3, 'undo must restore the reserved tile');
+assert.strictEqual(
+  revival.reserve.length,
+  3,
+  'undo must restore the reserved tile',
+);
 assert.strictEqual(revival.tray.length, 4);
 assert(revival.reviveUsed, 'undo cannot restore the revive allowance');
 revival.gameEnded = true;
 revival.tray = original.slice();
 revival.revive();
-assert.strictEqual(revival.tray.length, 7, 'second failure cannot revive again');
+assert.strictEqual(
+  revival.tray.length,
+  7,
+  'second failure cannot revive again',
+);
 
 const reserveFinish = makeGame([]);
 reserveFinish.levelData.tiles = [];
 /**
  * 统计棋盘上尚未移除的牌。
  */
-reserveFinish.remainingTiles =  () => 0;
+reserveFinish.remainingTiles = () => 0;
 reserveFinish.reserve = ['beef', 'beef', 'beef'];
 reserveFinish.resolveTray();
-assert.strictEqual(reserveFinish.result, undefined, 'reserved tiles must prevent early victory');
+assert.strictEqual(
+  reserveFinish.result,
+  undefined,
+  'reserved tiles must prevent early victory',
+);
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 reserveFinish.takeReservedTile(0);
+completions.splice(0).forEach((callback) => callback());
 assert.strictEqual(reserveFinish.result, true);
 assert.strictEqual(reserveFinish.reserve.length, 0);
 assert.strictEqual(reserveFinish.tray.length, 0);
-console.log('Free revive, ingredient conservation, duplicate requests, reserve undo and final match: OK');
+console.log(
+  'Free revive, ingredient conservation, ' +
+    'duplicate requests, reserve undo and f' +
+    'inal match: OK',
+);
+
+// Use the real renderer when returning the last reserved tile, so the reserve
+// node is actually hidden rather than bypassed by the normal rendering stub.
+function takeLastReserved(tray, type, remaining = 20) {
+  const game = makeGame(tray);
+  game.levelData.tiles = [];
+  game.board = new Node('Board');
+  game.reserveNode = new Node('Reserve');
+  game.reserveNode.active = true;
+  game.reserve = [type];
+  game.remainingTiles = () => remaining;
+  game.renderReserve = Game.prototype.renderReserve;
+  game.takeReservedTile(0);
+  assert.strictEqual(game.reserveNode.active, false, 'last return hides reserve');
+  assert.strictEqual(game.locked, true, 'settlement is still pending');
+  return game;
+}
+
+const lastUnmatched = takeLastReserved(['corn'], 'beef');
+lastUnmatched.takeReservedTile(0);
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastUnmatched.locked, false, 'last return must unlock input');
+assert.strictEqual(lastUnmatched.tray.length, 2, 'repeat input cannot duplicate food');
+pick(lastUnmatched, 'shrimp');
+assert.strictEqual(lastUnmatched.tray.length, 3, 'next move must still work');
+
+const lastMatched = takeLastReserved(['beef', 'beef'], 'beef');
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastMatched.locked, false);
+assert.strictEqual(lastMatched.tray.length, 0, 'last reserved tile must match');
+
+const lastWinning = takeLastReserved(['beef', 'beef'], 'beef', 0);
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastWinning.result, true, 'last reserved match must win');
+
+const lastFull = takeLastReserved(
+  ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn'], 'fish');
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(lastFull.result, false, 'last return into full tray must lose');
+
+const lastStale = takeLastReserved([], 'beef');
+lastStale.levelData = {config: {traySize: 7}};
+let staleSettlements = 0;
+lastStale.resolveTray = () => { staleSettlements += 1; };
+completions.splice(0).forEach(callback => callback());
+assert.strictEqual(staleSettlements, 0, 'old return must not settle a new level');
+console.log('Last reserved tile: input, match, victory, defeat and stale callback OK');
 
 const stages = makeGame([]);
 stages.levelData = {total: 888, config: {level: 3, traySize: 7}};
@@ -436,15 +644,19 @@ let remaining = 789;
 /**
  * 统计棋盘上尚未移除的牌。
  */
-stages.remainingTiles =  () => remaining;
+stages.remainingTiles = () => remaining;
 assert.strictEqual(stages.grantBoilRewards(), '');
-remaining = 786; // Triple crosses 100 at 102; exact equality must not be required.
+// Triple crosses 100 at 102; exact equality must not be required.
+remaining = 786;
 assert(stages.grantBoilRewards());
 assert.strictEqual(stages.rewardedMilestones, 1);
 /**
  * 把集合条目汇总为一个结果。
  */
-assert.strictEqual(Object.values(stages.toolUses).reduce((a, b) => a + b), 1);
+assert.strictEqual(
+  Object.values(stages.toolUses).reduce((a, b) => a + b),
+  1,
+);
 remaining = 789; // Undo and replay cannot duplicate a milestone reward.
 stages.grantBoilRewards();
 remaining = 786;
@@ -452,16 +664,27 @@ assert.strictEqual(stages.grantBoilRewards(), '');
 remaining = 0;
 stages.tray = ['beef', 'beef'];
 stages.reserve = ['corn'];
-assert.strictEqual(stages.clearedTileCount(), 885, 'picked and reserved tiles are not eliminated');
+assert.strictEqual(
+  stages.clearedTileCount(),
+  885,
+  'picked and reserved tiles are not eliminated',
+);
 stages.grantBoilRewards();
 assert.strictEqual(stages.rewardedMilestones, 8);
 /**
  * 把集合条目汇总为一个结果。
  */
-assert.strictEqual(Object.values(stages.toolUses).reduce((a, b) => a + b), 8);
+assert.strictEqual(
+  Object.values(stages.toolUses).reduce((a, b) => a + b),
+  8,
+);
 stages.levelData.config.level = 2;
 stages.rewardedMilestones = 0;
-assert.strictEqual(stages.grantBoilRewards(), '', 'other levels have no stage rewards');
+assert.strictEqual(
+  stages.grantBoilRewards(),
+  '',
+  'other levels have no stage rewards',
+);
 
 completions.splice(0);
 const flip = makeGame(['corn']);
@@ -471,18 +694,23 @@ flip.board = new Node('Board');
 /**
  * 根据食材类型和遮挡状态绘制牌面。
  */
-flip.drawTile =  () => {
-};
+flip.drawTile = () => {};
 /**
  * 将当前条目转换为后续处理所需的值。
  */
 flip.levelData.tiles = ['beef', 'shrimp', 'beef'].map((type, i) => ({
-  id: `tile${i}`, type, removed: false, blockedBy: [], x: i * 100, y: 0, layer: 0,
+  id: `tile${i}`,
+  type,
+  removed: false,
+  blockedBy: [],
+  x: i * 100,
+  y: 0,
+  layer: 0,
 }));
 /**
  * 依次处理集合中的每个条目。
  */
-flip.levelData.tiles.forEach( tile => {
+flip.levelData.tiles.forEach((tile) => {
   const node = new Node(tile.id);
   node.scale = new Vec3(1, 1, 1);
   flip.tileNodes.set(tile.id, node);
@@ -492,25 +720,38 @@ animatedTargets.length = 0;
 /**
  * 将当前条目转换为后续处理所需的值。
  */
-const beforeFlip = flip.levelData.tiles.map( tile => tile.type).sort();
+const beforeFlip = flip.levelData.tiles.map((tile) => tile.type).sort();
 flip.useShuffleTool();
 /**
  * 按条件筛选或判断条目：animatedTargets.includes(flip.tileNodes.get(tile.id))。
  */
-assert(flip.levelData.tiles.every( tile => animatedTargets.includes(flip.tileNodes.get(tile.id))),
-  'all remaining tiles, including covered tiles, must join the shuffle animation');
+assert(
+  flip.levelData.tiles.every((tile) =>
+    animatedTargets.includes(flip.tileNodes.get(tile.id)),
+  ),
+  'all remaining tiles, including covered' +
+    ' tiles, must join the shuffle animatio' +
+    'n',
+);
 assert(flip.locked, 'flip animation must temporarily lock input');
 flip.useShuffleTool();
-assert.strictEqual(flip.toolUses.shuffle, 1, 'double click must not consume two tools');
+assert.strictEqual(
+  flip.toolUses.shuffle,
+  1,
+  'double click must not consume two tools',
+);
 /**
  * 依次处理集合中的每个条目。
  */
-completions.splice(0).forEach( callback => callback());
+completions.splice(0).forEach((callback) => callback());
 assert(!flip.locked);
 /**
  * 将当前条目转换为后续处理所需的值。
  */
-assert.deepStrictEqual(flip.levelData.tiles.map( tile => tile.type).sort(), beforeFlip);
+assert.deepStrictEqual(
+  flip.levelData.tiles.map((tile) => tile.type).sort(),
+  beforeFlip,
+);
 assert.deepStrictEqual(flip.tray, ['corn']);
 flip.useShuffleTool();
 flip.levelData = {config: {level: 1, traySize: 7}, tiles: []};
@@ -518,9 +759,13 @@ flip.locked = true;
 /**
  * 依次处理集合中的每个条目。
  */
-completions.splice(0).forEach( callback => callback());
+completions.splice(0).forEach((callback) => callback());
 assert(flip.locked, 'old flip callback cannot unlock a new game');
-console.log('100-tile milestones, no reward farming, eight rewards, flip animation and stale callbacks: OK');
+console.log(
+  '100-tile milestones, no reward farming' +
+    ', eight rewards, flip animation and st' +
+    'ale callbacks: OK',
+);
 
 const countdown = makeGame([]);
 countdown.levelData = {total: 888, tiles: [], config: {level: 3}};
@@ -528,23 +773,32 @@ countdown.progressLabel = {};
 /**
  * 统计棋盘上尚未移除的牌。
  */
-countdown.remainingTiles =  () => 885;
+countdown.remainingTiles = () => 885;
 Game.prototype.updateProgress.call(countdown);
-assert.strictEqual(countdown.progressLabel.string, '距离下一次获取道具还有97个');
+assert.strictEqual(
+  countdown.progressLabel.string,
+  '距离下一次获取道具还有97个',
+);
 countdown.rewardedMilestones = 1;
 /**
  * 统计棋盘上尚未移除的牌。
  */
-countdown.remainingTiles =  () => 786;
+countdown.remainingTiles = () => 786;
 Game.prototype.updateProgress.call(countdown);
-assert.strictEqual(countdown.progressLabel.string, '距离下一次获取道具还有98个');
+assert.strictEqual(
+  countdown.progressLabel.string,
+  '距离下一次获取道具还有98个',
+);
 countdown.rewardedMilestones = 8;
 /**
  * 统计棋盘上尚未移除的牌。
  */
-countdown.remainingTiles =  () => 87;
+countdown.remainingTiles = () => 87;
 Game.prototype.updateProgress.call(countdown);
-assert.strictEqual(countdown.progressLabel.string, '本局开锅道具已全部领取，继续捞！');
+assert.strictEqual(
+  countdown.progressLabel.string,
+  '本局开锅道具已全部领取，继续捞！',
+);
 console.log('Third-level reward countdown and final reward message: OK');
 
 const actualData = loadDependency('../data/GameData');
@@ -558,7 +812,13 @@ function persistedGame() {
   /**
    * 更新当前对局并安排同步。
    */
-  game.playerService = { setSave(save) {writes.push(saveDomain.validateGameSave(save));} };
+  game.playerService = {
+    state: {progress: {discovered: []}},
+    beginDailySession: () => false,
+    setSave(save) {
+      writes.push(saveDomain.validateGameSave(save));
+    },
+  };
   game.board = new Node('Board');
   game.foodTransitionLayer = new Node('FoodTransitionLayer');
   game.toolBar = {};
@@ -566,11 +826,55 @@ function persistedGame() {
   /**
    * 刷新全部牌的可选状态和外观。
    */
-  game.createTileNode = game.refreshTileStates =  () => {};
+  game.refreshTileStates = game.drawTile = () => {};
+  game.createTileNode = (tile) => {
+    const node = new Node(`Tile_${tile.id}`);
+    node.setPosition(tile.x, tile.y, tile.layer);
+    game.board.addChild(node);
+    game.tileNodes.set(tile.id, node);
+  };
   game.remainingTiles = Game.prototype.remainingTiles.bind(game);
   game.loadLevel(1);
   return {game, writes};
 }
+
+// Use real tap handling and settlement with controlled flight completions.
+const rapid = persistedGame();
+rapid.game.flyTrayTile = (node, _tray, transition, _index, _scale, arrive) => {
+  node.setParent(transition);
+  completions.push(arrive);
+};
+const rapidTiles = rapid.game.levelData.tiles
+  .filter(tile => rapid.game.isTileSelectable(tile)).slice(0, 3);
+rapidTiles.forEach(tile => rapid.game.createTileNode(tile));
+const writesBeforeRapid = rapid.writes.length;
+for (const tile of [rapidTiles[0], rapidTiles[1], rapidTiles[1], rapidTiles[2]]) {
+  rapid.game.onTileClicked(tile);
+}
+assert.strictEqual(rapid.game.remainingTiles(), 29);
+assert.strictEqual(rapid.writes.length, writesBeforeRapid);
+while (completions.length) completions.shift()();
+assert(!rapid.game.locked);
+assert.deepStrictEqual(
+  rapid.writes.slice(writesBeforeRapid).map(save =>
+    Array.from(rapidTiles, tile => save.removedIds.includes(tile.id))),
+  [[true, false, false], [true, true, false], [true, true, true]],
+  'rapid clicks must settle once each in input order',
+);
+
+rapid.game.loadLevel(1);
+const resetTiles = rapid.game.levelData.tiles
+  .filter(tile => rapid.game.isTileSelectable(tile)).slice(0, 2);
+for (const tile of resetTiles) {
+  rapid.game.createTileNode(tile);
+  rapid.game.onTileClicked(tile);
+}
+rapid.game.loadLevel(0);
+while (completions.length) completions.shift()();
+assert.strictEqual(rapid.game.remainingTiles(), 18);
+assert.strictEqual(rapid.game.tray.length, 0);
+assert(!rapid.game.locked);
+console.log('Rapid tile clicks: input order, duplicates and restart isolation: OK');
 for (const reviveUsed of [false, true]) {
   const failure = persistedGame();
   failure.game.loadLevel(2);
@@ -582,52 +886,81 @@ for (const reviveUsed of [false, true]) {
   /**
    * 按条件筛选或判断条目：{ if ((counts[tile.type] || 0) >= 2) return false; counts[ti。
    */
-  const selected = failure.game.levelData.tiles.filter( tile => tile.blockedBy.length === 0).filter( tile => {
-    if ((counts[tile.type] || 0) >= 2) return false;
-    counts[tile.type] = (counts[tile.type] || 0) + 1;
-    return true;
-  }).slice(0, 7);
+  const selected = failure.game.levelData.tiles
+    .filter((tile) => tile.blockedBy.length === 0)
+    .filter((tile) => {
+      if ((counts[tile.type] || 0) >= 2) {
+        return false;
+      }
+      counts[tile.type] = (counts[tile.type] || 0) + 1;
+      return true;
+    })
+    .slice(0, 7);
   assert.strictEqual(selected.length, 7);
   /**
    * 依次处理集合中的每个条目。
    */
-  selected.forEach( tile => {tile.removed = true; failure.game.insertIntoTray(tile.type);});
+  selected.forEach((tile) => {
+    tile.removed = true;
+    failure.game.insertIntoTray(tile.type);
+  });
   let failureDialog = false;
   /**
    * 绘制失败弹窗中的操作区域。
    */
-  failure.game.drawFailurePanel =  () => {failureDialog = true;};
+  failure.game.drawFailurePanel = () => {
+    failureDialog = true;
+  };
   Game.prototype.endGame.call(failure.game, false);
   const lostSave = failure.writes.at(-1);
   assert.strictEqual(lostSave.status, 'lost');
   assert.strictEqual(lostSave.levelIndex, 2);
   assert.strictEqual(failure.game.levelIndex, 2);
-  assert(failureDialog && failure.game.node.getChildByName('ResultOverlay'), 'third-level failure must allow retrying the current level');
+  assert(
+    failureDialog && failure.game.node.getChildByName('ResultOverlay'),
+    'third-level failure must allow retrying the current level',
+  );
   /**
    * 为测试场景提供 shape 所需的模拟行为。
    */
   /**
    * 将当前条目转换为后续处理所需的值。
    */
-  const shape =  level => JSON.stringify(level.tiles.map( tile => [tile.x, tile.y]));
+  const shape = (level) =>
+    JSON.stringify(level.tiles.map((tile) => [tile.x, tile.y]));
   const oldShape = shape(failure.game.levelData);
   if (!reviveUsed) {
     failure.game.revive();
-    assert.strictEqual(shape(failure.game.levelData), oldShape, 'free revival must retain the current third-level layout');
+    assert.strictEqual(
+      shape(failure.game.levelData),
+      oldShape,
+      'free revival must retain the current third-level layout',
+    );
     assert.strictEqual(failure.game.levelIndex, 2);
   }
   failure.game.restartLevel();
   assert.strictEqual(failure.writes.at(-1).levelIndex, 2);
   assert.strictEqual(failure.writes.at(-1).status, 'playing');
   assert.notStrictEqual(shape(failure.game.levelData), oldShape);
-  assert.strictEqual(failure.writes.at(-1).layoutSeed, failure.game.levelData.layoutSeed);
+  assert.strictEqual(
+    failure.writes.at(-1).layoutSeed,
+    failure.game.levelData.layoutSeed,
+  );
   const reopened = persistedGame();
   reopened.game.restoreGame(lostSave);
   assert.strictEqual(reopened.game.levelIndex, 2);
-  assert.strictEqual(shape(reopened.game.levelData), oldShape, 'restoring a same-day lost save must keep the saved third-level layout');
+  assert.strictEqual(
+    shape(reopened.game.levelData),
+    oldShape,
+    'restoring a same-day lost save must keep the saved third-level layout',
+  );
   const retrySave = failure.writes.at(-1);
   reopened.game.restoreGame(retrySave);
-  assert.strictEqual(shape(reopened.game.levelData), shape(failure.game.levelData), 'restoring the retried game must keep the new layout');
+  assert.strictEqual(
+    shape(reopened.game.levelData),
+    shape(failure.game.levelData),
+    'restoring the retried game must keep the new layout',
+  );
 }
 for (const randomValue of [0, 0.123, 0.999999]) {
   fixedRandom = randomValue;
@@ -638,54 +971,90 @@ for (const randomValue of [0, 0.123, 0.999999]) {
       /**
        * 将当前条目转换为后续处理所需的值。
        */
-      const before = JSON.stringify(repeated.game.levelData.tiles.map( tile => [tile.x, tile.y]));
+      const before = JSON.stringify(
+        repeated.game.levelData.tiles.map((tile) => [tile.x, tile.y]),
+      );
       repeated.game.restartLevel();
       /**
        * 将当前条目转换为后续处理所需的值。
        */
-      assert.notStrictEqual(JSON.stringify(repeated.game.levelData.tiles.map( tile => [tile.x, tile.y])), before,
-        'even a repeated random value must produce a different layout on retry');
+      assert.notStrictEqual(
+        JSON.stringify(
+          repeated.game.levelData.tiles.map((tile) => [tile.x, tile.y]),
+        ),
+        before,
+        'even a repeated random value must produce a different layout on retry',
+      );
       assert.strictEqual(repeated.game.levelIndex, 2);
     }
-  } finally {fixedRandom = null;}
+  } finally {
+    fixedRandom = null;
+  }
 }
-console.log('Third-level retry: same level, different geometry even on RNG collisions, fresh checkpoints and exact layout restoration: OK');
+console.log(
+  'Third-level retry: same level, differe' +
+    'nt geometry even on RNG collisions, fr' +
+    'esh checkpoints and exact layout resto' +
+    'ration: OK',
+);
 const persisted = persistedGame();
 assert.strictEqual(persisted.writes.length, 1);
 /**
  * 按条件筛选或判断条目：tile.layer === 1。
  */
-const topTiles = persisted.game.levelData.tiles.filter( tile => tile.layer === 1);
+const topTiles = persisted.game.levelData.tiles.filter(
+  (tile) => tile.layer === 1,
+);
 const matchType = topTiles[0].type;
 /**
  * 按条件筛选或判断条目：tile.type === matchType。
  */
-for (const tile of topTiles.filter( tile => tile.type === matchType).slice(0, 3)) {
+for (const tile of topTiles
+  .filter((tile) => tile.type === matchType)
+  .slice(0, 3)) {
   persisted.game.lastMoveSnapshot = {
-    tray: persisted.game.tray.slice(), reserve: [],
+    tray: persisted.game.tray.slice(),
+    reserve: [],
     /**
      * 按条件筛选或判断条目：item.removed。
      */
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    removedIds: persisted.game.levelData.tiles.filter( item => item.removed).map( item => item.id),
+    removedIds: persisted.game.levelData.tiles
+      .filter((item) => item.removed)
+      .map((item) => item.id),
   };
   persisted.game.locked = true;
   tile.removed = true;
   persisted.game.insertIntoTray(tile.type);
   const beforeResolve = persisted.writes.length;
   persisted.game.checkpointGame();
-  assert.strictEqual(persisted.writes.length, beforeResolve, 'flying tiles must not save half-settled state');
+  assert.strictEqual(
+    persisted.writes.length,
+    beforeResolve,
+    'flying tiles must not save half-settled state',
+  );
   persisted.game.resolveTray();
   assert.strictEqual(persisted.writes.length, beforeResolve + 1);
 }
-assert.strictEqual(persisted.writes.at(-1).tray.length, 0, 'save commits match immediately, before animation completes');
+assert.strictEqual(
+  persisted.writes.at(-1).tray.length,
+  0,
+  'save commits match immediately, before animation completes',
+);
 const saved = persisted.writes.at(-1);
 const afterRestore = persisted.writes.length;
 persisted.game.restoreGame(saved);
-assert.strictEqual(persisted.writes.length, afterRestore, 'restoring a checkpoint must not overwrite it with a fresh level');
-assert.deepStrictEqual(JSON.parse(JSON.stringify(persisted.game.levelData)), JSON.parse(JSON.stringify(saveDomain.restoreLevel(saved))));
+assert.strictEqual(
+  persisted.writes.length,
+  afterRestore,
+  'restoring a checkpoint must not overwrite it with a fresh level',
+);
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(persisted.game.levelData)),
+  JSON.parse(JSON.stringify(saveDomain.restoreLevel(saved))),
+);
 persisted.game.useUndoTool();
 assert.strictEqual(persisted.writes.at(-1).tray.length, 2);
 assert.strictEqual(persisted.writes.at(-1).toolUses.undo, 0);
@@ -696,16 +1065,22 @@ const typeCounts = {};
 /**
  * 按条件筛选或判断条目：tile.layer === 1。
  */
-for (const tile of savedRevive.game.levelData.tiles.filter( tile => tile.layer === 1)) {
+for (const tile of savedRevive.game.levelData.tiles.filter(
+  (tile) => tile.layer === 1,
+)) {
   if ((typeCounts[tile.type] || 0) < 2 && selected.length < 7) {
-    selected.push(tile); typeCounts[tile.type] = (typeCounts[tile.type] || 0) + 1;
+    selected.push(tile);
+    typeCounts[tile.type] = (typeCounts[tile.type] || 0) + 1;
   }
 }
 assert.strictEqual(selected.length, 7);
 /**
  * 依次处理集合中的每个条目。
  */
-selected.forEach( tile => {tile.removed = true; savedRevive.game.insertIntoTray(tile.type);});
+selected.forEach((tile) => {
+  tile.removed = true;
+  savedRevive.game.insertIntoTray(tile.type);
+});
 savedRevive.game.endGame(false);
 assert.strictEqual(savedRevive.writes.at(-1).status, 'lost');
 savedRevive.game.revive();
@@ -717,51 +1092,77 @@ savedRevive.game.restoreGame(revivalCheckpoint);
 assert(savedRevive.game.reviveUsed && savedRevive.game.reserve.length === 3);
 savedRevive.game.takeReservedTile(0);
 savedRevive.game.useUndoTool();
-assert.strictEqual(savedRevive.writes.at(-1).reserve.length, 3, 'reserve/undo remains available after restoration');
+assert.strictEqual(
+  savedRevive.writes.at(-1).reserve.length,
+  3,
+  'reserve/undo remains available after restoration',
+);
 
 completions.splice(0);
 const savedFlip = persistedGame();
 /**
  * 根据食材类型和遮挡状态绘制牌面。
  */
-savedFlip.game.drawTile =  () => {};
+savedFlip.game.drawTile = () => {};
 /**
  * 依次处理集合中的每个条目。
  */
-savedFlip.game.levelData.tiles.forEach( tile => {
-  const node = new Node(tile.id); node.scale = new Vec3(1, 1, 1);
+savedFlip.game.levelData.tiles.forEach((tile) => {
+  const node = new Node(tile.id);
+  node.scale = new Vec3(1, 1, 1);
   node.position = new Vec3(tile.x, tile.y, tile.layer);
   savedFlip.game.tileNodes.set(tile.id, node);
 });
 const writesBeforeFlip = savedFlip.writes.length;
 savedFlip.game.useShuffleTool();
-assert.strictEqual(savedFlip.writes.length, writesBeforeFlip, 'shuffle must wait until food types settle');
+assert.strictEqual(
+  savedFlip.writes.length,
+  writesBeforeFlip,
+  'shuffle must wait until food types settle',
+);
 /**
  * 依次处理集合中的每个条目。
  */
-completions.splice(0).forEach( callback => callback());
+completions.splice(0).forEach((callback) => callback());
 assert.strictEqual(savedFlip.writes.length, writesBeforeFlip + 1);
 assert.strictEqual(savedFlip.writes.at(-1).toolUses.shuffle, 0);
 /**
  * 将当前条目转换为后续处理所需的值。
  */
-assert.deepStrictEqual(JSON.parse(JSON.stringify(savedFlip.writes.at(-1).types)), JSON.parse(JSON.stringify(savedFlip.game.levelData.tiles.map( tile => tile.type))));
-console.log('Real save hooks: settled picks/matches, no restore overwrite, revive/reserve/undo and completed shuffle: OK');
+assert.deepStrictEqual(
+  JSON.parse(JSON.stringify(savedFlip.writes.at(-1).types)),
+  JSON.parse(
+    JSON.stringify(savedFlip.game.levelData.tiles.map((tile) => tile.type)),
+  ),
+);
+console.log(
+  'Real save hooks: settled picks/matches' +
+    ', no restore overwrite, revive/reserve' +
+    '/undo and completed shuffle: OK',
+);
 
-// Unlimited use bypasses only the allowance, preserving normal actions and valid saves.
+// Unlimited use bypasses only the allowance, preserving normal actions and
+// valid saves.
 completions.splice(0);
 const unlimited = persistedGame();
 unlimited.game.toolUses = {undo: 0, bomb: 0, shuffle: 0};
 unlimited.game.unlimitedTools = {undo: true, bomb: true, shuffle: true};
 unlimited.game.useUndoTool();
-assert.strictEqual(unlimited.game.toolUses.undo, 0, 'no move must remain a no-op');
+assert.strictEqual(
+  unlimited.game.toolUses.undo,
+  0,
+  'no move must remain a no-op',
+);
 for (let i = 0; i < 3; i++) {
   /**
    * 按条件筛选或判断条目：!tile.removed && tile.blockedBy.length === 0。
    */
-  const tile = unlimited.game.levelData.tiles.find( tile => !tile.removed && tile.blockedBy.length === 0);
+  const tile = unlimited.game.levelData.tiles.find(
+    (tile) => !tile.removed && tile.blockedBy.length === 0,
+  );
   unlimited.game.lastMoveSnapshot = {tray: [], reserve: [], removedIds: []};
-  tile.removed = true; unlimited.game.tray = [tile.type];
+  tile.removed = true;
+  unlimited.game.tray = [tile.type];
   unlimited.game.useUndoTool();
   assert(!tile.removed && unlimited.game.tray.length === 0);
   assert.strictEqual(unlimited.writes.at(-1).toolUses.undo, 0);
@@ -769,133 +1170,285 @@ for (let i = 0; i < 3; i++) {
 for (let i = 0; i < 3; i++) {
   const before = unlimited.game.remainingTiles();
   unlimited.game.useBombTool();
-  assert(unlimited.game.remainingTiles() < before, 'bomb must work repeatedly with zero normal uses');
+  assert(unlimited.game.locked, 'bomb input must lock during the effect');
+  while (completions.length) completions.shift()();
+  assert(
+    unlimited.game.remainingTiles() < before,
+    'bomb must work repeatedly with zero normal uses',
+  );
   assert.strictEqual(unlimited.writes.at(-1).toolUses.bomb, 0);
+  assert.strictEqual(unlimited.writes.at(-1).removedIds.length,
+    unlimited.game.levelData.tiles.filter(tile => tile.removed).length,
+    'bomb must save the settled result before its animation finishes');
 }
 for (let i = 0; i < 3; i++) {
   const before = unlimited.writes.length;
   unlimited.game.useShuffleTool();
   assert(unlimited.game.locked);
   unlimited.game.useBombTool();
-  assert.strictEqual(unlimited.writes.length, before, 'animation locks still apply in unlimited mode');
+  assert.strictEqual(
+    unlimited.writes.length,
+    before,
+    'animation locks still apply in unlimited mode',
+  );
   /**
    * 依次处理集合中的每个条目。
    */
-  completions.splice(0).forEach( callback => callback());
+  completions.splice(0).forEach((callback) => callback());
   assert(!unlimited.game.locked);
   assert.strictEqual(unlimited.writes.length, before + 1);
   assert.strictEqual(unlimited.writes.at(-1).toolUses.shuffle, 0);
 }
 for (const type of ['undo', 'bomb', 'shuffle']) {
   unlimited.game.unlimitedTools[type] = false;
-  assert(!unlimited.game.canUseTool(type), 'turning unlimited off must restore the exhausted allowance');
+  assert(
+    !unlimited.game.canUseTool(type),
+    'turning unlimited off must restore the exhausted allowance',
+  );
   unlimited.game.unlimitedTools[type] = true;
 }
 unlimited.game.gameEnded = true;
-assert(!unlimited.game.canUseTool('bomb'), 'unlimited mode cannot act after game over');
+assert(
+  !unlimited.game.canUseTool('bomb'),
+  'unlimited mode cannot act after game over',
+);
 unlimited.game.gameEnded = false;
 unlimited.game.node.addChild(new Node('BackdoorOverlay'));
-assert(!unlimited.game.canUseTool('bomb'), 'the backdoor must block tools while open');
+assert(
+  !unlimited.game.canUseTool('bomb'),
+  'the backdoor must block tools while open',
+);
 unlimited.game.node.getChildByName('BackdoorOverlay').destroy();
 const unlimitedSave = unlimited.writes.at(-1);
 unlimited.game.restoreGame(unlimitedSave);
 /**
  * 按条件筛选或判断条目：!value。
  */
-assert(Object.values(unlimited.game.unlimitedTools).every( value => !value), 'restoring a save resets local debug switches');
+assert(
+  Object.values(unlimited.game.unlimitedTools).every((value) => !value),
+  'restoring a save resets local debug switches',
+);
 for (const index of [1, 2, 0]) {
   unlimited.game.unlimitedTools = {undo: true, bomb: true, shuffle: true};
   unlimited.game.loadLevel(index);
   /**
    * 按条件筛选或判断条目：!value。
    */
-  assert(Object.values(unlimited.game.unlimitedTools).every( value => !value), 'restarting or switching level resets unlimited use');
+  assert(
+    Object.values(unlimited.game.unlimitedTools).every((value) => !value),
+    'restarting or switching level resets unlimited use',
+  );
 }
 unlimited.game.unlimitedTools = {undo: true, bomb: true, shuffle: true};
-assert(!unlimited.game.canUseTool('bomb'), 'the first level never enables tools');
+assert(
+  !unlimited.game.canUseTool('bomb'),
+  'the first level never enables tools',
+);
 /**
  * 按条件筛选或判断条目：!('unlimitedTools' in save)。
  */
-assert(unlimited.writes.every( save => !('unlimitedTools' in save)), 'debug flags must not enter player saves');
-console.log('Unlimited tools: repeated undo/bomb/shuffle at zero allowance, valid saves, lock/menu/end guards and round reset: OK');
+assert(
+  unlimited.writes.every((save) => !('unlimitedTools' in save)),
+  'debug flags must not enter player saves',
+);
+console.log(
+  'Unlimited tools: repeated undo/bomb/sh' +
+    'uffle at zero allowance, valid saves, ' +
+    'lock/menu/end guards and round reset: ' +
+    'OK',
+);
 
 // A bomb must keep the other hundreds of board/image nodes intact.
-const fastBomb = persistedGame(); fastBomb.game.loadLevel(2);
+const fastBomb = persistedGame();
+fastBomb.game.loadLevel(2);
 fastBomb.game.unlimitedTools.bomb = true;
-fastBomb.game.refreshTileStates = Game.prototype.refreshTileStates.bind(fastBomb.game);
-fastBomb.game.updateProgress = Game.prototype.updateProgress.bind(fastBomb.game);
+fastBomb.game.refreshTileStates = Game.prototype.refreshTileStates.bind(
+  fastBomb.game,
+);
+fastBomb.game.updateProgress = Game.prototype.updateProgress.bind(
+  fastBomb.game,
+);
 fastBomb.game.progressLabel = {};
 /**
  * 根据关卡数据重建棋盘牌节点。
  */
-fastBomb.game.createTileNode = fastBomb.game.rebuildBoardTiles =  () => assert.fail('bomb must never rebuild the board');
+fastBomb.game.createTileNode = fastBomb.game.rebuildBoardTiles = () =>
+  assert.fail('bomb must never rebuild the board');
 /**
  * 将当前条目转换为后续处理所需的值。
  */
-const allTiles = new Map(fastBomb.game.levelData.tiles.map( tile => [tile.id, tile]));
+const allTiles = new Map(
+  fastBomb.game.levelData.tiles.map((tile) => [tile.id, tile]),
+);
 for (const tile of allTiles.values()) {
   const node = new Node(`Tile_${tile.id}`);
   node.addChild(new Node('IngredientImage'));
   node.selectableState = fastBomb.game.isTileSelectable(tile, allTiles);
-  fastBomb.game.board.addChild(node); fastBomb.game.tileNodes.set(tile.id, node);
+  fastBomb.game.board.addChild(node);
+  fastBomb.game.tileNodes.set(tile.id, node);
 }
 /**
  * 按编号查找棋盘食材牌。
  */
-fastBomb.game.findTile =  () => assert.fail('board refresh must use indexed blocker lookup');
+fastBomb.game.findTile = () =>
+  assert.fail('board refresh must use indexed blocker lookup');
 for (let repeat = 0; repeat < 3; repeat++) {
   const previousNodes = new Map(fastBomb.game.tileNodes);
   /**
    * 为测试提供当前调用所需的回调行为。
    */
-  const previousStates = new Map(Array.from(previousNodes, ([id, node]) => [id, node.selectableState]));
+  const previousStates = new Map(
+    Array.from(previousNodes, ([id, node]) => [id, node.selectableState]),
+  );
   const redraws = [];
   /**
    * 根据食材类型和遮挡状态绘制牌面。
    */
-  fastBomb.game.drawTile =  (node, type, blocked) => {redraws.push(node); assert.strictEqual(blocked, !node.selectableState);};
+  fastBomb.game.drawTile = (node, type, blocked) => {
+    redraws.push(node);
+    assert.strictEqual(blocked, !node.selectableState);
+  };
   const before = fastBomb.game.remainingTiles();
   fastBomb.game.useBombTool();
+  while (completions.length) completions.shift()();
   const eliminated = before - fastBomb.game.remainingTiles();
-  assert(eliminated === 3 || eliminated === 6);
+  assert(eliminated >= 3 && eliminated <= 18 && eliminated % 3 === 0);
   assert.strictEqual(fastBomb.game.tileNodes.size, before - eliminated);
   let changed = 0;
   for (const [id, node] of previousNodes) {
     const tile = allTiles.get(id);
     if (tile.removed) {
-      assert(node.destroyed && !node.parent && !fastBomb.game.tileNodes.has(id));
+      assert(
+        node.parent?.destroyed && !fastBomb.game.tileNodes.has(id),
+      );
     } else {
-      assert.strictEqual(fastBomb.game.tileNodes.get(id), node, 'surviving nodes must be reused');
+      assert.strictEqual(
+        fastBomb.game.tileNodes.get(id),
+        node,
+        'surviving nodes must be reused',
+      );
       assert.strictEqual(node.children[0].name, 'IngredientImage');
-      assert.strictEqual(node.selectableState, fastBomb.game.isTileSelectable(tile, allTiles));
-      if (node.selectableState !== previousStates.get(id)) changed++;
+      assert.strictEqual(
+        node.selectableState,
+        fastBomb.game.isTileSelectable(tile, allTiles),
+      );
+      if (node.selectableState !== previousStates.get(id)) {
+        changed++;
+      }
     }
   }
-  assert.strictEqual(redraws.length, changed, 'only newly uncovered tiles must be redrawn');
-  assert(redraws.length < previousNodes.size / 4, 'bomb must not redraw most of the 888-tile board');
+  assert.strictEqual(
+    redraws.length,
+    changed + eliminated,
+    'only bomb targets and newly uncovered tiles must be redrawn',
+  );
+  assert(
+    redraws.length < previousNodes.size / 4,
+    'bomb must not redraw most of the 888-tile board',
+  );
 }
-console.log('Bomb performance regression: no board reconstruction, surviving images reused, indexed blockers and only changed states redrawn: OK');
+console.log(
+  'Bomb performance regression: no board ' +
+    'reconstruction, surviving images reuse' +
+    'd, indexed blockers and only changed s' +
+    'tates redrawn: OK',
+);
 
-// Endgame setup must keep the original tile inventory/geometry and remain saveable.
+// A new round must discard old effects and ignore their delayed completion.
+const staleBomb = persistedGame();
+const staleBombSounds = [];
+staleBomb.game.playEffect = key => staleBombSounds.push(key);
+staleBomb.game.useBombTool();
+const oldBombEffects = staleBomb.game.board.getChildByName('BombEffects');
+assert(oldBombEffects && staleBomb.game.locked);
+staleBomb.game.loadLevel(2);
+assert(oldBombEffects.destroyed && !oldBombEffects.parent);
+staleBomb.game.locked = true;
+while (completions.length) completions.shift()();
+assert(staleBomb.game.locked, 'old bomb must not unlock a new round');
+assert.strictEqual(staleBomb.game.remainingTiles(), 888);
+assert.strictEqual(staleBombSounds.length, 0,
+  'a restarted round must not play the old bomb sound');
+
+const finalBomb = persistedGame();
+const finalType = finalBomb.game.levelData.tiles[0].type;
+finalBomb.game.levelData.tiles.forEach(tile => {
+  tile.removed = tile.type !== finalType;
+});
+const beforeBomb = finalBomb.game.remainingTiles();
+const bombSounds = [];
+finalBomb.game.playEffect = key => bombSounds.push(key);
+finalBomb.game.useBombTool();
+const particles = finalBomb.game.board.getChildByName('BombEffects').children;
+assert.strictEqual(particles.filter(n => n.name.startsWith('BombSmoke_')).length, 8);
+assert.strictEqual(particles.filter(n => n.name.startsWith('BombSpark_')).length, 38);
+assert(particles.some(n => n.name === 'BombFlash'));
+assert.strictEqual(bombSounds.length, 0, 'sound must wait for detonation');
+const removedByBomb = beforeBomb - finalBomb.game.remainingTiles();
+assert(removedByBomb <= 6, 'second-level bomb must retain its six-tile cap');
+assert(finalBomb.game.locked && !finalBomb.game.gameEnded);
+const bombSave = finalBomb.writes.at(-1);
+assert.strictEqual(bombSave.removedIds.length,
+  finalBomb.game.levelData.tiles.filter(tile => tile.removed).length);
+while (completions.length) completions.shift()();
+assert.deepStrictEqual(bombSounds, ['bomb'], 'detonation plays one dedicated clip');
+assert(!finalBomb.game.locked || finalBomb.game.gameEnded);
+console.log('Bomb settlement save, animation lock and restart isolation: OK');
+
+const bombAudio = new Game();
+let soundPlays = 0;
+bombAudio.effectSource = {stop() {}, play() { soundPlays++; }};
+bombAudio.audioClips.set('bomb', {name: 'bomb'});
+bombAudio.soundEnabled = false;
+bombAudio.playEffect('bomb', 0.9);
+assert.strictEqual(soundPlays, 0, 'bomb sound must respect mute');
+bombAudio.soundEnabled = true;
+bombAudio.playEffect('bomb', 0.9);
+assert.strictEqual(soundPlays, 1);
+assert.strictEqual(bombAudio.effectSource.clip.name, 'bomb');
+console.log('Bomb particles, dedicated detonation audio and mute: OK');
+
+// Endgame setup must keep the original tile inventory/geometry and remain
+// saveable.
 completions.splice(0);
 for (const index of [0, 1, 2]) {
   for (const status of ['playing', 'lost', 'won']) {
-    const reduced = persistedGame(); const g = reduced.game; g.loadLevel(index);
+    const reduced = persistedGame();
+    const g = reduced.game;
+    g.loadLevel(index);
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const geometry = JSON.stringify(g.levelData.tiles.map( tile => [tile.id, tile.type, tile.x, tile.y, tile.layer, tile.blockedBy]));
+    const geometry = JSON.stringify(
+      g.levelData.tiles.map((tile) => [
+        tile.id,
+        tile.type,
+        tile.x,
+        tile.y,
+        tile.layer,
+        tile.blockedBy,
+      ]),
+    );
     g.unlimitedTools.bomb = index > 0;
     g.reviveUsed = true;
     g.lastMoveSnapshot = {tray: [], reserve: [], removedIds: []};
     /**
      * 依次处理集合中的每个条目。
      */
-    if (status === 'won') g.levelData.tiles.forEach( tile => {tile.removed = true;});
-    // Include tray and reserve contents, plus ended boards and pending match effects.
-    g.tray = ['beef', 'beef']; g.reserve = ['corn'];
-    g.gameEnded = status !== 'playing'; g.locked = status !== 'playing'; g.lastResult = status;
-    const effects = new Node('MatchEffects'); g.trayNode.addChild(effects);
+    if (status === 'won') {
+      g.levelData.tiles.forEach((tile) => {
+        tile.removed = true;
+      });
+    }
+    // Include tray and reserve contents, plus ended boards and pending match
+    // effects.
+    g.tray = ['beef', 'beef'];
+    g.reserve = ['corn'];
+    g.gameEnded = status !== 'playing';
+    g.locked = status !== 'playing';
+    g.lastResult = status;
+    const effects = new Node('MatchEffects');
+    g.trayNode.addChild(effects);
     g.leaveThreeMatchingTiles();
     assert(effects.destroyed);
     assert.strictEqual(g.remainingTiles(), 3);
@@ -905,46 +1458,235 @@ for (const index of [0, 1, 2]) {
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    assert.strictEqual(new Set(g.levelData.tiles.filter( tile => !tile.removed).map( tile => tile.type)).size, 1);
+    assert.strictEqual(
+      new Set(
+        g.levelData.tiles
+          .filter((tile) => !tile.removed)
+          .map((tile) => tile.type),
+      ).size,
+      1,
+    );
     assert.strictEqual(g.tray.length + g.reserve.length, 0);
-    assert(!g.gameEnded && !g.locked && g.lastResult === 'playing' && g.lastMoveSnapshot === null);
+    assert(
+      !g.gameEnded &&
+        !g.locked &&
+        g.lastResult === 'playing' &&
+        g.lastMoveSnapshot === null,
+    );
     assert.strictEqual(g.unlimitedTools.bomb, index > 0);
     assert(g.reviveUsed, 'endgame setup must not restore the revive allowance');
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    assert.strictEqual(JSON.stringify(g.levelData.tiles.map( tile => [tile.id, tile.type, tile.x, tile.y, tile.layer, tile.blockedBy])), geometry);
+    assert.strictEqual(
+      JSON.stringify(
+        g.levelData.tiles.map((tile) => [
+          tile.id,
+          tile.type,
+          tile.x,
+          tile.y,
+          tile.layer,
+          tile.blockedBy,
+        ]),
+      ),
+      geometry,
+    );
     const checkpoint = reduced.writes.at(-1);
     assert.strictEqual(checkpoint.removedIds.length, g.levelData.total - 3);
     assert.strictEqual(checkpoint.rewardedMilestones, index === 2 ? 8 : 0);
     const uses = JSON.stringify(checkpoint.toolUses);
     g.leaveThreeMatchingTiles();
-    assert.strictEqual(JSON.stringify(reduced.writes.at(-1).toolUses), uses, 'repeated setup cannot farm rewards');
+    assert.strictEqual(
+      JSON.stringify(reduced.writes.at(-1).toolUses),
+      uses,
+      'repeated setup cannot farm rewards',
+    );
     g.restoreGame(reduced.writes.at(-1));
-    assert.strictEqual(g.remainingTiles(), 3, 'the setup must round-trip through the real save validator');
+    assert.strictEqual(
+      g.remainingTiles(),
+      3,
+      'the setup must round-trip through the real save validator',
+    );
     while (g.remainingTiles()) {
       /**
        * 按条件筛选或判断条目：g.isTileSelectable(tile)。
        */
-      const tile = g.levelData.tiles.find( tile => g.isTileSelectable(tile));
+      const tile = g.levelData.tiles.find((tile) => g.isTileSelectable(tile));
       assert(tile, 'the remaining triple must have an unblocked pick');
-      tile.removed = true; pick(g, tile.type);
+      tile.removed = true;
+      pick(g, tile.type);
     }
     assert.strictEqual(reduced.writes.at(-1).status, 'won');
     assert.strictEqual(g.tray.length, 0);
     /**
      * 依次处理集合中的每个条目。
      */
-    completions.splice(0).forEach( callback => callback());
+    completions.splice(0).forEach((callback) => callback());
   }
 }
 const blockedSetup = persistedGame();
 for (const guard of ['animation', 'menu']) {
   blockedSetup.game.locked = guard === 'animation';
-  if (guard === 'menu') blockedSetup.game.node.addChild(new Node('BackdoorOverlay'));
+  if (guard === 'menu') {
+    blockedSetup.game.node.addChild(new Node('BackdoorOverlay'));
+  }
   const before = blockedSetup.writes.length;
   blockedSetup.game.leaveThreeMatchingTiles();
   assert.strictEqual(blockedSetup.writes.length, before);
   assert.strictEqual(blockedSetup.game.remainingTiles(), 30);
 }
-console.log('Three-tile setup: all levels, active/lost/won boards, cleared tray/reserve, valid save/restore, idempotent rewards and final triple wins: OK');
+console.log(
+  'Three-tile setup: all levels, active/l' +
+    'ost/won boards, cleared tray/reserve, ' +
+    'valid save/restore, idempotent rewards' +
+    ' and final triple wins: OK',
+);
+
+for (const seed of [0, actualData.RANDOM_LAYOUT_SEED_START,
+  actualData.CONNECTED_LAYOUT_SEED_START]) {
+  const {game: upgraded, writes} = persistedGame();
+  upgraded.loadLevel(2, false, actualData.createLevel(2, seed, undefined, 12345));
+  upgraded.checkpointGame();
+  const untouched = writes.at(-1), before = writes.length;
+  upgraded.restoreGame(untouched);
+  assert.strictEqual(upgraded.levelData.config.layers.length, 50);
+  assert.strictEqual(upgraded.levelData.total, 888);
+  assert(upgraded.levelData.layoutSeed >= actualData.VARIED_LAYOUT_SEED_START);
+  assert.strictEqual(writes.length, before + 1,
+    'upgrade must persist the new board once');
+  assert.strictEqual(writes.at(-1).removedIds.length, 0);
+  upgraded.restoreGame(writes.at(-1));
+  assert.strictEqual(writes.length, before + 1,
+    'the upgraded save must not be repeatedly replaced');
+}
+console.log('Untouched legacy third levels upgrade once; current and '
+  + 'progressed saves are retained: OK');
+
+// Exercise the real visibility refresh with the full logical inventory.
+for (const seed of [0, 1, 42, 2147483647, 2147483648, 4294967292]) {
+  const {game: g, writes} = persistedGame();
+  let draws = 0;
+  let created = 0;
+  g.createTileNode = (tile) => {
+    created++;
+    const node = new Node(`Tile_${tile.id}`);
+    node.setPosition(tile.x, tile.y, tile.layer);
+    node.setScale(1, 1, 1);
+    g.board.addChild(node);
+    g.tileNodes.set(tile.id, node);
+  };
+  g.drawTile = (node) => {
+    assert(node.active !== false, 'hidden faces must never be drawn');
+    draws++;
+  };
+  g.refreshTileStates = Game.prototype.refreshTileStates.bind(g);
+  const level = actualData.createLevel(2, seed);
+  g.loadLevel(2, false, level);
+  assert.strictEqual(created, draws);
+  assert(draws <= 144, `seed ${seed} must not draw 888 hidden faces`);
+  if (seed >= 2147483647) {
+    assert.strictEqual(draws, 48, 'new layouts have 48 distinct positions');
+  }
+  const initialDraws = draws;
+  // A used tool makes this a progressed legacy game, which must stay intact.
+  g.toolUses.undo = 0;
+  g.checkpointGame();
+  const checkpoint = writes.at(-1);
+  // Count every node creation across restore, including temporary boards.
+  created = 0;
+  draws = 0;
+  g.rebuildBoardTiles = () => assert.fail('restore must build only once');
+  g.restoreGame(checkpoint);
+  assert.strictEqual(created, initialDraws);
+  assert.strictEqual(draws, initialDraws);
+  const inventory = g.levelData.tiles.map((tile) => tile.type).sort();
+  draws = 0;
+  g.useShuffleTool();
+  completions.splice(0).forEach((callback) => callback());
+  assert.strictEqual(draws, initialDraws * 2,
+    'shuffling must not allocate hidden Graphics');
+  assert.strictEqual(JSON.stringify(
+    g.levelData.tiles.map((tile) => tile.type).sort(),
+  ), JSON.stringify(inventory));
+  while (g.remainingTiles()) {
+    const selectable = g.levelData.tiles.filter(
+      (tile) => g.isTileSelectable(tile),
+    );
+    assert(selectable.length, 'culling cannot block the solution path');
+    for (const tile of selectable) {
+      const node = g.tileNodes.get(tile.id);
+      assert(node && node.active, 'every selectable tile must be visible');
+      tile.removed = true;
+      node.removeFromParent();
+      node.destroy();
+      g.tileNodes.delete(tile.id);
+    }
+    g.refreshTileStates();
+    assert(g.tileNodes.size <= 144,
+      'hidden layers must not accumulate allocated nodes');
+    const layers = g.board.children.map((node) =>
+      g.levelData.tiles.find((tile) => `Tile_${tile.id}` === node.name).layer);
+    assert(layers.every((layer, i) => i === 0 || layers[i - 1] <= layer),
+      'newly exposed lower tiles must remain behind upper tiles');
+    const positions = new Set();
+    for (const tile of g.levelData.tiles) {
+      if (tile.removed || !g.tileNodes.get(tile.id)?.active) {
+        continue;
+      }
+      const key = `${tile.x}:${tile.y}`;
+      assert(!positions.has(key), 'only one face per position is rendered');
+      positions.add(key);
+    }
+  }
+}
+console.log('iOS memory: hidden faces culled, full solution visible, '
+  + 'legacy/random saves restored in one board pass: OK');
+
+async function validateRewardedRevival() {
+  const g = makeGame(['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish']);
+  g.levelIndex = 2;
+  g.enabledInHierarchy = true;
+  g.gameEnded = true;
+  const overlay = new Node('ResultOverlay');
+  overlay.isValid = true;
+  g.node.addChild(overlay);
+  let requests = 0;
+  let complete;
+  g.rewardedVideo.show = () => {
+    requests++;
+    return new Promise(resolve => {complete = resolve;});
+  };
+  await g.revive();
+  assert.equal(requests, 0, 'first revive must be free');
+  const originalReserve = g.reserve.slice();
+  g.tray = ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish'];
+  g.gameEnded = true;
+  const pending = g.revive();
+  assert.equal(requests, 1);
+  assert.equal(g.tray.length, 7, 'showing an ad cannot grant revival');
+  complete('completed');
+  await pending;
+  assert.equal(g.reserve.length, 6, 'older reserved food must be preserved');
+  assert.deepEqual(g.reserve.slice(0, 3), originalReserve);
+  assert.equal(g.tray.length, 4);
+  assert(!g.gameEnded);
+
+  for (const result of ['cancelled', 'failed', 'unsupported', 'busy']) {
+    g.gameEnded = true;
+    g.tray = ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish'];
+    const before = JSON.stringify({tray: g.tray, reserve: g.reserve});
+    g.rewardedVideo.show = async () => result;
+    await g.revive();
+    assert.equal(JSON.stringify({tray: g.tray, reserve: g.reserve}), before);
+    assert(g.gameEnded);
+  }
+  g.rewardedVideo.show = () => new Promise(resolve => {complete = resolve;});
+  const stale = g.revive();
+  g.levelData = {config: {traySize: 7}};
+  complete('completed');
+  await stale;
+  assert.equal(g.tray.length, 7, 'an old ad cannot revive a new board');
+  console.log('Third-level rewarded revives: first free, repeat reward, reserve conservation, '
+    + 'failed/cancelled ads and stale board isolation OK');
+}
+validateRewardedRevival().catch(error => {console.error(error); process.exitCode = 1;});

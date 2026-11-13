@@ -1,0 +1,16 @@
+[Error: EPERM: operation not permitted, open 'D:\codeX\create\app\HotPot\temp\logs\project.log'] {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'open',
+  path: 'D:\\codeX\\create\\app\\HotPot\\temp\\logs\\project.log'
+}
+[46688:1102/170903.024:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[46688:1102/170903.024:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[46688:1102/170903.023:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[46688:1102/170903.025:ERROR:disk_cache.cc(208)] Unable to create cache
+[46688:1102/170903.025:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[46688:1102/170903.026:ERROR:disk_cache.cc(208)] Unable to create cache
+[46688:1102/170903.026:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[46688:1102/170903.026:ERROR:disk_cache.cc(208)] Unable to create cache
+[46688:1102/170903.027:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+web-mobile 插件构建配置无版本号，将跳过数据迁移

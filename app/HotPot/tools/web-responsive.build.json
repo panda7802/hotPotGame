@@ -1,0 +1,69 @@
+{
+  "__version__": "1.3.9",
+  "platform": "web-mobile",
+  "name": "HotPot",
+  "taskName": "web-responsive",
+  "buildPath": "project://build",
+  "outputName": "web-responsive",
+  "buildMode": "normal",
+  "engineModulesConfigKey": "defaultConfig",
+  "debug": false,
+  "sourceMaps": false,
+  "md5Cache": false,
+  "mangleProperties": true,
+  "inlineEnum": true,
+  "mainBundleCompressionType": "merge_dep",
+  "mainBundleIsRemote": false,
+  "startSceneAssetBundle": false,
+  "startScene": "7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb",
+  "scenes": [
+    {
+      "url": "db://assets/scene/main.scene",
+      "uuid": "7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb"
+    }
+  ],
+  "nativeCodeBundleMode": "wasm",
+  "wasmCompressionMode": "brotli",
+  "bundleConfigs": [],
+  "packAutoAtlas": true,
+  "useSplashScreen": true,
+  "splashScreen": {
+    "totalTime": 0,
+    "displayRatio": 1,
+    "autoFit": true,
+    "watermarkLocation": "default",
+    "logo": {
+      "type": "none"
+    },
+    "background": {
+      "type": "color",
+      "color": {
+        "x": 1,
+        "y": 0.9411764706,
+        "z": 0.831372549,
+        "w": 1
+      }
+    }
+  },
+  "useBuiltinServer": false,
+  "bundleCommonChunk": false,
+  "skipCompressTexture": false,
+  "polyfills": {
+    "asyncFunctions": false
+  },
+  "binGroupConfig": {
+    "enable": false,
+    "threshold": 16
+  },
+  "packages": {
+    "web-mobile": {
+      "orientation": "portrait",
+      "embedWebDebugger": false
+    }
+  },
+  "overwriteProjectSettings": {
+    "includeModules": {
+      "mask": "on"
+    }
+  }
+}

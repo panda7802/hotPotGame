@@ -1,0 +1,246 @@
+{
+  "build": "20261102-level3-connected",
+  "checks": [
+    {
+      "width": 407,
+      "height": 795,
+      "family": 0,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 60.32449849288016,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 62.40666666666665,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 407,
+      "height": 795,
+      "family": 1,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 60.32449849288016,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 62.40666666666665,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 407,
+      "height": 795,
+      "family": 2,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 60.32449849288016,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 62.40666666666665,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "family": 0,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 57.80480199563455,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 59.79999999999998,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "family": 1,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 57.80480199563455,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 59.79999999999998,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "family": 2,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 57.80480199563455,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 59.79999999999998,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "family": 0,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 53.35827876520113,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 54.66700765519242,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "family": 1,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 53.35827876520113,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 54.66700765519241,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 360,
+      "height": 640,
+      "family": 2,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 53.35827876520113,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 54.66700765519241,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "family": 0,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 47.42958112462322,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 48.50422049075823,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "family": 1,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 47.42958112462322,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 48.50422049075824,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "family": 2,
+      "second": {
+        "nodes": 30,
+        "tileWidth": 47.42958112462322,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 15
+      },
+      "third": {
+        "nodes": 48,
+        "tileWidth": 48.50422049075824,
+        "tileScale": 1,
+        "contained": true,
+        "selectable": 24
+      }
+    }
+  ],
+  "gameplay": {
+    "removed": 45,
+    "tray": 0,
+    "layers": [
+      36,
+      35,
+      34,
+      33,
+      32
+    ]
+  },
+  "errors": [],
+  "missing": []
+}

@@ -1,4 +1,11 @@
-import {AudioClip, AudioSource, Component, Font, Label, Node, SpriteFrame} from 'cc';
+import {
+  AudioClip,
+  AudioSource,
+  Component,
+  Label,
+  Node,
+  SpriteFrame,
+} from 'cc';
 import {IngredientType, LevelData} from '../data/GameData';
 import {SaveStatus} from '../data/PlayerData';
 import {PlayerService} from './PlayerService';
@@ -48,6 +55,7 @@ export abstract class HotPotFields extends Component {
    * 当前对局是否结束。
    */
   protected gameEnded = false;
+  protected runId: string | undefined;
   /**
    * 连续消除次数。
    */
@@ -80,18 +88,6 @@ export abstract class HotPotFields extends Component {
    * 本地存档与云同步服务。
    */
   protected playerService: PlayerService | null = null;
-  /**
-   * 玩家同步状态的文字节点。
-   */
-  protected playerStatusLabel: Label | null = null;
-  /**
-   * 玩家存档摘要的文字节点。
-   */
-  protected playerSaveLabel: Label | null = null;
-  /**
-   * 地区名称使用的字体。
-   */
-  protected regionFont: Font | null = null;
   /**
    * 玩家档案入口的文字节点。
    */
@@ -157,7 +153,11 @@ export abstract class HotPotFields extends Component {
   /**
    * 本局调试模式下各道具是否无限使用。
    */
-  protected unlimitedTools: Record<ToolType, boolean> = {undo: false, bomb: false, shuffle: false};
+  protected unlimitedTools: Record<ToolType, boolean> = {
+    undo: false,
+    bomb: false,
+    shuffle: false,
+  };
   /**
    * 撤销操作所需的上一手快照。
    */
@@ -178,5 +178,4 @@ export abstract class HotPotFields extends Component {
    * 底部界面可用的纵向偏移。
    */
   protected bottomSpread = 0;
-
 }

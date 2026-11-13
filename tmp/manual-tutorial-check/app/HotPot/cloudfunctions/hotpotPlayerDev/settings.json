@@ -1,0 +1,8 @@
+{
+  "enabled": true,
+  "environmentId": "cloud1-d2gc9q7cobffff893",
+  "allowSharedEnvironment": false,
+  "regionsFileId": "",
+  "collectionName": "hotpot_players_dev",
+  "appId": "wx943cc2d81ec6f820"
+}

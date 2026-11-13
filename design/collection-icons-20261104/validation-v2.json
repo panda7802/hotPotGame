@@ -1,0 +1,50 @@
+{
+  "tool": "built-in image_gen",
+  "manualReview": {
+    "text": "图鉴",
+    "ingredients": [
+      "雪花和牛卷",
+      "松茸切片"
+    ],
+    "noShells": true,
+    "integratedIntoGame": false
+  },
+  "images": [
+    {
+      "file": "style-01-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "bytes": 1740910
+    },
+    {
+      "file": "style-04-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "bytes": 1459243
+    },
+    {
+      "file": "style-08-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "bytes": 1537204
+    },
+    {
+      "file": "style-09-v2.png",
+      "width": 1254,
+      "height": 1254,
+      "alpha": true,
+      "alphaMin": 0,
+      "alphaMax": 255,
+      "bytes": 1844602
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+'use strict';
+const http=require('http'),fs=require('fs'),path=require('path');
+const repo=path.resolve(__dirname,'../../..'),marker=fs.readFileSync(path.join(repo,'app/HotPot/assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
+const revision=marker.endsWith('-ranking')?'-ranking':marker.endsWith('-polish')?'-polish':'',root=path.join(repo,'exports','HotPot-ui720'+revision+'-20261030','web'),port=Number(process.env.PORT||8910);
+const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript','.json':'application/json','.css':'text/css','.png':'image/png','.jpg':'image/jpeg','.wasm':'application/wasm','.mp3':'audio/mpeg'};
+http.createServer((req,res)=>{res.setHeader('Cache-Control','no-store');const pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);if(pathname==='/__build.json'){res.setHeader('Content-Type','application/json');return res.end(JSON.stringify({build:marker}))}const file=path.resolve(root,'.'+(pathname==='/'?'/index.html':pathname));if(!file.startsWith(root+path.sep)||!fs.existsSync(file)||!fs.statSync(file).isFile()){res.writeHead(404);return res.end()}res.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');fs.createReadStream(file).pipe(res)}).listen(port,'127.0.0.1',()=>console.log('Playable Cocos build: http://127.0.0.1:'+port));
