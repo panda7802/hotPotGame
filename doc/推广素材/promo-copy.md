@@ -1,5 +1,18 @@
 # 《锅里捞啥》推广文案
 
+## 素材下载
+
+- 竖版推广图（720 × 1280）：[火锅三消](portrait/01-match-three.jpg)、[千层盛宴](portrait/02-thousand-layer.jpg)、[珍藏图鉴](portrait/03-rare-collection.jpg)、[烹饪餐谱](portrait/04-cooking-recipes.jpg)
+- 横版推广图（1280 × 720）：[火锅三消](landscape/01-match-three.jpg)、[珍藏图鉴](landscape/02-rare-collection.jpg)、[烹饪餐谱](landscape/03-cooking-recipes.jpg)
+- 微信分享图（600 × 480）：[火锅三消](share/01-match-three.jpg)、[千层盛宴](share/02-thousand-layer.jpg)、[珍藏图鉴](share/03-rare-collection.jpg)、[烹饪餐谱](share/04-recipe-book.jpg)、[五星出锅](share/05-five-star-cooking.jpg)
+- [竖版玩法合集](videos/HotPot-promo-portrait-gameplay.mp4)
+
+| 竖版短视频 | 封面 |
+| --- | --- |
+| [火锅三消](videos/01-hotpot-match.mp4) | [下载 JPG](videos/01-hotpot-match-cover.jpg) |
+| [珍藏图鉴](videos/02-hotpot-treasures.mp4) | [下载 JPG](videos/02-hotpot-treasures-cover.jpg) |
+| [五星烹饪](videos/03-hotpot-five-star.mp4) | [下载 JPG](videos/03-hotpot-five-star-cover.jpg) |
+
 ## 游戏简介（20 字以内）
 
 火锅三消捞食材，点亮图鉴，烹出五星菜。
