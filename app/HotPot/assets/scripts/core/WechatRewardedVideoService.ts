@@ -1,3 +1,5 @@
+import {adsDisabled} from './AdSession';
+
 interface RewardedVideoAd {
   load(): Promise<unknown>;
   show(): Promise<unknown>;
@@ -12,7 +14,7 @@ interface WechatAdHost {
   createRewardedVideoAd?: (options: {adUnitId: string}) => RewardedVideoAd;
 }
 
-type AdResult = 'completed' | 'cancelled' | 'failed' | 'unsupported' | 'busy';
+type AdResult = 'completed' | 'skipped' | 'cancelled' | 'failed' | 'unsupported' | 'busy';
 const REVIVE_AD_UNIT = 'adunit-406d51b037be9f14';
 const AD_TIMEOUT_MS = 120_000;
 
@@ -24,7 +26,7 @@ export class WechatRewardedVideoService {
     (globalThis as {wx?: WechatAdHost}).wx) {}
 
   prepare(): void {
-    if (this.ad) return;
+    if (adsDisabled || this.ad) return;
     try {
       this.ad = this.host?.createRewardedVideoAd?.({adUnitId: REVIVE_AD_UNIT});
     } catch (error) {
@@ -33,6 +35,7 @@ export class WechatRewardedVideoService {
   }
 
   async show(): Promise<AdResult> {
+    if (adsDisabled) return 'skipped';
     if (this.finish) return 'busy';
     if (!this.host?.createRewardedVideoAd) return 'unsupported';
     this.prepare();

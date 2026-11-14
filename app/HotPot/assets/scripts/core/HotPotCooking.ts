@@ -249,7 +249,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
         label.string = `重做剩余 ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
       };
       this.cooling();
-      designButton(panel, 'Button_广告重做', '看广告立即重做', box, () => { void this.skipCooldown(panel, dish); });
+      designButton(panel, 'Button_广告重做', this.adsDisabled ? '立即重做' : '看广告立即重做',
+        box, () => { void this.skipCooldown(panel, dish); });
     } else {
       designButton(panel, 'Button_开始烹饪', this.cooking.dishes[key] ? '再做一次' : '开始烹饪', box,
         () => this.beginCooking(dish));
@@ -268,7 +269,7 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     const currentPage = this.node.getChildByName(PAGE)?.getChildByName('PlayerPanel');
     if (currentPage !== panel || this.playerService?.playerId !== owner) return;
     if (!cookingCooldown(this.cooking, key)) { this.beginCooking(dish); return; }
-    if (result === 'completed') {
+    if (result === 'completed' || result === 'skipped') {
       const progress = this.cooking;
       const next = skipCookingCooldown(progress, key, attempt);
       if (next === progress && cookingCooldown(progress, key)) return;

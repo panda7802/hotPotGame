@@ -60,8 +60,9 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
   protected drawFailurePanel(panel:Node):void {
     transform(panel,720,1280);(panel as any).referenceHeight=1280;
     const t=getPageTheme(),body=designNode(panel,'ReviveDialog',[56,239,608,802]);designSurface(body);
-    const adRevive=this.levelIndex===2&&this.reviveUsed;
-    const exhausted=this.reviveUsed&&!adRevive;
+    const repeatRevive=this.levelIndex===2&&this.reviveUsed;
+    const adRevive=repeatRevive&&!this.adsDisabled;
+    const exhausted=this.reviveUsed&&!repeatRevive;
     const circle=designNode(body,'WarningCircle',[238,46,132,132]);designSurface(circle,t.panel,66);designIcon(circle,'warning',[30,30,72,72]);
     designButton(body,'MenuClose','×',[526,16,64,64],()=>this.dismissOverlay(),true);
     designText(body,'托盘满啦',[42,202,524,74],44,t.ink,true);
@@ -70,9 +71,13 @@ export abstract class HotPotDesignResults extends HotPotDesignCollection {
       const card=designNode(body,'ReservedPreview_'+i,[134+i*118,422,104,100]);designSurface(card,t.panel,14);
       this.addIngredientImage(card,type,false,94,90);
     });
-    designText(body,adRevive?'本局免费次数已用 · 每次看完视频可复活':'每局免费复活一次 · 无需广告',[42,542,524,46],23,t.muted);
-    const name=exhausted?'Button_免费复活已用完':adRevive?'Button_看视频复活':'Button_免费复活，继续捞';
-    const caption=exhausted?'免费复活已用完':adRevive?'▶  看视频复活':'↻  免费复活，继续捞';
+    const hint=adRevive?'本局免费次数已用 · 每次看完视频可复活'
+      :repeatRevive?'本次运行可直接复活':'每局免费复活一次 · 无需广告';
+    designText(body,hint,[42,542,524,46],23,t.muted);
+    const name=exhausted?'Button_免费复活已用完':adRevive?'Button_看视频复活'
+      :repeatRevive?'Button_直接复活':'Button_免费复活，继续捞';
+    const caption=exhausted?'免费复活已用完':adRevive?'▶  看视频复活'
+      :repeatRevive?'↻  直接复活':'↻  免费复活，继续捞';
     designButton(body,name,caption,[42,600,524,84],()=>{void this.revive()},false,exhausted);
     designButton(body,'Button_重新开始','重新开始',[42,706,524,84],()=>this.showRestartConfirmation(),true);
   }

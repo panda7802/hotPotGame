@@ -584,6 +584,12 @@ assert(
   ),
   'the three-tile action is available on level one too',
 );
+const adSwitch = panelOf(hidden, 'BackdoorOverlay').getChildByName('Button_关闭所有广告');
+assert.equal(hidden.adsDisabled, false);
+adSwitch.emit(Node.EventType.TOUCH_END);
+assert.equal(hidden.adsDisabled, true);
+assert.equal(adSwitch.getChildByName('Label').getComponent(Label).string, '广告已关闭');
+assert.equal(createGame().adsDisabled, true);
 hidden.dismissPlayerMenu('BackdoorOverlay');
 console.log(
   'Hidden entry: silent 6+3 sequence, wro' +

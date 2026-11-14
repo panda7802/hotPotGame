@@ -21,6 +21,12 @@ export abstract class HotPotNativeAds extends HotPotCashout {
   private adBounds?: NativeAdBounds;
   private adInBackground = false;
 
+  protected disableAds(): void {
+    super.disableAds();
+    if (this.adPage) this.clearNativeAd(true);
+    else this.nativeAd.dispose();
+  }
+
   onEnable(): void {
     super.onEnable();
     if (this.nativeAd.supported) {

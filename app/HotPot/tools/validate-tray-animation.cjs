@@ -1680,6 +1680,14 @@ async function validateRewardedRevival() {
     assert.equal(JSON.stringify({tray: g.tray, reserve: g.reserve}), before);
     assert(g.gameEnded);
   }
+  g.rewardedVideo.show = async () => 'skipped';
+  await g.revive();
+  assert.equal(g.tray.length, 4, 'disabling ads still allows a repeat revive');
+  assert.equal(g.reserve.length, 9);
+  assert(!g.gameEnded);
+
+  g.tray = ['beef', 'beef', 'shrimp', 'shrimp', 'corn', 'corn', 'fish'];
+  g.gameEnded = true;
   g.rewardedVideo.show = () => new Promise(resolve => {complete = resolve;});
   const stale = g.revive();
   g.levelData = {config: {traySize: 7}};

@@ -315,7 +315,7 @@ export abstract class HotPotBoard extends HotPotBoardActions {
       const result = await this.rewardedVideo.show();
       if (!this.enabledInHierarchy || this.levelData !== level || !this.gameEnded
         || !overlay.isValid || this.node.getChildByName('ResultOverlay') !== overlay) return;
-      if (result !== 'completed') {
+      if (result !== 'completed' && result !== 'skipped') {
         if (result === 'busy') return;
         const hint = result === 'cancelled' ? '看完整段视频后才能复活'
           : result === 'unsupported' ? '请在微信小游戏中观看广告'

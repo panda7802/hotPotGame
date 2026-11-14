@@ -1,3 +1,5 @@
+import {adsDisabled} from './AdSession';
+
 export interface NativeAdBounds {
   left: number;
   top: number;
@@ -42,7 +44,7 @@ export class WechatNativeAdService {
     (globalThis as {wx?: NativeAdHost}).wx) {}
 
   get supported(): boolean {
-    return typeof this.host?.createCustomAd === 'function';
+    return !adsDisabled && typeof this.host?.createCustomAd === 'function';
   }
 
   windowSize(fallback: NativeAdSize): NativeAdSize {
@@ -67,11 +69,11 @@ export class WechatNativeAdService {
   }
 
   prepare(width: number): boolean {
-    if (this.ad && this.requestedWidth === width) {
-      return true;
-    }
     if (!this.supported || !(width > 0)) {
       return false;
+    }
+    if (this.ad && this.requestedWidth === width) {
+      return true;
     }
     this.dispose();
     this.requestedWidth = width;

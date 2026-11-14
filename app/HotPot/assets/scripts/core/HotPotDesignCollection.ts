@@ -323,11 +323,17 @@ export abstract class HotPotDesignCollection extends HotPotDesignMenus {
       dismiss();
       this.leaveThreeMatchingTiles()
     }, true);
-    designButton(p, 'Button_图鉴全开', '图鉴全开', [40, 992, 640, 76], () => {
+    designButton(p, 'Button_图鉴全开', '图鉴全开', [40, 992, 280, 76], () => {
       this.playerService!.unlockAllIngredients();
       this.showToast('60 种食材图鉴已全部点亮', t.success);
     }, true);
-    designText(p, '无限开关仅本局有效，重开或切关后重置', [40, 1080, 640, 30], 20, designOnBackground());
+    designButton(p, 'Button_关闭所有广告', this.adsDisabled ? '广告已关闭' : '关闭所有广告',
+      [340, 992, 340, 76], () => {
+        this.disableAds();
+        dismiss();
+        this.showBackdoor();
+      }, true, this.adsDisabled);
+    designText(p, '无限道具仅本局有效 · 广告在重启应用后恢复', [40, 1080, 640, 30], 20, designOnBackground());
     designFooter(p, '返回', back);
   }
 }

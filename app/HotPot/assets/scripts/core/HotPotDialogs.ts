@@ -137,13 +137,20 @@ export abstract class HotPotDialogs extends HotPotPlayerMenus {
         this.leaveThreeMatchingTiles();
       },
     );
-    makeButton(panel, '图鉴全开', new Vec3(0, -365), 540, 68, '#B88261', () => {
+    makeButton(panel, '图鉴全开', new Vec3(-160, -365), 220, 68, '#B88261', () => {
       this.playerService!.unlockAllIngredients();
       this.showToast('60 种食材图鉴已全部点亮', '#477345');
     });
+    const ads = makeButton(panel, this.adsDisabled ? '广告已关闭' : '关闭所有广告',
+      new Vec3(120, -365), 300, 68, '#B88261', () => {
+        if (this.adsDisabled) return;
+        this.disableAds();
+        ads.getChildByName('Label')!.getComponent(Label)!.string = '广告已关闭';
+      });
+    ads.name = 'Button_关闭所有广告';
     makeBodyLabel(
       panel,
-      '无限开关仅本局有效，重开或切关后重置',
+      '无限道具仅本局有效 · 广告在重启应用后恢复',
       21,
       '#94735D',
       new Vec3(0, -415),

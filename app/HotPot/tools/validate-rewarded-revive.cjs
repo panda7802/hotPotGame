@@ -7,16 +7,26 @@ const vm = require('node:vm');
 const {loadTypeScript} = require('./prepare-cloud.cjs');
 const ts = loadTypeScript();
 const timers = new Set();
-const exportsObject = {};
-const source = path.join(__dirname, '../assets/scripts/core/WechatRewardedVideoService.ts');
-vm.runInNewContext(ts.transpileModule(fs.readFileSync(source, 'utf8'), {
-  compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019},
-}).outputText, {
-  exports: exportsObject, globalThis: {}, console: {warn() {}},
-  setTimeout: callback => {timers.add(callback); return callback;},
-  clearTimeout: callback => timers.delete(callback),
-});
-const {WechatRewardedVideoService} = exportsObject;
+function loadAdModules() {
+  const cache = new Map();
+  function load(name) {
+    const source = path.resolve(__dirname, '../assets/scripts/core', name + '.ts');
+    if (cache.has(source)) return cache.get(source);
+    const exports = {};
+    cache.set(source, exports);
+    vm.runInNewContext(ts.transpileModule(fs.readFileSync(source, 'utf8'), {
+      compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2019},
+    }).outputText, {
+      exports, require: load, globalThis: {}, console: {warn() {}},
+      setTimeout: callback => {timers.add(callback); return callback;},
+      clearTimeout: callback => timers.delete(callback),
+    });
+    return exports;
+  }
+  return load;
+}
+const loadAdModule = loadAdModules();
+const {WechatRewardedVideoService} = loadAdModule('WechatRewardedVideoService');
 const tick = () => new Promise(resolve => setImmediate(resolve));
 
 function fixture() {
@@ -132,6 +142,44 @@ async function main() {
   assert.equal(domain.restoreLevel(save).tiles.filter(tile => tile.removed).length, removedIds.length);
   console.log('Rewarded video: completion, cancellation, unknown close, retry, failure, '
     + 'busy, stale callbacks, disposal, timeout and repeated-revive cloud saves OK');
+
+  const {WechatNativeAdService} = loadAdModule('WechatNativeAdService');
+  let nativeCreations = 0;
+  let nativeShows = 0;
+  let nativeDestroyed = false;
+  const host = {createCustomAd() {
+    nativeCreations++;
+    return {style: {}, onError() {}, onClose() {},
+      async show() {nativeShows++;}, async hide() {},
+      destroy() {nativeDestroyed = true;}};
+  }};
+  const native = new WechatNativeAdService(host);
+  const bounds = {width: 300, left: 20, top: 400};
+  native.show(bounds, () => {});
+  await tick();
+  assert.equal(nativeShows, 1);
+
+  loadAdModule('AdSession').disableAdsForSession();
+  native.dispose();
+  retry.service.dispose();
+  assert(nativeDestroyed && retry.ad.destroyed);
+  assert.equal(await retry.service.show(), 'skipped');
+  assert.equal(native.prepare(bounds.width), false);
+  assert.equal(new WechatNativeAdService(host).supported, false);
+  assert.equal(nativeCreations, 1);
+  const recreated = fixture();
+  recreated.service.prepare();
+  assert.equal(await recreated.service.show(), 'skipped');
+  assert.equal(recreated.creations(), 0);
+
+  const restarted = loadAdModules();
+  const restartedNative = new (restarted('WechatNativeAdService').WechatNativeAdService)(host);
+  assert.equal(restartedNative.prepare(bounds.width), true);
+  assert.equal(nativeCreations, 2);
+  restartedNative.dispose();
+  const restartedRewarded = new (restarted('WechatRewardedVideoService').WechatRewardedVideoService)({});
+  assert.equal(await restartedRewarded.show(), 'unsupported');
+  console.log('Ad switch: both formats disabled across instances and restored after a fresh launch OK');
 }
 
 main().catch(error => {console.error(error); process.exitCode = 1;});

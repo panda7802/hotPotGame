@@ -26,6 +26,7 @@ import {WechatShareService} from './WechatShareService';
 import {WechatGameClubService} from './WechatGameClubService';
 import {WechatGameRecommendationService} from './WechatGameRecommendationService';
 import {WechatRewardedVideoService} from './WechatRewardedVideoService';
+import {adsDisabled, disableAdsForSession} from './AdSession';
 import {GAME_CLUB_OPENLINK} from '../data/GameClubConfig';
 
 import {
@@ -49,6 +50,15 @@ export abstract class HotPotState extends HotPotFields {
   protected readonly rewardedVideo = new WechatRewardedVideoService();
   private gameClubOpenlink: string = GAME_CLUB_OPENLINK;
   private manualPlayerSync = false;
+
+  protected get adsDisabled(): boolean {
+    return adsDisabled;
+  }
+
+  protected disableAds(): void {
+    disableAdsForSession();
+    this.rewardedVideo.dispose();
+  }
 
   protected disposeSettingsPages(): void {
     this.wechatGameClub.dispose();
