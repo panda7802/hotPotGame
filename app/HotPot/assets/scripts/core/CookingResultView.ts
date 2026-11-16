@@ -1,5 +1,5 @@
 import type {Node} from 'cc';
-import {CookingRound, scoreCooking} from '../data/CookingData';
+import {recipeBatches, scoreCooking} from '../data/CookingData';
 import {getIngredient, IngredientType} from '../data/GameData';
 import {getPageTheme} from '../data/PageTheme';
 import {
@@ -10,12 +10,12 @@ import {
 type FoodIcon = (parent: Node, id: IngredientType, x: number,
   y: number, size: number) => void;
 
-export function drawCookingBreakdown(panel: Node, round: CookingRound,
+export function drawCookingBreakdown(panel: Node, batches: ReturnType<typeof recipeBatches>,
   result: ReturnType<typeof scoreCooking>, drawFood: FoodIcon): void {
   const theme = getPageTheme();
-  const grouped = round.batches.length > 1;
+  const grouped = batches.length > 1;
   const closed = new Set<number>();
-  const sections = round.batches.map(batch => result.rows.filter(row =>
+  const sections = batches.map(batch => result.rows.filter(row =>
     batch.some(([id]) => id === row.id),
   ));
   const extras = result.rows.filter(row => row.target === 0);

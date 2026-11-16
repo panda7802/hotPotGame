@@ -20,25 +20,28 @@ const AD_TIMEOUT_MS = 120_000;
 
 export class WechatRewardedVideoService {
   private ad?: RewardedVideoAd;
+  private unit?: string;
   private finish?: (result: AdResult) => void;
 
   constructor(private readonly host: WechatAdHost | undefined =
     (globalThis as {wx?: WechatAdHost}).wx) {}
 
-  prepare(): void {
-    if (adsDisabled || this.ad) return;
+  prepare(adUnitId = REVIVE_AD_UNIT): void {
+    if (adsDisabled || this.finish || (this.ad && this.unit === adUnitId)) return;
+    if (this.ad) this.dispose();
     try {
-      this.ad = this.host?.createRewardedVideoAd?.({adUnitId: REVIVE_AD_UNIT});
+      this.ad = this.host?.createRewardedVideoAd?.({adUnitId});
+      if (this.ad) this.unit = adUnitId;
     } catch (error) {
       console.warn('[HotPot rewarded ad] Initialization failed', error);
     }
   }
 
-  async show(): Promise<AdResult> {
+  async show(adUnitId = REVIVE_AD_UNIT): Promise<AdResult> {
     if (adsDisabled) return 'skipped';
     if (this.finish) return 'busy';
     if (!this.host?.createRewardedVideoAd) return 'unsupported';
-    this.prepare();
+    this.prepare(adUnitId);
     const ad = this.ad;
     if (!ad) return 'failed';
     return new Promise<AdResult>(resolve => {
@@ -97,6 +100,7 @@ export class WechatRewardedVideoService {
     this.finish?.('cancelled');
     const ad = this.ad;
     this.ad = undefined;
+    this.unit = undefined;
     try { ad?.destroy?.(); } catch (error) {
       console.warn('[HotPot rewarded ad] Cleanup failed', error);
     }

@@ -75,6 +75,26 @@ async function main() {
   ad.close(undefined);
   assert.equal(await pending, 'cancelled');
 
+  const slots = [];
+  const separate = new WechatRewardedVideoService({createRewardedVideoAd({adUnitId}) {
+    const ad = fixture().ad;
+    slots.push({adUnitId, ad});
+    return ad;
+  }});
+  separate.prepare();
+  pending = separate.show('adunit-4bfa2babdf8bbd0e');
+  assert.equal(slots[1].adUnitId, 'adunit-4bfa2babdf8bbd0e');
+  assert(slots[0].ad.destroyed);
+  assert.equal(await separate.show(), 'busy');
+  slots[1].ad.close({isEnded: true});
+  assert.equal(await pending, 'completed');
+  pending = separate.show();
+  assert.equal(slots[2].adUnitId, 'adunit-406d51b037be9f14');
+  assert(slots[1].ad.destroyed);
+  slots[2].ad.close({isEnded: false});
+  assert.equal(await pending, 'cancelled');
+  separate.dispose();
+
   const retry = fixture();
   retry.ad.show = function () {
     this.shows++;

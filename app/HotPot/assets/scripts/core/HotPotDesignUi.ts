@@ -329,6 +329,8 @@ export function fitDesignPage(panel:Node):void {
   (panel as Node & {
     layoutNativeAd?: (layout: DesignPageLayout) => void;
   }).layoutNativeAd?.({bodyTop, footerTop, height: h});
+  (panel as Node & {layoutDesignContent?: (layout: DesignPageLayout) => void})
+    .layoutDesignContent?.({bodyTop, footerTop, height: h});
 }
 export function designOverlay(parent:Node,name:string,viewport:number,modal=false,background?:string):{overlay:Node,panel:Node} {
   const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,viewport);overlay.addComponent(BlockInputEvents);
