@@ -11,15 +11,16 @@ import {COOKING_RING_SECONDS, COOKING_TIME_SECONDS, cookingRingCount, CookingRin
 import {getIngredient, IngredientType} from '../data/GameData';
 import {getPageTheme} from '../data/PageTheme';
 import {GameSave, regionPath} from '../data/PlayerData';
+import {cookingRecipeAppearance, cookingRecipeFlavor, drawCookingRecipeArt, drawCookingRecipeBatches} from './CookingRecipeView';
 import {drawCookingBreakdown} from './CookingResultView';
 import {
-  drawCookingDish, drawCookingLessons, paintCookingClip, paintCookingCrossPin, paintCookingHourglass, paintCookingPot, paintCookingRing,
+  drawCookingLessons, paintCookingClip, paintCookingCrossPin, paintCookingHourglass, paintCookingPot, paintCookingRing,
   paintCookingServingPeg, paintCookingSharedPin, paintCookingSlider,
 } from './CookingRingView';
 import {hex} from './HotPotUi';
 import {
   designButton, designFooter, designHeader, designHit, designNode, designOnBackground,
-  designOverlay, designScroll, designSurface, designText, DesignPageLayout, fitDesignPage,
+  designOverlay, designScroll, designSurface, designText, DesignPageLayout, DesignRect, fitDesignPage,
 } from './HotPotDesignUi';
 import {HotPotNativeAds} from './HotPotNativeAds';
 
@@ -181,13 +182,8 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     return icon;
   }
 
-  private dishArt(parent: Node, dish: Recipe, x: number, y: number, width: number): void {
-    const size = width / 280;
-    const frame = designNode(parent, 'CookingDishArt', [x, y, width, 144 * size]);
-    const art = designNode(frame, 'CookingDish', [0, 0, 280, 144]);
-    art.setPosition(0, 0);
-    art.setScale(size, size, 1);
-    drawCookingDish(art, dish.ingredients, this.foodIcon.bind(this));
+  private dishArt(parent: Node, dish: Recipe, box: DesignRect): void {
+    drawCookingRecipeArt(designNode(parent, 'CookingDishArt', box), dish, this.foodIcon.bind(this));
   }
 
   private showCookingHelp(): void {
@@ -221,6 +217,7 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     const panel = this.page('选择菜谱', close);
     if (!panel) return;
     const discovered = this.discovered, progress = this.cooking, theme = getPageTheme();
+    const palette = cookingRecipeAppearance();
     const advanced = distinctCookingClears(progress);
     const rows = RECIPES.filter(dish => dish.difficulty === this.recipeDifficulty);
     if (this.recipeDifficulty === 1) rows.push(practiceRecipe(discovered));
@@ -240,15 +237,15 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     rows.forEach((dish, index) => {
       const card = designNode(content, 'Recipe_' + dish.id, [0, index * 172, 640, 158]);
       const key = recipeKey(dish), record = progress.dishes[key];
-      designSurface(card, theme.card, undefined, record?.firstPerfect ? '#C09845' : theme.edge);
-      this.dishArt(card, dish, 8, 24, 209);
-      designText(card, dish.name, [224, 14, 340, 46], 32, theme.ink, true, true);
+      designSurface(card, palette.card, theme.radius, record?.firstPerfect ? '#C09845' : palette.edge);
+      this.dishArt(card, dish, [12, 12, 192, 134]);
+      designText(card, dish.name, [224, 14, 340, 46], 32, palette.ink, true, true);
       designText(card, `${cookingRingCount(dish.difficulty)} 环 · ${recipeBatches(dish).length} 批`,
-        [224, 59, 330, 36], 23, theme.muted, false, true);
+        [224, 59, 330, 36], 23, palette.muted, false, true);
       const status = dish.practice ? '拆环练习' : locked ? '进阶未解锁' : !this.canCook(dish) ? '缺少食材'
         : record?.firstClear ? `${scoreCooking(dish, record.best).stars} 星 · 已出品` : '';
-      if (status) designText(card, status, [224, 102, 242, 43], 22, theme.muted, false, true);
-      designText(card, '选择 ›', [475, 96, 140, 48], 25, theme.accent, true);
+      designText(card, status || cookingRecipeFlavor(dish), [224, 96, 312, 52], 19, palette.muted, false, true);
+      designText(card, '选择 ›', [541, 96, 86, 48], 22, palette.accent, true);
       designHit(card, () => this.showRecipe(dish));
     });
     designFooter(panel, '玩法说明', () => this.showCookingHelp(), 'Button_菜谱玩法说明', false);
@@ -266,33 +263,28 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     if (!panel) return;
     const theme = getPageTheme(), key = recipeKey(dish);
     const progress = this.cooking, record = progress.dishes[key], known = this.discovered;
-    this.dishArt(panel, dish, 99, 282, 522);
-    designText(panel, '食材目标', [40, 540, 640, 42], 27, designOnBackground(), true);
-    dish.ingredients.forEach(([id, count], index) => {
-      const row = designNode(panel, 'RecipeIngredient_' + id,
-        [40 + 326 * (index % 2), 591 + Math.floor(index / 2) * 79, 314, 72]);
-      const found = known.includes(id);
-      designSurface(row, theme.card, theme.radius, found ? theme.edge : theme.line, false);
-      this.foodIcon(row, id, 12, 4, 64);
-      designText(row, getIngredient(id).name, [88, 0, 158, 72], 27, theme.ink, true, true);
-      designText(row, found ? String(count) : `${count} ›`, [241, 0, 65, 72], 27, theme.accent, true);
-      if (!found) designHit(row, () => {
-        this.dismissPlayerMenu(PAGE);
-        this.showIngredientDetail(id, () => this.showRecipe(dish));
-      });
-    });
-    const rulesTop = 604 + Math.ceil(dish.ingredients.length / 2) * 79;
-    const rules = designNode(panel, 'RecipeRules', [40, rulesTop, 640, 126]);
-    designSurface(rules, theme.card, theme.radius, theme.edge);
+    const palette = cookingRecipeAppearance();
+    const batches = recipeBatches(dish);
+    this.dishArt(panel, dish, [157, 283, 406, 292]);
+    const flavor = designNode(panel, 'RecipeFlavor', [40, 584, 640, 52]);
+    designSurface(flavor, palette.card, theme.radius, palette.edge, false);
+    designText(flavor, cookingRecipeFlavor(dish), [10, 0, 620, 52], 23, palette.ink, true);
+    const rules = designNode(panel, 'RecipeRules', [40, 646, 640, 59]);
+    designSurface(rules, palette.group, theme.radius, palette.edge, false);
     const difficulty = OVERLAY_DIFFICULTIES[dish.difficulty - 1];
-    designText(rules, `${difficulty} · ${cookingRingCount(dish.difficulty)} 环 · ${recipeBatches(dish).length} 批`,
-      [10, 8, 620, 53], 29, theme.ink, true);
+    designText(rules, `${difficulty} · ${cookingRingCount(dish.difficulty)} 环 · ${batches.length} 批`,
+      [10, 0, 620, 30], 23, palette.ink, true);
     designText(rules, `开局 ${COOKING_TIME_SECONDS} 秒  ·  每拆一环 +${COOKING_RING_SECONDS} 秒`,
-      [10, 61, 620, 52], 25, theme.accent, true);
+      [10, 28, 620, 28], 21, palette.accent, true);
+    designText(panel, '食材目标', [40, 706, 640, 32], 25, designOnBackground(), true);
+    drawCookingRecipeBatches(panel, batches, known, this.foodIcon.bind(this), id => {
+      this.dismissPlayerMenu(PAGE);
+      this.showIngredientDetail(id, () => this.showRecipe(dish));
+    });
     if (record) {
       const best = scoreCooking(dish, record.best);
       designText(panel, `个人最佳 ${best.score} 分 · ${best.stars} 星`,
-        [40, rulesTop + 131, 640, 37], 24, designOnBackground(), true);
+        [40, 985, 640, 37], 24, designOnBackground(), true);
     }
     this.drawRecipeAction(panel, dish, () => this.showRecipe(dish));
     designButton(panel, 'Button_准备玩法说明', '玩法说明', [40, 1124, 202, 80], () => this.showCookingHelp(), true);
@@ -935,7 +927,7 @@ export abstract class HotPotCooking extends HotPotNativeAds {
     const panel = this.page('出锅啦', back);
     if (!panel) return;
     const result = scoreCooking(dish, round.portions);
-    this.dishArt(panel, dish, 100, 281, 520);
+    this.dishArt(panel, dish, [160, 282, 400, 248]);
     const summary = designNode(panel, 'CookingResultSummary', [40, 541, 640, 141]);
     designSurface(summary, theme.card, undefined, result.stars === 5 ? '#C09845' : theme.edge);
     designText(summary, dish.name, [20, 6, 600, 43], 36, theme.ink, true);
