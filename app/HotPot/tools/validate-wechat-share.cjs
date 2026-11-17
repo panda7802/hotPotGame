@@ -68,5 +68,29 @@ const brokenMenu = new WechatShareService({
 });
 brokenMenu.start();
 assert.equal(brokenMenu.share(), 'opened');
-console.log('WeChat share: menu/button, lifecycle, old client, errors and ' +
-  'browser fallback passed; no success callback or player data sent.');
+
+let view = {page: 'match', style: 4}, friendMenu, timelineMenu;
+const themed = new WechatShareService({
+  onShareAppMessage: callback => { friendMenu = callback; },
+  onShareTimeline: callback => { timelineMenu = callback; },
+  shareAppMessage: message => messages.push(message),
+}, () => view);
+themed.start();
+for (const style of [1, 4, 8, 9]) {
+  for (const page of ['match', 'cooking', 'collection', 'recipe', 'achievements', 'general']) {
+    view = {page, style};
+    const expected = page === 'general' ? 'share-card.jpg' : `share-covers/${page}-${style}.jpg`;
+    assert.equal(friendMenu().imageUrl, expected);
+    assert.equal(timelineMenu().imageUrl, expected);
+    assert.equal(timelineMenu().query, 'source=share&entry=timeline');
+    assert.equal(themed.share(), 'opened');
+    assert.equal(messages.at(-1).imageUrl, expected);
+    const cover = fs.readFileSync(path.join(__dirname, '../build-templates/wechatgame', expected));
+    assert.equal(cover.readUInt16BE(0), 0xffd8);
+  }
+}
+view = {page: 'recipe', style: 8};
+assert.equal(themed.share('试做番茄豆腐汤', 'tomato-tofu@1'), 'opened');
+assert.equal(messages.at(-1).imageUrl, 'share-covers/recipe-8.jpg');
+assert.equal(messages.at(-1).query, 'source=share&entry=button&recipe=tomato-tofu%401');
+console.log('WeChat share: five themed page covers, a common cover, friend/menu/timeline and recipe links OK');

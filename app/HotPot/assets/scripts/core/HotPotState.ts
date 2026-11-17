@@ -22,7 +22,7 @@ import {createLevel, LevelData} from '../data/GameData';
 
 import {HotPotFields} from './HotPotFields';
 import {PlayerService} from './PlayerService';
-import {WechatShareService} from './WechatShareService';
+import {SharePage, WechatShareService} from './WechatShareService';
 import {WechatGameClubService} from './WechatGameClubService';
 import {WechatGameRecommendationService} from './WechatGameRecommendationService';
 import {WechatRewardedVideoService} from './WechatRewardedVideoService';
@@ -35,7 +35,7 @@ import {
 } from '../data/CollectionData';
 
 import {DESIGN_HEIGHT, DESIGN_WIDTH, ToolType} from './HotPotUi';
-import {readPageStyle, setPageTheme} from '../data/PageTheme';
+import {getPageTheme, readPageStyle, setPageTheme} from '../data/PageTheme';
 
 const PLAYER_UPLOAD_INTERVAL = 30;
 
@@ -44,7 +44,9 @@ const PLAYER_UPLOAD_INTERVAL = 30;
  */
 export abstract class HotPotState extends HotPotFields {
   protected referenceLayout=false;
-  protected readonly wechatSharing = new WechatShareService();
+  protected readonly wechatSharing = new WechatShareService(undefined, () => ({
+    page: this.getSharePage(), style: getPageTheme().id,
+  }));
   private readonly wechatGameClub = new WechatGameClubService();
   private readonly wechatGameRecommendation = new WechatGameRecommendationService();
   protected readonly rewardedVideo = new WechatRewardedVideoService();
@@ -93,6 +95,29 @@ export abstract class HotPotState extends HotPotFields {
   onDisable(): void {
     this.disposeSettingsPages();
     this.rewardedVideo.dispose();
+  }
+
+  private getSharePage(): SharePage {
+    const overlay = this.node.children.slice().reverse().find(child =>
+      child.activeInHierarchy && child.name.endsWith('Overlay'));
+    if (!overlay || overlay.name === 'ResultOverlay' || overlay.name === 'ReviveOverlay') return 'match';
+    const body = overlay.getChildByName('PlayerPanel')?.getChildByName('DesignBody');
+    switch (overlay.name) {
+    case 'CollectionOverlay':
+      return body?.getChildByName('AchievementBoard') ? 'achievements' : 'collection';
+    case 'CollectionDetailOverlay':
+      return 'collection';
+    case 'CookingOverlay':
+      if (body?.getChildByName('RecipeList') || body?.getChildByName('RecipeRules')) return 'recipe';
+      if (body?.getChildByName('CookingRingBoard') || body?.getChildByName('CookingResultSummary')) return 'cooking';
+      return 'general';
+    case 'CookingTimeoutOverlay':
+    case 'CookingFailureOverlay':
+    case 'CookingConfirmOverlay':
+      return 'cooking';
+    default:
+      return 'general';
+    }
   }
 
   protected shareGame(title?: string, recipe?: string): void {

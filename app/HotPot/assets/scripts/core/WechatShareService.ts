@@ -1,3 +1,5 @@
+import type {PageStyle} from '../data/PageTheme';
+
 interface ShareMessage {
   title: string;
   query: string;
@@ -5,6 +7,9 @@ interface ShareMessage {
 }
 
 const SHARE_CARD_IMAGE = 'share-card.jpg';
+
+export type SharePage = 'match' | 'cooking' | 'collection' | 'recipe' | 'achievements' | 'general';
+type ShareView = {page: SharePage; style: PageStyle};
 
 interface WechatShareHost {
   shareAppMessage?: (message: ShareMessage) => void;
@@ -34,16 +39,20 @@ export class WechatShareService {
   constructor(
     private readonly host: WechatShareHost | undefined =
       (globalThis as {wx?: WechatShareHost}).wx,
+    private readonly currentView?: () => ShareView,
   ) {}
 
   private message(
     source: 'menu' | 'button' | 'timeline',
     title = '锅里捞啥｜一起来捞一锅，看看谁能通关！',
+    recipe?: string,
   ): ShareMessage {
+    const view = this.currentView?.();
+    const imageUrl = view && view.page !== 'general' ? `share-covers/${view.page}-${view.style}.jpg` : SHARE_CARD_IMAGE;
     return {
       title,
-      query: 'source=share&entry=' + source,
-      ...(source === 'timeline' ? {} : {imageUrl: SHARE_CARD_IMAGE}),
+      query: 'source=share&entry=' + source + (recipe ? '&recipe=' + encodeURIComponent(recipe) : ''),
+      imageUrl,
     };
   }
 
@@ -75,9 +84,7 @@ export class WechatShareService {
       return 'unsupported';
     }
     try {
-      const message = this.message('button', title);
-      if (recipe) message.query += '&recipe=' + encodeURIComponent(recipe);
-      this.host.shareAppMessage(message);
+      this.host.shareAppMessage(this.message('button', title, recipe));
       return 'opened';
     } catch {
       return 'failed';
