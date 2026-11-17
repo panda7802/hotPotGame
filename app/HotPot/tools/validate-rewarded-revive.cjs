@@ -164,29 +164,54 @@ async function main() {
     + 'busy, stale callbacks, disposal, timeout and repeated-revive cloud saves OK');
 
   const {WechatNativeAdService} = loadAdModule('WechatNativeAdService');
-  let nativeCreations = 0;
+  const nativeAds = [];
   let nativeShows = 0;
   let nativeDestroyed = false;
-  const host = {createCustomAd() {
-    nativeCreations++;
-    return {style: {}, onError() {}, onClose() {},
+  const host = {createCustomAd({adUnitId}) {
+    const ad = {adUnitId, style: {}, onError() {},
+      onClose(close) {this.close = close;}, onResize(resize) {this.resize = resize;},
       async show() {nativeShows++;}, async hide() {},
-      destroy() {nativeDestroyed = true;}};
+      destroy() {this.destroyed = nativeDestroyed = true;}};
+    nativeAds.push(ad);
+    return ad;
   }};
   const native = new WechatNativeAdService(host);
   const bounds = {width: 300, left: 20, top: 400};
-  native.show(bounds, () => {});
+  assert(native.prepare(bounds.width, 'settings'));
+  native.show(bounds, 'ranking', () => {});
   await tick();
+  assert.equal(nativeAds.length, 1);
+  assert.equal(nativeAds[0].adUnitId, 'adunit-253cf09b57a1e3d9');
   assert.equal(nativeShows, 1);
+  native.show(bounds, 'collection', () => {});
+  await tick();
+  const collection = nativeAds[1];
+  assert(nativeAds[0].destroyed);
+  assert.equal(collection.adUnitId, 'adunit-c71919c100419c22');
+  collection.resize({width: 300, height: 120});
+  assert.equal(native.size(300, 'collection').height, 120);
+  assert.equal(native.size(300, 'achievements').height, 105);
+  let closed = false;
+  native.show(bounds, 'achievements', reason => {closed = reason === 'closed';});
+  await tick();
+  assert(collection.destroyed);
+  collection.close();
+  assert.equal(closed, false);
+  assert.equal(nativeAds[2].adUnitId, 'adunit-ed625cbfe9bd497b');
+  native.position({...bounds, width: 280}, 'achievements');
+  await tick();
+  assert(nativeAds[2].destroyed);
+  assert.equal(nativeAds[3].adUnitId, 'adunit-ed625cbfe9bd497b');
+  assert.equal(nativeShows, 4);
 
   loadAdModule('AdSession').disableAdsForSession();
   native.dispose();
   retry.service.dispose();
   assert(nativeDestroyed && retry.ad.destroyed);
   assert.equal(await retry.service.show(), 'skipped');
-  assert.equal(native.prepare(bounds.width), false);
+  assert.equal(native.prepare(bounds.width, 'collection'), false);
   assert.equal(new WechatNativeAdService(host).supported, false);
-  assert.equal(nativeCreations, 1);
+  assert.equal(nativeAds.length, 4);
   const recreated = fixture();
   recreated.service.prepare();
   assert.equal(await recreated.service.show(), 'skipped');
@@ -194,12 +219,12 @@ async function main() {
 
   const restarted = loadAdModules();
   const restartedNative = new (restarted('WechatNativeAdService').WechatNativeAdService)(host);
-  assert.equal(restartedNative.prepare(bounds.width), true);
-  assert.equal(nativeCreations, 2);
+  assert.equal(restartedNative.prepare(bounds.width, 'achievements'), true);
+  assert.equal(nativeAds.length, 5);
   restartedNative.dispose();
   const restartedRewarded = new (restarted('WechatRewardedVideoService').WechatRewardedVideoService)({});
   assert.equal(await restartedRewarded.show(), 'unsupported');
-  console.log('Ad switch: both formats disabled across instances and restored after a fresh launch OK');
+  console.log('Native placements, independent measurements, stale callbacks and ad switch OK');
 }
 
 main().catch(error => {console.error(error); process.exitCode = 1;});

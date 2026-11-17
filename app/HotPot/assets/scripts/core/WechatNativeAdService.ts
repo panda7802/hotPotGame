@@ -31,13 +31,21 @@ interface NativeAdHost {
 }
 
 type AdChange = 'resize' | 'closed' | 'failed';
-const AD_UNIT_ID = 'adunit-253cf09b57a1e3d9';
+const SHARED_AD_UNIT = 'adunit-253cf09b57a1e3d9';
+const AD_UNITS = {
+  settings: SHARED_AD_UNIT,
+  ranking: SHARED_AD_UNIT,
+  collection: 'adunit-c71919c100419c22',
+  achievements: 'adunit-ed625cbfe9bd497b',
+} as const;
+export type NativeAdPlacement = keyof typeof AD_UNITS;
 
 /** Preloads the template and owns at most one native view at a time. */
 export class WechatNativeAdService {
   private ad?: NativeAd;
   private changed?: (reason: AdChange) => void;
   private measured?: NativeAdSize;
+  private adUnitId?: string;
   private requestedWidth = 350;
 
   constructor(private readonly host: NativeAdHost | undefined =
@@ -60,29 +68,31 @@ export class WechatNativeAdService {
     return fallback;
   }
 
-  size(width: number): NativeAdSize {
-    if (this.measured && this.requestedWidth === width) {
+  size(width: number, placement: NativeAdPlacement): NativeAdSize {
+    if (this.measured && this.requestedWidth === width && this.adUnitId === AD_UNITS[placement]) {
       return this.measured;
     }
     // The configured template is a 20:7 horizontal card.
     return {width, height: width * 7 / 20};
   }
 
-  prepare(width: number): boolean {
+  prepare(width: number, placement: NativeAdPlacement): boolean {
     if (!this.supported || !(width > 0)) {
       return false;
     }
-    if (this.ad && this.requestedWidth === width) {
+    const adUnitId = AD_UNITS[placement];
+    if (this.ad && this.requestedWidth === width && this.adUnitId === adUnitId) {
       return true;
     }
     this.dispose();
     this.requestedWidth = width;
     try {
       const ad = this.host!.createCustomAd!({
-        adUnitId: AD_UNIT_ID,
+        adUnitId,
         style: {left: 0, top: 0, width},
       });
       this.ad = ad;
+      this.adUnitId = adUnitId;
       ad.onError(error => this.fail(ad, error));
       ad.onClose(() => {
         if (this.ad === ad) {
@@ -97,7 +107,7 @@ export class WechatNativeAdService {
           || size.width <= 0 || size.height <= 0) {
           return;
         }
-        const previous = this.size(this.requestedWidth);
+        const previous = this.size(this.requestedWidth, placement);
         this.measured = {width: size.width, height: size.height};
         if (Math.abs(previous.width - size.width) > 0.5
           || Math.abs(previous.height - size.height) > 0.5) {
@@ -112,9 +122,9 @@ export class WechatNativeAdService {
     }
   }
 
-  show(bounds: NativeAdBounds, changed: (reason: AdChange) => void): void {
-    const alreadyShowing = this.changed && this.requestedWidth === bounds.width;
-    if (!this.prepare(bounds.width)) {
+  show(bounds: NativeAdBounds, placement: NativeAdPlacement, changed: (reason: AdChange) => void): void {
+    const alreadyShowing = this.changed && this.requestedWidth === bounds.width && this.adUnitId === AD_UNITS[placement];
+    if (!this.prepare(bounds.width, placement)) {
       changed('failed');
       return;
     }
@@ -135,15 +145,15 @@ export class WechatNativeAdService {
     }).catch(error => this.fail(ad, error));
   }
 
-  position(bounds: NativeAdBounds): void {
+  position(bounds: NativeAdBounds, placement: NativeAdPlacement): void {
     const ad = this.ad;
     const changed = this.changed;
     if (!ad || !changed) {
       return;
     }
-    if (bounds.width !== this.requestedWidth) {
+    if (bounds.width !== this.requestedWidth || this.adUnitId !== AD_UNITS[placement]) {
       // Width is part of createCustomAd. The runtime style exposes position.
-      this.show(bounds, changed);
+      this.show(bounds, placement, changed);
     } else {
       this.move(ad, bounds);
     }
@@ -181,6 +191,7 @@ export class WechatNativeAdService {
   dispose(): void {
     const ad = this.ad;
     this.ad = undefined;
+    this.adUnitId = undefined;
     this.changed = undefined;
     this.measured = undefined;
     try {

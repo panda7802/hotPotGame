@@ -3,8 +3,9 @@ import {Portions, Recipe, recipeBatches, scoreCooking} from './CookingData';
 
 export const COOKING_RING_GAP = 25;
 export const COOKING_SERVE_ANGLE = 300;
-export const COOKING_TIME_SECONDS = 180;
+export const COOKING_TIME_SECONDS = 60;
 export const COOKING_RING_SECONDS = 10;
+export const cookingRingCount = (difficulty: Recipe['difficulty']) => [9, 32, 88][difficulty - 1];
 
 export interface RingPortion {
   id: IngredientType;
@@ -17,17 +18,16 @@ export interface CookingRingSnapshot {
   released: boolean[];
   attached: boolean[];
   pins: boolean[];
+  crossPins: boolean[];
   portions: Portions;
 }
 
-export type CookingRingShape = 'round' | 'square' | 'oval';
 export type CookingPinShape = 'straight' | 'elbow' | 'u';
 
 export interface CookingRing {
   x: number;
   y: number;
   radius: number;
-  shape: CookingRingShape;
   angle: number;
   food?: RingPortion;
   released: boolean;
@@ -41,6 +41,9 @@ interface CookingClip {
   paired: boolean;
   pinned: boolean;
   pinShape: CookingPinShape;
+  sharedPin?: number;
+  crossPinned?: boolean;
+  turnDirection?: 1 | -1;
 }
 
 const wrap = (angle: number) => (angle % 360 + 360) % 360;
@@ -50,6 +53,11 @@ const SNAP_TOLERANCE = 9;
 type Layout = {points: readonly (readonly [number, number, number])[]; links: readonly (readonly [number, number])[]};
 
 const CLUSTERS: Record<number, Layout> = {
+  6: {
+    points: [[140, 85, 63], [452, 105, 62], [294, 241, 64], [501, 305, 58],
+      [107, 416, 60], [302, 468, 63]],
+    links: [[0, 2], [1, 2], [1, 3], [2, 3], [2, 4], [2, 5], [4, 5]],
+  },
   7: {
     points: [[100, 94, 61], [307, 79, 60], [520, 110, 62], [205, 245, 60],
       [412, 263, 61], [95, 412, 60], [315, 426, 62]],
@@ -65,28 +73,23 @@ const CLUSTERS: Record<number, Layout> = {
       [123, 275, 61], [322, 255, 59], [514, 278, 60], [217, 450, 62], [434, 441, 62]],
     links: [[0, 1], [1, 2], [2, 3], [0, 4], [1, 4], [2, 5], [3, 6], [4, 5], [5, 6], [4, 7], [5, 7], [5, 8], [6, 8]],
   },
+  10: {
+    points: [[96, 101, 60], [276, 101, 62], [486, 77, 59], [96, 283, 60], [276, 283, 63],
+      [507, 255, 57], [179, 467, 64], [400, 422, 61], [100, 627, 52], [503, 587, 63]],
+    // The first two clasps sit on the same vertical line and share a slide pin.
+    links: [[0, 1], [3, 4], [1, 2], [0, 3], [1, 4], [2, 5], [4, 5],
+      [3, 6], [4, 6], [4, 7], [5, 7], [6, 7], [6, 8], [7, 9]],
+  },
 };
+
+const MEDIUM_ARRANGEMENTS = [[6, 10], [7, 9], [9, 7], [8, 8]];
+const HARD_ARRANGEMENT = [10, 7, 10, 8, 9];
 
 const SIMPLE_CLUSTER: Layout = {
   points: [[133, 85, 63], [486, 90, 63], [98, 250, 59], [310, 227, 63], [526, 257, 59],
     [187, 406, 62], [435, 427, 62], [91, 545, 59], [517, 567, 59]],
   links: [[0, 2], [0, 3], [1, 4], [2, 3], [3, 6], [4, 6], [2, 5], [5, 7], [6, 8]],
 };
-
-function boundedClusterSize(remaining: number): number[] {
-  return [7, 8, 9].filter(size => {
-    const left = remaining - size;
-    return left === 0 || (left >= 7 && left <= 9) || (left >= 14 && left <= 18) || left >= 21;
-  });
-}
-
-/** Distance to a piece's centre line in local coordinates, also used to anchor its clips on screen. */
-export function cookingRingRim(radius: number, shape: CookingRingShape, localAngle: number): number {
-  const x = Math.cos(localAngle), y = Math.sin(localAngle);
-  if (shape === 'square') return radius / (x ** 6 + y ** 6) ** (1 / 6) * .9;
-  if (shape === 'oval') return radius / Math.hypot(x, y / .76);
-  return radius;
-}
 
 export class CookingRingRound {
   readonly batches: ReturnType<typeof recipeBatches>;
@@ -108,8 +111,8 @@ export class CookingRingRound {
   get hasFood() { return Object.keys(this.portions).length > 0; }
   get finished() { return this.clips.every(clip => !clip.attached) && this.rings.every(ring => !ring.food || ring.released); }
   get batchReady() { return this.batch.every(([id, count]) => (this.portions[id] ?? 0) >= count); }
-  get totalRings() { return [9, 32, 88][this.dish.difficulty - 1]; }
-  get height() { return Math.max(...this.rings.map(ring => ring.y + ring.radius * 1.14)) + 17; }
+  get totalRings() { return cookingRingCount(this.dish.difficulty); }
+  get height() { return Math.max(...this.rings.map(ring => ring.y + ring.radius)) + 28; }
   get timeLeft() { return this.seconds; }
   get expired() { return this.seconds <= 0; }
   get result() { return scoreCooking(this.dish, this.portions); }
@@ -130,15 +133,20 @@ export class CookingRingRound {
   snapshot(): CookingRingSnapshot {
     return {batch: this.batchIndex, angles: this.rings.map(ring => ring.angle),
       released: this.rings.map(ring => ring.released), attached: this.clips.map(clip => clip.attached),
-      pins: this.clips.map(clip => clip.pinned),
+      pins: this.clips.map(clip => clip.pinned), crossPins: this.clips.map(clip => !!clip.crossPinned),
       portions: {...this.portions}};
   }
 
   restore(saved: CookingRingSnapshot): boolean {
     if (saved.batch !== this.batchIndex || saved.angles.length !== this.rings.length
-      || saved.attached.length !== this.clips.length || saved.pins.length !== this.clips.length) return false;
+      || saved.attached.length !== this.clips.length || saved.pins.length !== this.clips.length
+      || saved.crossPins.length !== this.clips.length) return false;
     this.rings.forEach((ring, i) => { ring.angle = saved.angles[i]; ring.released = saved.released[i]; });
-    this.clips.forEach((clip, i) => { clip.attached = saved.attached[i]; clip.pinned = saved.pins[i]; });
+    this.clips.forEach((clip, i) => {
+      clip.attached = saved.attached[i];
+      clip.pinned = saved.pins[i];
+      if (clip.crossPinned !== undefined) clip.crossPinned = saved.crossPins[i];
+    });
     for (const id of Object.keys(this.portions) as IngredientType[]) delete this.portions[id];
     Object.assign(this.portions, saved.portions);
     return true;
@@ -172,6 +180,7 @@ export class CookingRingRound {
     }
     for (const clip of this.clips) {
       if (!clip.attached || clip.pinned || (clip.holder !== index && clip.owner !== index)) continue;
+      if (clip.turnDirection && (clip.holder !== index || Math.sign(delta) !== clip.turnDirection)) continue;
       const other = clip.holder === index ? clip.owner : clip.holder;
       const target = clip.holder === index ? clip.angle : clip.angle + 180;
       if (distanceTo(target) > travel) continue;
@@ -191,8 +200,17 @@ export class CookingRingRound {
 
   pullPin(index: number): boolean {
     const clip = this.clips[index];
-    if (this.expired || this.ruined || !clip?.attached || !clip.pinned) return false;
+    if (this.expired || this.ruined || !clip?.attached || !clip.pinned
+      || clip.crossPinned || (clip.sharedPin !== undefined && this.clips[clip.sharedPin].crossPinned)) return false;
     clip.pinned = false;
+    if (clip.sharedPin !== undefined) this.clips[clip.sharedPin].pinned = false;
+    return true;
+  }
+
+  pullCrossPin(index: number): boolean {
+    const clip = this.clips[index];
+    if (this.expired || this.ruined || !clip?.crossPinned || !clip.pinned) return false;
+    clip.crossPinned = false;
     return true;
   }
 
@@ -213,7 +231,7 @@ export class CookingRingRound {
     const end = Math.floor(this.totalRings * (this.batchIndex + 1) / this.batches.length);
     const count = end - start;
     const pattern = Math.floor(this.random() * 4);
-    this.layoutRings(count, pattern);
+    this.layoutRings(count, (pattern + this.batchIndex) % 4);
     const decoys = new Set<number>();
     if (extra && this.dish.difficulty > 1) {
       const candidates = this.rings.map((_, i) => i).filter(i => this.rings[i].x < 175 || this.rings[i].x > 450);
@@ -229,45 +247,62 @@ export class CookingRingRound {
   }
 
   private layoutRings(count: number, pattern: number): void {
-    let group = 0, yOffset = 0, previousBottom: number[] = [];
-    while (this.rings.length < count) {
+    const difficulty = this.dish.difficulty;
+    const sizes = difficulty === 1 ? [count] : difficulty === 2
+      ? MEDIUM_ARRANGEMENTS[pattern].concat(count === 32 ? MEDIUM_ARRANGEMENTS[(pattern + 2) % 4] : [])
+      : HARD_ARRANGEMENT.map((_, index) => HARD_ARRANGEMENT[(index + pattern) % HARD_ARRANGEMENT.length]);
+    let yOffset = 0, previousBottom: number[] = [];
+    sizes.forEach((size, group) => {
       const start = this.rings.length;
-      const sizes = boundedClusterSize(count - start);
-      const layout = this.dish.difficulty === 1 ? SIMPLE_CLUSTER : CLUSTERS[sizes[(pattern + group) % sizes.length]];
+      const layout = difficulty === 1 ? SIMPLE_CLUSTER : CLUSTERS[size];
       const mirror = (pattern + group) % 2 !== 0;
       const highest = Math.min(...layout.points.map(point => point[1]));
       const lowest = Math.max(...layout.points.map(point => point[1]));
       const nextTop: number[] = [], nextBottom: number[] = [];
       layout.points.forEach(([x, y, radius], i) => {
-        const index = start + i, variant = (i + pattern + group * 2) % 6;
-        const shape = this.dish.difficulty === 1 ? 'round' : variant === 0 || variant === 3 ? 'square'
-          : variant === 4 ? 'oval' : 'round';
-        this.rings.push({x: mirror ? 616 - x : x, y: y + yOffset, radius, shape,
+        const index = start + i;
+        this.rings.push({x: mirror ? 616 - x : x, y: y + yOffset, radius,
           angle: wrap(37 + pattern * 90 + index * 71), released: false});
         if (y - highest <= 58) nextTop.push(index);
         if (lowest - y <= 74) nextBottom.push(index);
       });
-      for (const [from, to] of layout.links) this.addClip(start + from, start + to);
-      if (previousBottom.length) {
+      const firstClip = this.clips.length;
+      for (const [from, to] of layout.links) this.addClip(start + from, start + to, pattern);
+      if (difficulty === 3 && size === 10) {
+        this.clips[firstClip].sharedPin = firstClip + 1;
+        this.clips[firstClip + 1].sharedPin = firstClip;
+        this.clips[firstClip].pinned = this.clips[firstClip + 1].pinned = true;
+        this.clips[firstClip + 1].paired = true;
+        this.clips[firstClip].crossPinned = true;
+      }
+      if (previousBottom.length && (difficulty === 3 ? group !== 3 : (pattern + group) % 3 !== 1)) {
         const joins = previousBottom.flatMap(from => nextTop.map(to => ({from, to,
           distance: Math.hypot(this.rings[from].x - this.rings[to].x, this.rings[from].y - this.rings[to].y)})));
         joins.sort((a, b) => a.distance - b.distance);
-        this.addClip(joins[0].from, joins[0].to);
+        this.addClip(joins[0].from, joins[0].to, pattern);
       }
       previousBottom = nextBottom;
       yOffset += lowest + 115;
-      group++;
+    });
+    // Keep a short opening move in reach before the board starts scrolling.
+    const opening = this.rings.findIndex((ring, index) => ring.y < 180
+      && this.clips.filter(clip => clip.holder === index || clip.owner === index)
+        .every(clip => clip.sharedPin === undefined));
+    for (const clip of this.clips.filter(clip => clip.holder === opening || clip.owner === opening)) {
+      clip.paired = clip.pinned = false;
+      clip.turnDirection = undefined;
     }
   }
 
-  private addClip(holder: number, owner: number): void {
+  private addClip(holder: number, owner: number, pattern: number): void {
     const from = this.rings[holder], to = this.rings[owner];
     const angle = wrap(Math.atan2(to.y - from.y, to.x - from.x) * 180 / Math.PI);
-    const variant = (holder * 3 + owner) % 7;
+    const variant = (holder * 3 + owner + pattern) % 7;
     const difficulty = this.dish.difficulty;
     this.clips.push({holder, owner, angle, attached: true,
       paired: difficulty > 1 && variant < difficulty - 1,
       pinned: difficulty > 1 && (variant === 4 || difficulty === 3 && (variant === 0 || variant === 6)),
-      pinShape: variant === 4 ? 'elbow' : variant === 6 ? 'u' : 'straight'});
+      pinShape: variant === 4 ? 'elbow' : variant === 6 ? 'u' : 'straight',
+      turnDirection: difficulty > 1 && variant === 2 ? (holder % 2 === 0 ? 1 : -1) : undefined});
   }
 }

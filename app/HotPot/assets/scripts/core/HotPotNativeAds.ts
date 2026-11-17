@@ -1,15 +1,16 @@
 import {game, Game, Node, ScrollView, UITransform, view} from 'cc';
+import {getPageTheme} from '../data/PageTheme';
 import {HotPotCashout} from './HotPotCashout';
 import {
   DesignPageLayout, designSurface, fitDesignPage,
 } from './HotPotDesignUi';
+import {paintGameArt} from './HotPotGameArt';
 import {referenceArea} from './HotPotReferenceLayout';
 import {transform} from './HotPotUi';
 import {
-  NativeAdBounds, WechatNativeAdService,
+  NativeAdBounds, NativeAdPlacement, WechatNativeAdService,
 } from './WechatNativeAdService';
 
-type AdPageKind = 'settings' | 'ranking' | 'collection';
 type AdPanel = Node & {
   layoutNativeAd?: (layout: DesignPageLayout) => void;
 };
@@ -17,7 +18,7 @@ type AdPanel = Node & {
 /** Keeps native overlays aligned with the themed secondary-page footer. */
 export abstract class HotPotNativeAds extends HotPotCashout {
   private readonly nativeAd = new WechatNativeAdService();
-  private adPage?: {panel: AdPanel; kind: AdPageKind};
+  private adPage?: {panel: AdPanel; kind: NativeAdPlacement};
   private adBounds?: NativeAdBounds;
   private adInBackground = false;
 
@@ -30,7 +31,7 @@ export abstract class HotPotNativeAds extends HotPotCashout {
   onEnable(): void {
     super.onEnable();
     if (this.nativeAd.supported) {
-      this.nativeAd.prepare(this.nativeAdWindow().adWidth);
+      this.nativeAd.prepare(this.nativeAdWindow().adWidth, 'settings');
     }
     game.on(Game.EVENT_HIDE, this.suspendNativeAd, this);
     game.on(Game.EVENT_SHOW, this.resumeNativeAd, this);
@@ -73,8 +74,8 @@ export abstract class HotPotNativeAds extends HotPotCashout {
   ): void {
     const alreadyOpen = this.node.getChildByName('CollectionOverlay');
     super.showCollection(...args);
-    if (!alreadyOpen && (!args[0] || args[0] === 'ingredients')) {
-      this.attachNativeAd('CollectionOverlay', 'collection');
+    if (!alreadyOpen) {
+      this.attachNativeAd('CollectionOverlay', args[0] === 'achievements' ? 'achievements' : 'collection');
     }
   }
 
@@ -85,7 +86,7 @@ export abstract class HotPotNativeAds extends HotPotCashout {
     super.dismissPlayerMenu(name);
   }
 
-  private attachNativeAd(name: string, kind: AdPageKind): void {
+  private attachNativeAd(name: string, kind: NativeAdPlacement): void {
     const overlay = this.node.getChildByName(name);
     const panel = overlay?.getChildByName('PlayerPanel') as AdPanel;
     if (!panel || this.adPage?.panel === panel || !this.nativeAd.supported) {
@@ -107,16 +108,16 @@ export abstract class HotPotNativeAds extends HotPotCashout {
   }
 
   private layoutNativeAd(
-    panel: AdPanel, kind: AdPageKind, layout: DesignPageLayout,
+    panel: AdPanel, kind: NativeAdPlacement, layout: DesignPageLayout,
   ): void {
     const {area, window, safeWidth, adWidth: width} = this.nativeAdWindow();
     const units = 720 / window.width;
-    const size = this.nativeAd.size(width);
+    const size = this.nativeAd.size(width, kind);
     const gap = 12 * units;
     const height = size.height * units;
     const slotTop = layout.footerTop - gap - height;
     const bodyHeight = slotTop - gap - layout.bodyTop;
-    const minimumBodyHeight = kind === 'ranking' ? 462 : 350;
+    const minimumBodyHeight = {settings: 350, ranking: 462, collection: 350, achievements: 381}[kind];
     if (!(width > 0) || size.width > safeWidth
       || bodyHeight < minimumBodyHeight) {
       this.clearNativeAd(true);
@@ -132,6 +133,8 @@ export abstract class HotPotNativeAds extends HotPotCashout {
         layout.height / 2 - layout.bodyTop - bodyHeight / 2 - 13 * scale);
     } else if (kind === 'ranking') {
       this.layoutAdRanking(body, bodyHeight);
+    } else if (kind === 'achievements') {
+      this.layoutAdAchievements(body, bodyHeight);
     } else {
       this.layoutAdCollection(body, bodyHeight);
     }
@@ -149,7 +152,7 @@ export abstract class HotPotNativeAds extends HotPotCashout {
       width,
     };
     if (!this.adInBackground) {
-      this.nativeAd.position(this.adBounds);
+      this.nativeAd.position(this.adBounds, kind);
     }
   }
 
@@ -213,6 +216,16 @@ export abstract class HotPotNativeAds extends HotPotCashout {
     }
   }
 
+  private layoutAdAchievements(body: Node, available: number): void {
+    const board = body.getChildByName('AchievementBoard')!;
+    const height = Math.min(790, available - 18);
+    this.placeAdNode(board, 28, 18, 664, height);
+    const frame = board.getChildByName('AchievementFrame')!;
+    this.placeAdNode(frame, 0, 0, 664, height);
+    paintGameArt(frame, 'panel', getPageTheme().id, true);
+    this.resizeAdScroll(board.getChildByName('CollectionViewport')!, 36, 208, 592, Math.min(541, height - 224));
+  }
+
   private resizeAdScroll(
     viewport: Node, x: number, y: number, width: number, height: number,
   ): void {
@@ -239,7 +252,7 @@ export abstract class HotPotNativeAds extends HotPotCashout {
     if (!page || !this.adBounds || this.adInBackground) {
       return;
     }
-    this.nativeAd.show(this.adBounds, reason => {
+    this.nativeAd.show(this.adBounds, page.kind, reason => {
       if (this.adPage !== page || !page.panel.isValid) {
         return;
       }
@@ -283,6 +296,8 @@ export abstract class HotPotNativeAds extends HotPotCashout {
           this.layoutAdRanking(body, 820);
         } else if (kind === 'collection') {
           this.layoutAdCollection(body, 836);
+        } else if (kind === 'achievements') {
+          this.layoutAdAchievements(body, 808);
         }
         fitDesignPage(panel);
       }
