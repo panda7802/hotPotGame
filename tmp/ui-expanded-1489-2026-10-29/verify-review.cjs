@@ -1,0 +1,24 @@
+const { chromium } = require('playwright');
+const fs = require('fs');
+const path = require('path');
+const { pathToFileURL } = require('url');
+(async () => {
+  const browser = await chromium.launch({headless:true, executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe'});
+  const page = await browser.newPage({ viewport:{width:1280,height:900} });
+  const errors=[];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.goto(pathToFileURL(path.join(__dirname,'review-board.html')).href);
+  await page.locator('img').last().waitFor();
+  const images=await page.locator('img').evaluateAll(imgs=>imgs.map(i=>({src:i.getAttribute('src'),loaded:i.complete&&i.naturalWidth>0,width:i.naturalWidth,height:i.naturalHeight})));
+  const expected=JSON.parse(fs.readFileSync(path.join(__dirname,'review-manifest.json'),'utf8')).length;
+  if(images.length!==expected || images.some(i=>!i.loaded)) throw Error('Missing image: '+JSON.stringify(images));
+  await page.screenshot({path:path.join(__dirname,'review-desktop.png'),fullPage:true});
+  await page.setViewportSize({width:390,height:844});
+  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth);
+  await page.screenshot({path:path.join(__dirname,'review-mobile.png'),fullPage:true});
+  const result={images,errors,mobileOverflow:overflow};
+  fs.writeFileSync(path.join(__dirname,'review-verification.json'),JSON.stringify(result,null,2));
+  await browser.close();
+  if(errors.length||overflow) throw Error(JSON.stringify(result));
+  console.log(JSON.stringify(result,null,2));
+})().catch(e=>{console.error(e);process.exitCode=1});

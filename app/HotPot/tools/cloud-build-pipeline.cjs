@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const {verifyCloudBuild} = require('./verify-cloud-build.cjs');
+const {inspectWechatPackages} = require('./wechat-package-budget.cjs');
 
 const OUTPUT = 'wechatgame-cloud-dev';
 const BRANCH = 'codex/cloudbase-player-save';
@@ -9,25 +10,39 @@ const START_SCENE = '7c3e7fab-7b1e-4865-ba84-3cf81b48b9fb';
 /**
  * 读取并解析 JSON 文件，兼容 UTF-8 BOM。
  */
-const readJson =  file => JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+const readJson = (file) =>
+  JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
 /**
  * 比较两个路径是否指向同一目录。
  */
-const samePath =  (a, b) => process.platform === 'win32'
-  ? path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase() : path.resolve(a) === path.resolve(b);
+const samePath = (a, b) =>
+  process.platform === 'win32'
+    ? path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase()
+    : path.resolve(a) === path.resolve(b);
 
 /**
  * 读取工作区当前 Git 分支。
  */
 function readCurrentBranch(repository) {
+  // Isolated build copies may live below the actual checkout, like any other
+  // untracked subdirectory. Find its real Git ancestor; keep the branch guard.
+  while (!fs.existsSync(path.join(repository, '.git'))) {
+    const parent = path.dirname(repository);
+    if (parent === repository) throw new Error('Cannot find the build repository.');
+    repository = parent;
+  }
   let gitDirectory = path.join(repository, '.git');
   if (fs.statSync(gitDirectory).isFile()) {
     const pointer = fs.readFileSync(gitDirectory, 'utf8').trim();
-    if (!pointer.startsWith('gitdir: ')) throw new Error('无法识别 Git 工作目录。');
+    if (!pointer.startsWith('gitdir: ')) {
+      throw new Error('无法识别 Git 工作目录。');
+    }
     gitDirectory = path.resolve(repository, pointer.slice('gitdir: '.length));
   }
   const head = fs.readFileSync(path.join(gitDirectory, 'HEAD'), 'utf8').trim();
-  return head.startsWith('ref: refs/heads/') ? head.slice('ref: refs/heads/'.length) : '';
+  return head.startsWith('ref: refs/heads/')
+    ? head.slice('ref: refs/heads/'.length)
+    : '';
 }
 
 /**
@@ -39,31 +54,75 @@ function assertBranch(root, readBranch = readCurrentBranch) {
   }
 }
 
+/** Resolve Mask from task overrides, resolved modules or project settings. */
+function hasMaskModule(root, options) {
+  const override = options.overwriteProjectSettings?.includeModules?.mask;
+  if (override === 'on') return true;
+  if (override === 'off') return false;
+  if (Array.isArray(options.includeModules)) {
+    return options.includeModules.includes('mask');
+  }
+  const file = path.join(root, 'settings/v2/packages/engine.json');
+  if (!fs.existsSync(file)) return false;
+  const settings = readJson(file);
+  const config = settings.modules?.configs?.[
+    options.engineModulesConfigKey || 'defaultConfig'
+  ];
+  if (Array.isArray(config?.includeModules)) {
+    return config.includeModules.includes('mask');
+  }
+  return config?.cache?.mask?._value === true;
+}
+
 /**
  * 校验微信小游戏的构建参数和输出名称。
  */
 function assertBuildOptions(root, options) {
   const expected = path.join(root, 'build');
   const buildPath = options.buildPath?.startsWith('project://')
-    ? path.resolve(root, options.buildPath.slice('project://'.length)) : options.buildPath;
-  if (options.platform !== 'wechatgame') throw new Error('云开发构建的平台必须是微信小游戏。');
+    ? path.resolve(root, options.buildPath.slice('project://'.length))
+    : options.buildPath;
+  if (options.platform !== 'wechatgame') {
+    throw new Error('云开发构建的平台必须是微信小游戏。');
+  }
   if (options.outputName !== OUTPUT) {
-    throw new Error(`当前发布包名称为“${options.outputName || '未设置'}”，必须改为“${OUTPUT}”。请修改输出目录名称，不要只改任务名；若 Cocos 自动追加了 -001，请去掉后再构建。旧发布目录仍受保护。`);
+    throw new Error(
+      '当前发布包名称为“' +
+        String(options.outputName || '未设置') +
+        '”，必须改为“' +
+        String(OUTPUT) +
+        '”。请修改输出目录名称，不要只改任务名；若 Cocos 自动追加了 -001' +
+        '，请去掉后再构建。旧发布目录仍受保护。',
+    );
   }
   if (!buildPath || !samePath(buildPath, expected)) {
-    throw new Error(`发布路径必须为 project://build（${expected}），当前为“${options.buildPath || '未设置'}”。`);
+    throw new Error(
+      '发布路径必须为 project://build（' +
+        String(expected) +
+        '），当前为“' +
+        String(options.buildPath || '未设置') +
+        '”。',
+    );
   }
-  if (options.buildMode !== 'normal' || options.debug !== false || options.md5Cache !== false ||
-    options.mainBundleCompressionType !== 'subpackage' || options.startScene !== START_SCENE ||
+  if (options.buildMode !== 'normal'
+    || options.debug !== false ||
+    options.md5Cache !== false ||
+    options.mainBundleCompressionType !== 'subpackage' ||
+    options.startScene !== START_SCENE ||
     options.mainBundleIsRemote !== false) {
-    throw new Error('请使用导入配置中的正常构建、main 场景、本地小游戏分包及关闭 MD5 设置。');
+    throw new Error(
+      '请使用导入配置中的正常构建、main 场景、本地小游戏分包及关闭 MD5 设置。',
+    );
   }
-  if (!options.includeModules?.includes('mask') && options.overwriteProjectSettings?.includeModules?.mask !== 'on') {
+  if (!hasMaskModule(root, options)) {
     throw new Error('地区滚动需要 Mask 模块，请重新导入云开发构建配置。');
   }
   const wechat = options.packages?.wechatgame;
-  if (!wechat || wechat.appid !== 'wx943cc2d81ec6f820' || wechat.orientation !== 'portrait' ||
-    wechat.separateEngine !== false || wechat.highPerformanceMode !== false ||
+  if (!wechat
+    || wechat.appid !== 'wx943cc2d81ec6f820' ||
+    wechat.orientation !== 'portrait' ||
+    wechat.separateEngine !== false ||
+    wechat.highPerformanceMode !== false ||
     wechat.buildOpenDataContextTemplate !== '') {
     throw new Error('微信平台参数不匹配，请重新导入云开发配置并核对 AppID。');
   }
@@ -77,8 +136,10 @@ function assertDestination(root, destination) {
   if (!destination || !samePath(destination, expected)) {
     throw new Error(`拒绝写入其他构建目录；目标必须是 ${expected}`);
   }
-  // A directory link must not redirect this development build into a release checkout.
-  if (fs.existsSync(destination) && !samePath(fs.realpathSync(destination), destination)) {
+  // A directory link must not redirect this development build into a release
+  // checkout.
+  if (fs.existsSync(destination)
+    && !samePath(fs.realpathSync(destination), destination)) {
     throw new Error('开发输出目录不能是指向其他位置的目录链接。');
   }
 }
@@ -86,12 +147,19 @@ function assertDestination(root, destination) {
 /**
  * 写入云开发构建配置并检查最终包大小。
  */
-function finalizeCloudBuild({root = path.resolve(__dirname, '..'), build = path.join(root, 'build', OUTPUT)} = {}) {
+function finalizeCloudBuild({
+  root = path.resolve(__dirname, '..'),
+  build = path.join(root, 'build', OUTPUT),
+} = {}) {
   assertDestination(root, build);
-  const settings = readJson(path.join(root, 'cloudfunctions/hotpotPlayerDev/settings.json'));
-  if (!settings.enabled ||
-    settings.collectionName !== 'hotpot_players_dev' || settings.appId !== 'wx943cc2d81ec6f820' ||
-    !settings.environmentId || settings.environmentId === 'hotpot-d9g7g17ifb99bdd1b') {
+  const settings = readJson(
+    path.join(root, 'cloudfunctions/hotpotPlayerDev/settings.json'),
+  );
+  if (!settings.enabled
+    || settings.collectionName !== 'hotpot_players_dev' ||
+    settings.appId !== 'wx943cc2d81ec6f820' ||
+    !settings.environmentId ||
+    settings.environmentId === 'hotpot-d9g7g17ifb99bdd1b') {
     throw new Error('独立开发云配置不匹配，停止处理构建产物。');
   }
   const projectFile = path.join(build, 'project.config.json');
@@ -105,33 +173,40 @@ function finalizeCloudBuild({root = path.resolve(__dirname, '..'), build = path.
   fs.writeFileSync(projectFile, JSON.stringify(project));
   fs.writeFileSync(gameFile, JSON.stringify(game));
   // Also enforce the project startup template for existing GUI build tasks.
-  fs.copyFileSync(path.join(root, 'build-templates/wechatgame/first-screen.js'), path.join(build, 'first-screen.js'));
+  fs.copyFileSync(
+    path.join(root, 'build-templates/wechatgame/first-screen.js'),
+    path.join(build, 'first-screen.js'),
+  );
   const runtimeSettingsFile = path.join(build, 'src/settings.json');
   const runtimeSettings = readJson(runtimeSettingsFile);
-  runtimeSettings.splashScreen = {...runtimeSettings.splashScreen, totalTime: 0, logo: {type: 'none'}};
+  runtimeSettings.splashScreen = {
+    ...runtimeSettings.splashScreen,
+    totalTime: 0,
+    logo: {type: 'none'},
+  };
   fs.writeFileSync(runtimeSettingsFile, JSON.stringify(runtimeSettings));
   const target = verifyCloudBuild({root, build});
-  /**
-   * 为测试场景提供 size 所需的模拟行为。
-   */
-  function size(folder) {
-    /**
-     * 把集合条目汇总为一个结果。
-     */
-    return fs.readdirSync(folder, {withFileTypes: true}).reduce((total, item) => {
-      const file = path.join(folder, item.name);
-      if (item.isSymbolicLink()) throw new Error('构建产物中不允许目录/文件链接。');
-      return total + (item.isDirectory() ? size(file) : fs.statSync(file).size);
-    }, 0);
-  }
-  const bytes = size(build);
-  if (bytes >= 4000000) throw new Error(`开发包超过 4 MB：${bytes} 字节。`);
+  const budget = inspectWechatPackages(build);
+  const {bytes, mainBytes, subpackageBytes, packages} = budget;
+  console.log(`[HotPot Cloud Build] 主包 ${mainBytes} bytes，分包 ${subpackageBytes} bytes`);
+  for (const item of packages) console.log(`[HotPot Cloud Build] 分包 ${item.name}: ${item.bytes} bytes`);
+  console.log(`[HotPot Cloud Build] 小游戏分包模式；主包剩余 ${budget.mainRemainingBytes} bytes；总包采用独立 30 MB 项目预算。`);
   console.log(`[HotPot Cloud Build] 完成：${build} (${bytes} bytes)`);
-  return {...target, bytes};
+  return {...target, ...budget};
 }
 
-module.exports = {OUTPUT, BRANCH, assertBranch, assertBuildOptions, assertDestination, finalizeCloudBuild};
+module.exports = {
+  OUTPUT,
+  BRANCH,
+  assertBranch,
+  assertBuildOptions,
+  assertDestination,
+  finalizeCloudBuild,
+};
 if (require.main === module) {
   assertBranch(path.resolve(__dirname, '..'));
-  finalizeCloudBuild();
+  require('./optimize-wechat-lossless.cjs').optimizeWechatBuild()
+    .then(() => finalizeCloudBuild()).catch(error => {
+      console.error(error);process.exitCode = 1;
+    });
 }

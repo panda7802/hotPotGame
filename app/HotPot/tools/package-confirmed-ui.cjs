@@ -1,0 +1,30 @@
+'use strict';
+const fs=require('fs'),path=require('path'),crypto=require('crypto'),assert=require('assert');
+const repo=path.resolve(__dirname,'../../..'),project=path.join(repo,'app/HotPot');
+const built=path.join(repo,'tmp/build-confirmed-ui-20261030/app/HotPot');
+const marker=fs.readFileSync(path.join(project,'assets/scripts/core/HotPotTileSkin.ts'),'utf8').match(/CLIENT_BUILD\s*=\s*'([^']+)'/)[1];
+const delivery=path.join(repo,'exports/HotPot-confirmed-ui-20261030');
+function files(root){return fs.readdirSync(root,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(root,e.name)):[path.join(root,e.name)])}
+const hash=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const sources=[...files(path.join(project,'assets/scripts')).filter(f=>f.endsWith('.ts')),...files(path.join(project,'assets/resources')).filter(f=>!f.endsWith('.meta'))].map(file=>{
+  const relative=path.relative(project,file),staged=path.join(built,relative);
+  assert(fs.existsSync(staged)&&hash(staged)===hash(file),'Stale build source: '+relative);
+  return{file:relative.replaceAll('\\','/'),sha256:hash(file)};
+});
+for(const [dir,file] of [['web-confirmed-ui','assets/main/index.js'],['wechatgame-cloud-dev','subpackages/main/game.js']])assert(fs.readFileSync(path.join(built,'build',dir,file),'utf8').includes(marker),'Wrong build '+dir);
+const verification=JSON.parse(fs.readFileSync(path.join(repo,'design/all-pages-ninepatch-20261030/runtime-cocos/verification.json'),'utf8'));
+assert.equal(verification.build,marker);assert.deepEqual(verification.styles,[1,4,8,9]);assert.deepEqual(verification.pageErrors,[]);assert.deepEqual(verification.missingLocalAssets,[]);
+if(fs.existsSync(delivery))throw Error('Refusing to replace delivery: '+delivery);
+fs.mkdirSync(delivery,{recursive:true});fs.cpSync(path.join(built,'build/wechatgame-cloud-dev'),path.join(delivery,'wechatgame'),{recursive:true});
+const wx=path.join(delivery,'wechatgame'),configPath=path.join(wx,'project.config.json'),config=JSON.parse(fs.readFileSync(configPath,'utf8'));
+delete config.cloudfunctionRoot;config.projectname='锅里捞啥-确认版UI';fs.writeFileSync(configPath,JSON.stringify(config,null,2));
+const inventory=files(wx).map(file=>({file:path.relative(wx,file).replaceAll('\\','/'),bytes:fs.statSync(file).size,sha256:hash(file)}));
+const total=inventory.reduce((sum,f)=>sum+f.bytes,0),game=JSON.parse(fs.readFileSync(path.join(wx,'game.json'),'utf8'));
+const packages=(game.subpackages||game.subPackages||[]).map(p=>({name:p.name,root:p.root,bytes:inventory.filter(f=>f.file.startsWith(p.root.replace(/\/$/,'')+'/')).reduce((s,f)=>s+f.bytes,0)}));
+const main=total-packages.reduce((s,p)=>s+p.bytes,0);
+assert(total<4000000,'Complete client exceeds 4,000,000 bytes');
+assert(main<2000000&&packages.every(p=>p.bytes<2000000),'A package exceeds 2,000,000 bytes');
+const report={build:marker,totalClientBytes:total,limitBytes:4000000,remainingBytes:4000000-total,mainPackageBytes:main,subpackages:packages,runtime:verification,sourceHashes:sources,files:inventory};
+fs.writeFileSync(path.join(delivery,'build-report.json'),JSON.stringify(report,null,2));
+fs.writeFileSync(path.join(delivery,'导入说明.md'),`# 锅里捞啥 · 确认版 UI\n\n版本：${marker}\n\n微信开发者工具选择「小游戏」，导入本目录的 **wechatgame** 子文件夹。沿用项目现有 AppID。\n\n完整客户端未压缩合计 **${total.toLocaleString('en-US')} 字节**，低于4,000,000字节；余量 **${(4000000-total).toLocaleString('en-US')} 字节**。主包 ${main.toLocaleString('en-US')} 字节，每个本地分包也低于2,000,000字节。统计包含所有客户端文件，未使用ZIP压缩体积替代；逐文件SHA256和大小见 build-report.json。\n\n已接入01铜边墨绿游戏台、04杏橙奶油盛盘、08青瓷、09浅金暖木食盒，以及四主题道具次数居中。中段背景延展，顶部招牌、底部托盘与按钮保持比例；第一关没有道具图案和点击区域。各关使用真实牌局和现有三消、撤回、炸、翻锅、复活、存档与分享逻辑。子页面使用确认稿原画页头和主题材质。\n\n已完成Cocos Creator 3.8.8网页及微信正式构建、四主题真实引擎交互验证、多窗口及模拟微信安全区检查、类型检查、关卡解法、存档与纹理复用回归。未上传、发布小游戏或部署云函数。尚未执行微信手机扫码验证；请在开发者工具内预览后核对真机安全区、字体和分享卡片。\n\n源工程为仓库 app/HotPot。网页验证产物位于 tmp/build-confirmed-ui-20261030/app/HotPot/build/web-confirmed-ui；设计及引擎截图不进入微信客户端。\n`);
+console.log(JSON.stringify({delivery,totalClientBytes:total,remainingBytes:4000000-total,mainPackageBytes:main,subpackages:packages},null,2));

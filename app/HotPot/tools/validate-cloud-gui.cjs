@@ -1,19 +1,28 @@
 'use strict';
-// Exercises build hooks' shared logic in an isolated fixture; never launches Creator or WeChat.
+// Exercises build hooks' shared logic in an isolated fixture; never launches
+// Creator or WeChat.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
 const {prepareCloud, loadTypeScript} = require('./prepare-cloud.cjs');
-const {BRANCH, assertBranch, assertBuildOptions, assertDestination, finalizeCloudBuild} = require('./cloud-build-pipeline.cjs');
+const {
+  BRANCH,
+  assertBranch,
+  assertBuildOptions,
+  assertDestination,
+  finalizeCloudBuild,
+} = require('./cloud-build-pipeline.cjs');
 const project = path.resolve(__dirname, '..');
 const config = require('./wechat-cloud-dev.build.json');
 /**
  * 通过 JSON 创建可序列化数据的深拷贝。
  */
-const clone = value => JSON.parse(JSON.stringify(value));
+const clone = (value) => JSON.parse(JSON.stringify(value));
 const ts = loadTypeScript();
 const fixtureParent = path.join(project, 'temp');
-const fixture = fs.mkdtempSync(path.join(fixtureParent, 'cloud-gui-validation-'));
+const fixture = fs.mkdtempSync(
+  path.join(fixtureParent, 'cloud-gui-validation-'),
+);
 const root = path.join(fixture, 'app', 'HotPot');
 const build = path.join(root, 'build', config.outputName);
 /**
@@ -30,8 +39,19 @@ const copy = (src, dest) => write(dest, fs.readFileSync(src));
 /**
  * 读取并解析 JSON 文件，兼容 UTF-8 BOM。
  */
-const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
+const readJson = (file) => JSON.parse(fs.readFileSync(file, 'utf8'));
 try {
+  // A field validator must work before Builder UI has assembled the full task.
+  // The real pre-build guard below must still reject unsafe complete options.
+  const fieldRule = require('../extensions/hotpot-cloud-build/builder.js')
+    .configs.wechatgame.verifyRuleMap.cloudDevelopmentTarget.func;
+  for (const partial of [undefined, {}, {platform:'wechatgame'}, {protectRelease:true}, {common:{outputName:config.outputName}}]) {
+    assert.strictEqual(fieldRule(true, partial), true,
+      'Missing unrelated fields must not falsely report an unset output name');
+  }
+  for (const disabled of [false, undefined, null, 'true']) {
+    assert.strictEqual(fieldRule(disabled, config), false);
+  }
   assertBranch(project);
   assertBuildOptions(root, config);
   /**
@@ -51,87 +71,225 @@ try {
   /**
    * 为测试提供当前调用所需的回调行为。
    */
-  for (const change of [c => c.outputName = 'wechatgame', c => c.outputName = 'wechatgame-001',
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        c => c.outputName = 'wechatgame-cloud-dev-001',
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        c => c.buildPath = '../build', c => c.buildMode = 'script', c => c.mainBundleIsRemote = true,
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        /**
-         * 为测试提供当前调用所需的回调行为。
-         */
-        c => c.packages.wechatgame.appid = 'wrong', c => c.overwriteProjectSettings.includeModules.mask = 'off']) {
-    const invalid = clone(config); change(invalid);
+  for (const change of [
+    (c) => (c.outputName = 'wechatgame'),
+    (c) => (c.outputName = 'wechatgame-001'),
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    (c) => (c.outputName = 'wechatgame-cloud-dev-001'),
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    (c) => (c.buildPath = '../build'),
+    (c) => (c.buildMode = 'script'),
+    (c) => (c.mainBundleIsRemote = true),
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    /**
+     * 为测试提供当前调用所需的回调行为。
+     */
+    (c) => (c.packages.wechatgame.appid = 'wrong'),
+    (c) => (c.overwriteProjectSettings.includeModules.mask = 'off'),
+  ]) {
+    const invalid = clone(config);
+    change(invalid);
     /**
      * 验证非法输入会被正确拒绝。
      */
     assert.throws(() => assertBuildOptions(root, invalid));
   }
+
+  // New Builder UI omits unchanged module overrides and inherits the project.
+  const projectEngineFile = path.join(root, 'settings/v2/packages/engine.json');
+  const inherited = clone(config);
+  delete inherited.overwriteProjectSettings.includeModules.mask;
+  const projectEngine = {modules: {configs: {
+    defaultConfig: {includeModules: ['2d', 'mask', 'ui']},
+    withoutMask: {includeModules: ['2d', 'ui']},
+  }}};
+  write(projectEngineFile, JSON.stringify(projectEngine));
+  assertBuildOptions(root, inherited);
+  assert.strictEqual(fieldRule(true, inherited), true);
+  inherited.overwriteProjectSettings.includeModules.mask =
+    'inherit-project-setting';
+  assertBuildOptions(root, inherited);
+  inherited.overwriteProjectSettings.includeModules.mask = 'off';
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  delete inherited.overwriteProjectSettings.includeModules.mask;
+  inherited.engineModulesConfigKey = 'withoutMask';
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  inherited.engineModulesConfigKey = 'defaultConfig';
+  inherited.includeModules = ['ui'];
+  assert.throws(() => assertBuildOptions(root, inherited), /Mask/);
+  inherited.includeModules = ['ui', 'mask'];
+  assertBuildOptions(root, inherited);
+  console.log('Inherited Mask, explicit overrides and resolved modules: OK');
   /**
    * 验证非法输入会被正确拒绝。
    */
-  assert.throws(() => assertDestination(root, path.join(root, 'build/wechatgame')), /拒绝/);
+  assert.throws(
+    () => assertDestination(root, path.join(root, 'build/wechatgame')),
+    /拒绝/,
+  );
   /**
    * 验证非法输入会被正确拒绝。
    */
   assert.throws(() => assertDestination(root, undefined), /拒绝/);
-  for (const name of ['CloudConfig', 'GameData', 'PlayerData']) {
-    copy(path.join(project, 'assets/scripts/data', name + '.ts'), path.join(root, 'assets/scripts/data', name + '.ts'));
+  for (const name of [
+    'CloudConfig',
+    'RuntimeConfig',
+    'GameConfig',
+    'GameData',
+    'PlayerTypes',
+    'RegionData',
+    'CashoutData',
+    'PlayerData',
+  ]) {
+    copy(
+      path.join(project, 'assets/scripts/data', name + '.ts'),
+      path.join(root, 'assets/scripts/data', name + '.ts'),
+    );
   }
   const regionSource = path.join(fixture, 'doc/res/regions.json');
   copy(path.resolve(project, '../../doc/res/regions.json'), regionSource);
   const prepared = prepareCloud({root, ts, requireEnabled: true});
   assert.strictEqual(prepared.enabled, true);
-  assert(fs.existsSync(path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData.js')));
-  assert.strictEqual(typeof require(path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData.js')).validatePlayerState, 'function');
+  assert(
+    fs.existsSync(
+      path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData.js'),
+    ),
+  );
+  assert.strictEqual(
+    typeof require(
+      path.join(root, 'cloudfunctions/hotpotPlayerDev/PlayerData.js'),
+    ).validatePlayerState,
+    'function',
+  );
   const clientRegions = path.join(root, 'assets/resources/data/regions.json');
   const before = fs.readFileSync(clientRegions, 'utf8');
-  assert.strictEqual(before, fs.readFileSync(path.join(root, 'cloudfunctions/hotpotPlayerDev/regions.json'), 'utf8'));
+  assert.strictEqual(
+    before,
+    fs.readFileSync(
+      path.join(root, 'cloudfunctions/hotpotPlayerDev/regions.json'),
+      'utf8',
+    ),
+  );
   write(regionSource, '[{"code":"X","name":"甲"},{"code":"X","name":"乙"}]');
   /**
    * 验证非法输入会被正确拒绝。
    */
   assert.throws(() => prepareCloud({root, ts, requireEnabled: true}), /地区/);
-  assert.strictEqual(fs.readFileSync(clientRegions, 'utf8'), before, 'invalid regions must not overwrite the bundled tree');
+  assert.strictEqual(
+    fs.readFileSync(clientRegions, 'utf8'),
+    before,
+    'invalid regions must not overwrite the bundled tree',
+  );
 
-  // Use genuine existing compiled JS as a fixture without changing its original directory.
-  for (const file of ['cocos-js/cc.js', 'subpackages/main/game.js', 'game.js']) {
-    copy(path.join(project, 'build/wechatgame-cloud-dev', file), path.join(build, file));
+  // Use genuine existing compiled JS as a fixture without changing its original
+  // directory.
+  const compiledBuild = [
+    process.env.HOTPOT_BUILD_FIXTURE,
+    path.join(project, 'build/wechatgame-cloud-dev'),
+    path.resolve(project, '../../tmp/build-confirmed-ui-20261030/app/HotPot/build/wechatgame-cloud-dev'),
+  ].filter(Boolean).find(folder => ['cocos-js/cc.js', 'subpackages/main/game.js', 'game.js']
+    .every(file => fs.existsSync(path.join(folder, file))));
+  assert(compiledBuild, 'Build a genuine WeChat client or set HOTPOT_BUILD_FIXTURE first.');
+  for (const file of [
+    'cocos-js/cc.js',
+    'subpackages/main/game.js',
+    'game.js',
+  ]) {
+    copy(
+      path.join(compiledBuild, file),
+      path.join(build, file),
+    );
   }
-  write(path.join(build, 'project.config.json'), JSON.stringify({appid: 'old', compileType: 'game'}));
-  write(path.join(build, 'game.json'), JSON.stringify({deviceOrientation: 'portrait'}));
-  copy(path.join(project, 'build-templates/wechatgame/first-screen.js'), path.join(root, 'build-templates/wechatgame/first-screen.js'));
-  write(path.join(build, 'src/settings.json'), JSON.stringify({
-    splashScreen: {
-      totalTime: 2000,
-      logo: {type: 'default'}
-    }
-  }));
+  write(
+    path.join(build, 'project.config.json'),
+    JSON.stringify({appid: 'old', compileType: 'game'}),
+  );
+  write(
+    path.join(build, 'game.json'),
+    JSON.stringify({deviceOrientation: 'portrait',
+      subpackages: [{name: 'main', root: 'subpackages/main/'}]}),
+  );
+  copy(
+    path.join(project, 'build-templates/wechatgame/first-screen.js'),
+    path.join(root, 'build-templates/wechatgame/first-screen.js'),
+  );
+  write(
+    path.join(build, 'src/settings.json'),
+    JSON.stringify({
+      splashScreen: {
+        totalTime: 2000,
+        logo: {type: 'default'},
+      },
+    }),
+  );
+  const skinPath = 'assets/scripts/core/HotPotTileSkin.ts';
+  const skin = fs.readFileSync(path.join(project, skinPath), 'utf8');
+  const marker = /CLIENT_BUILD\s*=\s*'([^']+)'/;
+  const fixtureReceipt = path.join(compiledBuild, 'hotpot-build.json');
+  const fixtureBuild = fs.existsSync(fixtureReceipt) ? readJson(fixtureReceipt).clientBuild : undefined;
+  write(path.join(root, skinPath), skin);
+  if (fixtureBuild && fixtureBuild !== skin.match(marker)?.[1]) {
+    assert.throws(() => finalizeCloudBuild({root, build}), /旧代码/);
+    write(path.join(root, skinPath), skin.replace(marker, () => `CLIENT_BUILD = '${fixtureBuild}'`));
+  }
   const result = finalizeCloudBuild({root, build});
+  assert.strictEqual(readJson(path.join(build, 'hotpot-build.json')).clientBuild,
+    result.clientBuild);
   assert.strictEqual(result.environment, prepared.environmentId);
   assert.strictEqual(readJson(path.join(build, 'game.json')).cloud, true);
-  assert.strictEqual(readJson(path.join(build, 'project.config.json')).appid, prepared.appId);
-  assert.strictEqual(readJson(path.join(build, 'project.config.json')).cloudfunctionRoot, '../../cloudfunctions/');
-  assert.strictEqual(readJson(path.join(build, 'src/settings.json')).splashScreen.totalTime, 0);
-  assert.strictEqual(readJson(path.join(build, 'src/settings.json')).splashScreen.logo.type, 'none');
-  assert.strictEqual(fs.readFileSync(path.join(build, 'first-screen.js'), 'utf8'),
-    fs.readFileSync(path.join(project, 'build-templates/wechatgame/first-screen.js'), 'utf8'));
-  assert.strictEqual(finalizeCloudBuild({root, build}).bytes, result.bytes, 'CLI and GUI finalization must be idempotent');
-  assert.strictEqual((fs.readFileSync(path.join(build, 'game.js'), 'utf8').match(/HotPot cloud target/g) || []).length, 1);
+  assert.strictEqual(
+    readJson(path.join(build, 'project.config.json')).appid,
+    prepared.appId,
+  );
+  assert.strictEqual(
+    readJson(path.join(build, 'project.config.json')).cloudfunctionRoot,
+    '../../cloudfunctions/',
+  );
+  assert.strictEqual(
+    readJson(path.join(build, 'src/settings.json')).splashScreen.totalTime,
+    0,
+  );
+  assert.strictEqual(
+    readJson(path.join(build, 'src/settings.json')).splashScreen.logo.type,
+    'none',
+  );
+  assert.strictEqual(
+    fs.readFileSync(path.join(build, 'first-screen.js'), 'utf8'),
+    fs.readFileSync(
+      path.join(project, 'build-templates/wechatgame/first-screen.js'),
+      'utf8',
+    ),
+  );
+  assert.strictEqual(
+    finalizeCloudBuild({root, build}).bytes,
+    result.bytes,
+    'CLI and GUI finalization must be idempotent',
+  );
+  assert.strictEqual(
+    (
+      fs
+        .readFileSync(path.join(build, 'game.js'), 'utf8')
+        .match(/HotPot cloud target/g) || []
+    ).length,
+    1,
+  );
   const mainFile = path.join(build, 'subpackages/main/game.js');
   const main = fs.readFileSync(mainFile, 'utf8');
+  write(mainFile, main.replaceAll(result.clientBuild, 'obsolete-client'));
+  assert.throws(() => finalizeCloudBuild({root, build}), /旧代码/);
+  write(mainFile, main);
   write(mainFile, main.replaceAll(prepared.environmentId, 'wrong-environment'));
   /**
    * 验证非法输入会被正确拒绝。
@@ -146,6 +304,37 @@ try {
    */
   assert.throws(() => finalizeCloudBuild({root, build}), /Mask/);
   write(engineFile, engine);
+  // A delivery larger than 4 MB is valid when its main package remains small.
+  const gameFile = path.join(build, 'game.json');
+  const originalGame = readJson(gameFile);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: []}));
+  assert.throws(() => finalizeCloudBuild({root, build}), /必须启用小游戏分包/);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: [
+    ...originalGame.subpackages, {name: 'duplicate', root: 'subpackages/main/'}],
+  }));
+  assert.throws(() => finalizeCloudBuild({root, build}), /路径重复或相互嵌套/);
+  write(gameFile, JSON.stringify({...originalGame, subpackages: [
+    ...originalGame.subpackages, {name: 'escape', root: '../outside'}],
+  }));
+  assert.throws(() => finalizeCloudBuild({root, build}), /相对路径/);
+  const resourceFile = path.join(build, 'subpackages', 'art-test', 'texture.bin');
+  write(gameFile, JSON.stringify({...originalGame,
+    subpackages: [...originalGame.subpackages, {name: 'art-test', root: 'subpackages/art-test/'}],
+  }));
+  write(path.join(build, 'subpackages/art-test/game.js'), '');
+  write(resourceFile, Buffer.alloc(2000000));
+  const smallExpansion = finalizeCloudBuild({root, build});
+  assert(smallExpansion.bytes > 2000000);
+  write(resourceFile, Buffer.alloc(5000000));
+  const expanded = finalizeCloudBuild({root, build});
+  assert(expanded.bytes > 4000000);
+  assert.strictEqual(expanded.mainBytes, smallExpansion.mainBytes,
+    'Adding subpackage resources must not consume the main-package budget');
+  write(resourceFile, Buffer.alloc(30000000));
+  assert.throws(() => finalizeCloudBuild({root, build}), /合计超过项目 30 MB/);
+  fs.unlinkSync(resourceFile);
+  fs.unlinkSync(path.join(build, 'subpackages/art-test/game.js'));
+  write(gameFile, JSON.stringify(originalGame));
   write(path.join(build, 'oversize.bin'), Buffer.alloc(4000000));
   /**
    * 验证非法输入会被正确拒绝。
@@ -155,7 +344,8 @@ try {
   assert.strictEqual(hooks.throwError, true);
   assert.strictEqual(typeof hooks.onBeforeBuild, 'function');
   assert.strictEqual(typeof hooks.onAfterBuild, 'function');
-  const rule = require('../extensions/hotpot-cloud-build/builder.js').configs.wechatgame.verifyRuleMap.cloudDevelopmentTarget;
+  const rule = require('../extensions/hotpot-cloud-build/builder.js').configs
+    .wechatgame.verifyRuleMap.cloudDevelopmentTarget;
   assert.strictEqual(rule.func(true, config), true);
   const diagnostics = [];
   const originalError = console.error;
@@ -163,17 +353,38 @@ try {
     /**
      * 为测试场景提供 error 所需的模拟行为。
      */
-    console.error = message => diagnostics.push(message);
-    assert.strictEqual(rule.func(true, {...config, outputName: 'wechatgame-001'}), false);
-    // Creator may retain the task name while appending a suffix to the actual output.
-    assert.strictEqual(rule.func(true, {...config, outputName: 'wechatgame-cloud-dev-001'}), false);
-  } finally {console.error = originalError;}
+    console.error = (message) => diagnostics.push(message);
+    assert.strictEqual(
+      rule.func(true, {...config, outputName: 'wechatgame-001'}),
+      false,
+    );
+    // Creator may retain the task name while appending a suffix to the actual
+    // output.
+    assert.strictEqual(
+      rule.func(true, {...config, outputName: 'wechatgame-cloud-dev-001'}),
+      false,
+    );
+  } finally {
+    console.error = originalError;
+  }
   /**
    * 按条件筛选或判断条目：message.includes('wechatgame-cloud-dev-001') && message.incl。
    */
-  assert(diagnostics.some(message => message.includes('wechatgame-cloud-dev-001') && message.includes('不要只改任务名')),
-    'GUI validation must report the actual output name and how to correct it');
-  console.log('GUI build pipeline: output protection, branch/config checks, region validation, CloudBase flags, idempotency, stale environment, missing Mask and size limit: OK');
+  assert(
+    diagnostics.some(
+      (message) =>
+        message.includes('wechatgame-cloud-dev-001') &&
+        message.includes('不要只改任务名'),
+    ),
+    'GUI validation must report the actual output name and how to correct it',
+  );
+  console.log(
+    'GUI build pipeline: output protection,' +
+      ' branch/config checks, region validati' +
+      'on, CloudBase flags, idempotency, stal' +
+      'e environment, missing Mask, subpackage structure, deliveries above 4 MB' +
+      ' and separate main/total limits: OK',
+  );
 } finally {
   const resolved = path.resolve(fixture);
   assert.strictEqual(path.dirname(resolved), fixtureParent);

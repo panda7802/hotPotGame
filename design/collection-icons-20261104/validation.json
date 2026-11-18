@@ -1,0 +1,38 @@
+[
+  {
+    "file": "style-01.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha": true,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "bytes": 1750663
+  },
+  {
+    "file": "style-04.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha": true,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "bytes": 1426347
+  },
+  {
+    "file": "style-08.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha": true,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "bytes": 1518340
+  },
+  {
+    "file": "style-09.png",
+    "width": 1254,
+    "height": 1254,
+    "alpha": true,
+    "alphaMin": 0,
+    "alphaMax": 255,
+    "bytes": 1849761
+  }
+]

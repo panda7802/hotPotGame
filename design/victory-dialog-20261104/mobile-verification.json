@@ -1,0 +1,20 @@
+{
+  "build": "20261104-victory-mobile",
+  "imagesBytes": 688657,
+  "previousImagesBytes": 9727586,
+  "rawClientBytes": 4693501,
+  "rawMainBytes": 1485001,
+  "wechatClientBytes": 4680999,
+  "wechatMainBytes": 1473605,
+  "bothTotalsAbove4MiB": true,
+  "mainWithin4MB": true,
+  "sevenSubpackages": true,
+  "runtimeCases": 24,
+  "buttonActions": 48,
+  "selectedThemeOnly": true,
+  "downloadFailureRetry": true,
+  "creatorBuild": "passed",
+  "wechatPreview": "passed",
+  "upload": "not-executed",
+  "publish": "not-executed"
+}

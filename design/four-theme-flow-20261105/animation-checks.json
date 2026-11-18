@@ -1,0 +1,54 @@
+{
+  "build": "20261105-four-theme-flow",
+  "checks": [
+    {
+      "style": 1,
+      "palette": [
+        20,
+        72,
+        49
+      ],
+      "backgroundChangeRatio": 0.8424242424242424,
+      "meanChannelChange": 32.726262626262624,
+      "foodFixed": true,
+      "animationAdvanced": true
+    },
+    {
+      "style": 4,
+      "palette": [
+        180,
+        106,
+        47
+      ],
+      "backgroundChangeRatio": 0.7333333333333333,
+      "meanChannelChange": 22.961616161616163,
+      "foodFixed": true,
+      "animationAdvanced": true
+    },
+    {
+      "style": 8,
+      "palette": [
+        54,
+        133,
+        110
+      ],
+      "backgroundChangeRatio": 0.7575757575757576,
+      "meanChannelChange": 24.772727272727273,
+      "foodFixed": true,
+      "animationAdvanced": true
+    },
+    {
+      "style": 9,
+      "palette": [
+        143,
+        70,
+        47
+      ],
+      "backgroundChangeRatio": 0.9636363636363636,
+      "meanChannelChange": 40.226262626262624,
+      "foodFixed": true,
+      "animationAdvanced": true
+    }
+  ],
+  "errors": []
+}

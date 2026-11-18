@@ -1,0 +1,39 @@
+'use strict';
+const fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..'),s=JSON.parse(fs.readFileSync(path.join(__dirname,'storage-cleanup-20261102.json'),'utf8'));
+const fmt=n=>n>=1e9?(n/1e9).toFixed(2)+' GB':(n/1e6).toFixed(2)+' MB';
+const total=Object.values(s.savedBytes).reduce((a,b)=>a+b,0),out=path.join(root,'doc/仓库体积清理-2026-11-02.md');
+const text=[
+'# 仓库体积清理记录 · 2026-11-02','',
+'本次按用户要求清理 Git 本地占用，以及 exports/design 中已经过时的导出文件。单位按十进制 GB/MB 统计，Git 内置输出的 GiB/MiB 与此不同。','',
+'| 目录 | 清理前 | 清理后 | 释放 |','| --- | ---: | ---: | ---: |',
+...Object.keys(s.before).map(k=>'| `'+k+'` | '+fmt(s.before[k])+' | '+fmt(s.after[k])+' | '+fmt(s.savedBytes[k])+' |'),'',
+'合计释放约 **'+fmt(total)+'**。Git 会继续因正常编辑与本地恢复记录而小幅增长，上表为清理结束时的测量。','',
+'## Git 做了什么','',
+'- 删除 Git 自身报告为 garbage 的 19 个历史残留 `tmp_pack_*` / `tmp_obj_*` 文件，共 196,126,976 字节；只处理 2026-11-01 之前的临时文件。',
+'- 执行普通打包整理，使用 `gc.reflogExpire=never`、`gc.reflogExpireUnreachable=never` 和 `--prune=never`，保留提交、分支、标签、远端引用及恢复记录。',
+'- `git fsck --full --no-dangling` 检查通过，没有缺失或损坏对象；整理后的垃圾文件数量为 0。',
+'- HEAD 仍为 `'+s.head+'`；本地分支、标签、远端分支引用及暂存区条目核对未改变。没有提交、推送、强制推送或改写历史。','',
+'## 删除了什么','',
+'- exports 中更早的试验构建目录、ZIP 和旧体积报告；保留本机现有最新可用的 2026-10-31 客户端备份以及云开发配套资料。',
+'- 旧 `all-pages-ninepatch-20261030/png/` 的 1,320 张全屏导出、`components/` 的 84 张弹框组件、85 张旧 Cocos 运行截图及旧静态总览。',
+'- 已被后续全屏菜单取代的 `menu-navigation-20261101/` 旧导航评审稿。',
+'- 已删除的旧全量导出加入 `.gitignore`，exports 内新增包继续被忽略；exports/README.md 作为说明可以纳入版本控制。','',
+'## 保留了什么','',
+'- 游戏 TypeScript、运行资源、云函数与云端配套文件。',
+'- 当前四主题预览与 `production-masters/` 高清原图、最新全屏菜单设计、地域榜单设计和当前实装验证。',
+'- 仍被资源生成或验证脚本引用的历史布局源代码、runtime.cjs、assets 与 source-art；旧目录不再声明为完整图片交付。',
+'- 清理前后对 **'+Object.keys(s.protectedFiles).length+' 个保留文件** 核对 SHA-256 一致，包含上述工程内容、高清原图与保留客户端备份。其他会话原有的手动开发教程改动未处理。','',
+'## 本机客户端包的版本限制','',
+'当前源码标记为 `20261101-fullscreen-submenus-ranking`，但本机没有对应的正式 exports 包，现有 build 目录也与该标记不匹配。不能把旧包改名后当作最新版。',
+'因此保留 `exports/HotPot-four-style-ui-4mb-20261031/` 及同名 ZIP，标记为 2026-10-31 备份。需要 11 月 1 日版时应从当前源码重新构建、验证和打包。本次没有构建或发布小游戏。','',
+'## 为什么 .git 仍然较大','',
+'旧图片与 ZIP 曾经提交进历史。删除工作区文件以及增加忽略规则，都不会删除历史提交引用的大对象。普通 gc 可以整理对象、压缩和去掉冗余存储，但会保留这些有引用的历史内容。',
+'若还要大幅减少 Git 体积，需要另外确定历史清理方案，例如提交本次工作区清理后，再从历史中移除旧 exports 和批量设计导出，或迁移为只含当前内容的新仓库。这可能需要强制更新远端，并让其他电脑重新克隆/对齐，不能与普通本地缓存清理混为一谈。**本次没有执行这一步。**',
+'工作区有大量旧文件删除，尚未提交；此前已经存在的手动开发教程改动也仍在，后续提交前应分别核对。','',
+'## 当前入口','',
+'- [当前设计和原图用途](../design/README.md)',
+'- [本机导出包及版本说明](../exports/README.md)',
+'- 完整路径/删除体积清单和保留文件哈希：`tmp/storage-cleanup-20261102.json`。',''
+].join('\n');fs.writeFileSync(out,text);console.log(out);console.log('Total bytes freed: '+total);
+const index=path.join(root,'design/all-pages-ninepatch-20261030/index.html');fs.writeFileSync(index,fs.readFileSync(index,'utf8').replace('../fullscreen-menu-review-20261101/profile-1.png','../fullscreen-menu-review-20261101/vermilion-v1.png'));
+const html=fs.readFileSync(index,'utf8');for(const hit of html.matchAll(/href="([^"]+)"/g)){assertExists(path.resolve(path.dirname(index),hit[1]))}function assertExists(p){if(!fs.existsSync(p))throw Error('Missing support index link '+p)}console.log('Retained design support index links verified.');

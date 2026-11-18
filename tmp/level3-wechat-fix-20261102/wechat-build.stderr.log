@@ -1,0 +1,25 @@
+[Error: EPERM: operation not permitted, open 'D:\codeX\create\app\HotPot\temp\logs\project.log'] {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'open',
+  path: 'D:\\codeX\\create\\app\\HotPot\\temp\\logs\\project.log'
+}
+[48244:1102/172944.791:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/172944.791:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/172944.791:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/172944.801:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/172944.804:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[48244:1102/172944.806:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/172944.806:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[48244:1102/172944.809:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/172944.809:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+hotpot-cloud-build 插件构建配置无版本号，将跳过数据迁移
+[48244:1102/173010.601:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/173010.601:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/173010.603:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[48244:1102/173010.608:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/173010.608:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[48244:1102/173010.608:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/173010.609:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[48244:1102/173010.609:ERROR:disk_cache.cc(208)] Unable to create cache
+[48244:1102/173010.609:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2

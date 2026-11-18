@@ -1,0 +1,129 @@
+import {BlockInputEvents,Graphics,Label,Mask,Node,resources,ScrollView,Sprite,SpriteFrame,Texture2D,UITransform} from 'cc';
+import {getPageTheme,PageStyle} from '../data/PageTheme';
+import {hex,transform} from './HotPotUi';
+import {fitReferenceBackdrop,fitReferenceContent,referenceArea} from './HotPotReferenceLayout';
+import {paintGameArt} from './HotPotGameArt';
+
+/** Pixel coordinates measured from the top left of the approved 720×1280 canvas. */
+export type DesignRect=[number,number,number,number];
+export function designNode(parent:Node,name:string,box:DesignRect):Node {
+  if((parent as any).designPage){
+    const band=box[1]>=1124?'DesignFooter':box[1]>=280?'DesignBody':'DesignHeader';
+    parent=parent.getChildByName(band)!;
+    box=[box[0],box[1]-(band==='DesignFooter'?1124:band==='DesignBody'?280:0),box[2],box[3]];
+  }
+  const p=parent.getComponent(UITransform),n=new Node(name);parent.addChild(n);
+  transform(n,box[2],box[3]);
+  n.setPosition(box[0]+box[2]/2-(p?.width||720)*(p?.anchorX??.5),
+    (p?.height||1280)*(1-(p?.anchorY??.5))-box[1]-box[3]/2);
+  return n;
+}
+export function designRadius(style=getPageTheme().id):number{return {1:14,4:34,8:22,9:8}[style]}
+export function designOnBackground():string {return getPageTheme().id===1?'#FFF0CE':getPageTheme().ink}
+
+/** Native vectors and system text replace the old low resolution six-page atlases. */
+export function designSurface(n:Node,fill=getPageTheme().card,radius=designRadius(),border=getPageTheme().edge,shadow=true):Graphics {
+  const {width:w,height:h}=n.getComponent(UITransform)!;
+  radius=Math.min(radius,Math.max(0,Math.min(w,h)/2-1));
+  const g=n.getComponent(Graphics)||n.addComponent(Graphics);g.clear();
+  if(shadow){g.fillColor=hex(getPageTheme().id===1?'#0D261FCC':'#51321C28');g.roundRect(-w/2,-h/2-5,w,h,radius);g.fill()}
+  g.fillColor=hex(fill);g.roundRect(-w/2,-h/2,w,h,radius);g.fill();
+  if(border){g.strokeColor=hex(border);g.lineWidth=getPageTheme().id===9?1:2;g.roundRect(-w/2+1,-h/2+1,w-2,h-2,Math.max(0,radius-1));g.stroke()}
+  return g;
+}
+export function designText(parent:Node,value:string,box:DesignRect,size=28,color=getPageTheme().ink,bold=false,left=false):Label {
+  const n=designNode(parent,'Text_'+value.slice(0,18),box),label=n.addComponent(Label);
+  label.string=value;label.fontSize=size;label.lineHeight=Math.round(size*1.45);
+  label.color=hex(color);label.isBold=bold;label.enableWrapText=true;
+  label.horizontalAlign=left?Label.HorizontalAlign.LEFT:Label.HorizontalAlign.CENTER;
+  label.verticalAlign=Label.VerticalAlign.CENTER;label.overflow=Label.Overflow.SHRINK;
+  label.fontFamily=[8,9].includes(getPageTheme().id)?'KaiTi, STKaiti, serif':'Microsoft YaHei, sans-serif';
+  return label;
+}
+export function designHit(n:Node,action:()=>void,disabled=false):Node {
+  (n as any).referenceDisabled=disabled;
+  n.on(Node.EventType.TOUCH_END,()=>{if(!(n as any).referenceDisabled)action()});return n;
+}
+export function designButton(parent:Node,name:string,caption:string,box:DesignRect,action:()=>void,secondary=false,disabled=false):Node {
+  const t=getPageTheme(),n=designNode(parent,name,box);designHit(n,action,disabled);
+  designSurface(n,disabled?t.disabled:secondary?t.card:t.accent);
+  const label=designText(n,caption,[14,4,box[2]-28,box[3]-8],30,disabled?t.muted:secondary?t.ink:t.onAccent,true);
+  label.node.name='Label';return n;
+}
+export function designImage(parent:Node,name:string,key:string,box:DesignRect):Node {
+  const n=designNode(parent,name,box);
+  resources.load(key+'/texture',Texture2D,(error,texture)=>{
+    if(error||!texture||!n.isValid)return;
+    const frame=new SpriteFrame();frame.texture=texture;
+    const sprite=n.addComponent(Sprite);sprite.sizeMode=Sprite.SizeMode.CUSTOM;sprite.spriteFrame=frame;
+    n.on(Node.EventType.NODE_DESTROYED,()=>frame.destroy());
+  });return n;
+}
+export function designHeader(panel:Node,title:string):void {
+  const t=getPageTheme();
+  // Reuse the gameplay atlas: the header contains no baked-in controls.
+  const brand=designNode(panel,'MenuBrand',[102,18,516,178]);
+  paintGameArt(brand,'brand',t.id);
+  const plaque=designNode(panel,'MenuTitlePlaque',[150,214,420,52]);
+  paintGameArt(plaque,'stage',t.id);
+  designText(panel,title,[185,218,350,44],30,t.id===9?t.onAccent:t.accent,true);
+}
+
+/** Header/footer use screen width; only the middle composition fits its space. */
+export function fitDesignPage(panel:Node):void {
+  if(!(panel as any).designPage)return;
+  const area=referenceArea(),scale=area.width/720,h=area.height/scale;
+  const top=(area.systemTop??area.top)/scale+8,bottom=area.bottom/scale;
+  transform(panel,720,h);panel.setScale(scale,scale,1);panel.setPosition(0,0);
+  const header=panel.getChildByName('DesignHeader')!,body=panel.getChildByName('DesignBody')!,footer=panel.getChildByName('DesignFooter')!;
+  header.setPosition(0,h/2-top-140);
+  const footerTop=h-bottom-124,bodyTop=top+280;
+  const available=Math.max(1,footerTop-24-bodyTop),s=Math.min(1,available/832);
+  body.setScale(s,s,1);body.setPosition(0,h/2-bodyTop-available/2);
+  footer.setPosition(0,h/2-footerTop-78);
+}
+export function designOverlay(parent:Node,name:string,viewport:number,modal=false):{overlay:Node,panel:Node} {
+  const overlay=new Node(name);parent.addChild(overlay);transform(overlay,720,viewport);overlay.addComponent(BlockInputEvents);
+  const scrim=designNode(overlay,'ModalScrim',[0,0,720,viewport]);
+  designSurface(scrim,modal?'#101B19A8':getPageTheme().id===1?getPageTheme().dark:getPageTheme().panel,0,'',false);
+  if(!modal){const backdrop=designImage(overlay,'FullBleedBackground','reference/bg-0'+getPageTheme().id,[0,0,720,1280]);fitReferenceBackdrop(backdrop)}
+  const panel=new Node('PlayerPanel');overlay.addChild(panel);transform(panel,720,1280);
+  (panel as any).referenceHeight=1280;(overlay as any).designModal=modal;
+  if(modal)fitReferenceContent(panel,1280);
+  else{
+    for(const [name,height] of [['DesignHeader',280],['DesignBody',832],['DesignFooter',156]] as const){
+      const layer=new Node(name);panel.addChild(layer);transform(layer,720,height);
+    }
+    (panel as any).designPage=true;fitDesignPage(panel);
+  }
+  return {overlay,panel};
+}
+export function designScroll(parent:Node,name:string,box:DesignRect,height:number,offset=0):{content:Node,view:ScrollView} {
+  const viewport=designNode(parent,name,box);viewport.addComponent(Mask);
+  const content=new Node(name==='CollectionViewport'?'CollectionContent':'RegionContent');viewport.addChild(content);
+  const actualHeight=Math.max(box[3],height);transform(content,box[2],actualHeight).setAnchorPoint(.5,1);
+  content.setPosition(0,box[3]/2+Math.max(0,Math.min(offset,actualHeight-box[3])));
+  const view=viewport.addComponent(ScrollView);view.content=content;view.horizontal=false;view.vertical=true;view.elastic=false;view.inertia=true;view.cancelInnerEvents=true;
+  return {content,view};
+}
+export function designFooter(panel:Node,caption:string,action:()=>void,name='Button_返回',primary=true):Node {
+  return designButton(panel,name,caption==='返回'?'←  返回':caption,[52,1124,616,80],action,!primary);
+}
+export function designIcon(parent:Node,type:string,box:DesignRect,color=getPageTheme().accent):Node {
+  const n=designNode(parent,'Icon_'+type,box),g=n.addComponent(Graphics),s=Math.min(box[2],box[3])/24;
+  g.strokeColor=hex(color);g.fillColor=hex(color);g.lineWidth=1.8*s;g.lineCap=Graphics.LineCap.ROUND;g.lineJoin=Graphics.LineJoin.ROUND;
+  const line=(points:number[][],close=false)=>{points.forEach(([x,y],i)=>i?g.lineTo((x-12)*s,(12-y)*s):g.moveTo((x-12)*s,(12-y)*s));if(close)g.close();g.stroke()};
+  if(type==='book'){line([[4,4],[18,4],[18,20],[4,20],[4,4]]);line([[8,4],[8,20]]);line([[11,8],[15,8]])}
+  else if(type==='pin'){g.circle(0,3*s,6*s);g.stroke();g.circle(0,3*s,2*s);g.stroke();line([[7,13],[12,21],[17,13]])}
+  else if(type==='trophy'){line([[7,3],[17,3],[17,10],[15,14],[9,14],[7,10]],true);line([[7,5],[3,5],[3,9],[7,12]]);line([[17,5],[21,5],[21,9],[17,12]]);line([[12,14],[12,20]]);line([[8,21],[16,21]])}
+  else if(type==='palette'){g.circle(0,0,9*s);g.stroke();for(const [x,y] of [[-4,4],[3,5],[-5,-2],[3,-3]]){g.circle(x*s,y*s,1.3*s);g.fill()}}
+  else if(type==='share'){line([[12,16],[12,3]]);line([[7,8],[12,3],[17,8]]);line([[5,12],[5,21],[19,21],[19,12]])}
+  else if(type==='back'){line([[14,5],[7,12],[14,19]]);line([[7,12],[21,12]])}
+  else if(type==='close'){line([[5,5],[19,19]]);line([[19,5],[5,19]])}
+  else if(type==='warning'){line([[12,3],[22,21],[2,21]],true);line([[12,9],[12,14]]);g.circle(0,-5*s,.8*s);g.fill()}
+  else if(type==='check')line([[5,12],[10,17],[20,6]]);
+  else if(type==='refresh'){line([[20,5],[20,11],[14,11]]);line([[4,19],[4,13],[10,13]]);g.arc(0,0,7*s,.25,2.7,false);g.stroke();g.arc(0,0,7*s,3.4,5.85,false);g.stroke()}
+  else if(type==='rank'){line([[3,21],[3,10],[8,10],[8,21]]);line([[10,21],[10,3],[15,3],[15,21]]);line([[17,21],[17,13],[22,13],[22,21]])}
+  else line([[8,5],[16,12],[8,19]]);
+  return n;
+}

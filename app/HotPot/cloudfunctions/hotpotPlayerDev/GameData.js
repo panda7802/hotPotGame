@@ -1,63 +1,34 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.INGREDIENT_SEED_MAX = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.INGREDIENTS = void 0;
+exports.INGREDIENT_SEED_MAX = exports.VARIED_LAYOUT_SEED_END = exports.VARIED_LAYOUT_SEED_START = exports.CONNECTED_LAYOUT_SEED_END = exports.CONNECTED_LAYOUT_SEED_START = exports.RANDOM_LAYOUT_SEED_END = exports.RANDOM_LAYOUT_SEED_START = exports.EIGHT_ROW_IMAGE_HEIGHT = exports.LEVELS = exports.HIDDEN_INGREDIENTS = exports.NORMAL_INGREDIENTS = exports.INGREDIENTS = void 0;
 exports.selectLevelIngredients = selectLevelIngredients;
 exports.levelThreeLayoutFamily = levelThreeLayoutFamily;
+exports.buildLevelThreeRoute = buildLevelThreeRoute;
+exports.needsHiddenIngredientGuarantee = needsHiddenIngredientGuarantee;
+exports.guaranteedHiddenIngredientSeed = guaranteedHiddenIngredientSeed;
 exports.createLevel = createLevel;
+exports.createRestartLevel = createRestartLevel;
 exports.getIngredient = getIngredient;
 exports.selectBombTargets = selectBombTargets;
-exports.INGREDIENTS = [
-    { id: 'beef', name: '牛肉', color: '#D9574F', dark: '#9E302F' },
-    { id: 'shrimp', name: '鲜虾', color: '#FF8B62', dark: '#D85A45' },
-    { id: 'vegetable', name: '青菜', color: '#65B85A', dark: '#368744' },
-    { id: 'mushroom', name: '蘑菇', color: '#C69A72', dark: '#8B654E' },
-    { id: 'corn', name: '玉米', color: '#F2C94C', dark: '#D49A28' },
-    { id: 'fish', name: '鱼片', color: '#79B8D1', dark: '#427F9E' },
-    { id: 'egg', name: '鹌鹑蛋', color: '#F0E3BF', dark: '#A7854E' },
-    { id: 'jzg', name: '茶树菇', color: '#A4602B', dark: '#63321C' },
-    { id: 'meetball', name: '肉丸', color: '#C98C62', dark: '#8A543A' },
-    { id: 'ou', name: '莲藕', color: '#E3C69C', dark: '#9A7857' },
-    { id: 'tomato', name: '番茄', color: '#E7543E', dark: '#A52F28' },
-    { id: 'toufu', name: '豆腐', color: '#F0E5C8', dark: '#9A825D' },
-    { id: 'ydf', name: '油豆腐', color: '#E8A543', dark: '#A96825' },
-    { id: 'tripe', name: '毛肚', color: '#766054', dark: '#47372E' },
-    { id: 'duckblood', name: '鸭血', color: '#A83B35', dark: '#6C2528' },
-    { id: 'potato', name: '土豆', color: '#F1D48A', dark: '#A98A46' },
-    { id: 'crabstick', name: '蟹棒', color: '#ED6550', dark: '#A93629' },
-    { id: 'noodle', name: '宽粉', color: '#EADAC1', dark: '#AA9274' },
-    { id: 'luncheon', name: '午餐肉', color: '#EAA1A1', dark: '#AD6468' },
-    { id: 'kelp', name: '海带结', color: '#65753A', dark: '#354623' },
-    { id: 'lamb', name: '羊肉', color: '#EFA3A5', dark: '#B66A76' },
-    { id: 'blackchicken', name: '乌鸡卷', color: '#8E8987', dark: '#48454A' },
-    { id: 'yam', name: '山药', color: '#F5EEDA', dark: '#A99B82' },
-];
-// Each layer is made from complete triples. A top-to-bottom solution always
-// exists, while imperfect choices can still fill the seven-slot tray.
-exports.LEVELS = [
-    { level: 1, title: '开锅尝鲜', typeCount: 3, layers: [9, 9], traySize: 7 },
-    { level: 2, title: '热锅练手', typeCount: 4, layers: [15, 15], traySize: 7 },
-    {
-        level: 3,
-        title: '千层盛宴',
-        typeCount: 10,
-        typeOffset: 3,
-        layers: Array(37).fill(24),
-        traySize: 7,
-        tileScale: 0.82
-    },
-];
+const GameConfig_1 = require("./GameConfig");
+var GameConfig_2 = require("./GameConfig");
+Object.defineProperty(exports, "INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.INGREDIENTS; } });
+Object.defineProperty(exports, "NORMAL_INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.NORMAL_INGREDIENTS; } });
+Object.defineProperty(exports, "HIDDEN_INGREDIENTS", { enumerable: true, get: function () { return GameConfig_2.HIDDEN_INGREDIENTS; } });
+Object.defineProperty(exports, "LEVELS", { enumerable: true, get: function () { return GameConfig_2.LEVELS; } });
 /**
  * 由整数种子生成可重现的伪随机数。
  */
 function seededRandom(seed) {
     let value = seed % 2147483647;
-    if (value <= 0)
+    if (value <= 0) {
         value += 2147483646;
+    }
     /**
      * 在当前操作完成后更新相关游戏状态。
      */
-    return  () => {
-        value = value * 16807 % 2147483647;
+    return () => {
+        value = (value * 16807) % 2147483647;
         return (value - 1) / 2147483646;
     };
 }
@@ -75,7 +46,7 @@ function shuffle(list, random) {
  * 按食材池生成可成组三张的牌型序列。
  */
 function buildTypes(count, typeCount, typeOffset, layerIndex, random, pool) {
-    const availableTypeCount = Math.max(1, Math.min(10, typeCount, exports.INGREDIENTS.length));
+    const availableTypeCount = Math.max(1, Math.min(10, typeCount, GameConfig_1.INGREDIENTS.length));
     const groupTypes = [];
     for (let i = 0; i < count / 3; i += 1)
         groupTypes.push((i + layerIndex) % availableTypeCount);
@@ -84,8 +55,10 @@ function buildTypes(count, typeCount, typeOffset, layerIndex, random, pool) {
     /**
      * 依次处理集合中的每个条目。
      */
-    groupTypes.forEach( (typeIndex) => {
-        const ingredient = pool ? pool[typeIndex] : exports.INGREDIENTS[(typeIndex + typeOffset) % 13].id;
+    groupTypes.forEach((typeIndex) => {
+        const ingredient = pool
+            ? pool[typeIndex]
+            : GameConfig_1.INGREDIENTS[(typeIndex + typeOffset) % 13].id;
         result.push(ingredient, ingredient, ingredient);
     });
     return shuffle(result, random);
@@ -96,22 +69,47 @@ const EIGHT_ROW_SPACING = Math.ceil(exports.EIGHT_ROW_IMAGE_HEIGHT * 1.1);
  * 计算一层棋盘的牌位坐标。
  */
 function buildPositions(count, layerIndex, targetRows) {
-    const columns = targetRows ? Math.ceil(count / targetRows) : (count <= 9 ? 3 : (count <= 15 ? 5 : 6));
+    const columns = targetRows
+        ? Math.ceil(count / targetRows)
+        : count <= 9
+            ? 3
+            : count <= 15
+                ? 5
+                : 6;
     const rows = Math.ceil(count / columns);
-    const spacingX = targetRows ? (columns <= 3 ? 176 : 156) : (columns === 6 ? 112 : 120);
+    const spacingX = targetRows
+        ? columns <= 3
+            ? 176
+            : 156
+        : columns === 6
+            ? 112
+            : 120;
     const spacingY = targetRows ? EIGHT_ROW_SPACING : 108;
     const offsets = [
-        { x: -27, y: -18 }, { x: 24, y: 17 }, { x: -11, y: 39 },
-        { x: 38, y: -2 }, { x: 0, y: 0 },
+        { x: -27, y: -18 },
+        { x: 24, y: 17 },
+        { x: -11, y: 39 },
+        { x: 38, y: -2 },
+        { x: 0, y: 0 },
     ];
     const baseOffset = offsets[layerIndex % offsets.length];
     // 八行牌阵每层沿不同方向错开，让下层露出牌角与侧边。
     // 纵向偏移限制在 16px 内，为最上/下排保留棋盘边距。
     const stackedOffsets = [
-        { x: -28, y: -16 }, { x: 0, y: 0 },
-        { x: 28, y: 16 }, { x: -12, y: 8 },
+        { x: -28, y: -16 },
+        { x: 0, y: 0 },
+        { x: 28, y: 16 },
+        { x: -12, y: 8 },
     ];
-    const offset = targetRows ? stackedOffsets[layerIndex % stackedOffsets.length] : baseOffset;
+    const offset = targetRows
+        ? stackedOffsets[layerIndex % stackedOffsets.length]
+        : baseOffset;
+    /**
+     * 棋盘横坐标。
+     */
+    /**
+     * 棋盘纵坐标。
+     */
     const result = [];
     for (let i = 0; i < count; i += 1) {
         const row = Math.floor(i / columns);
@@ -145,31 +143,45 @@ function buildLevelThreePositions(config, layoutSeed) {
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const rowShifts = [0, 1, 2].map( () => randomized ? Math.floor(random() * 71) - 35 : 0);
+    const rowShifts = [0, 1, 2].map(() => randomized ? Math.floor(random() * 71) - 35 : 0);
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const columnShifts = [0, 1].map( () => randomized ? Math.floor(random() * 17) - 8 : 0);
+    const columnShifts = [0, 1].map(() => randomized ? Math.floor(random() * 17) - 8 : 0);
     /**
      * 在当前操作完成后更新相关游戏状态。
      */
-    const phases = Array.from({ length: 6 },  () => randomized ? Math.floor(random() * 2) : 0);
+    const phases = Array.from({ length: 6 }, () => randomized ? Math.floor(random() * 2) : 0);
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    return config.layers.map( (_, layer) => {
+    return config.layers.map((_, layer) => {
+        /**
+         * 棋盘横坐标。
+         */
+        /**
+         * 棋盘纵坐标。
+         */
         const positions = [];
         for (let row = 0; row < 3; row += 1) {
             for (let col = 0; col < 2; col += 1) {
                 const offsets = (layer + phases[row * 2 + col]) % 2 === 0
-                    ? [{ x: -halfWidth, y: -halfHeight }, { x: halfWidth, y: -halfHeight },
-                        { x: -halfWidth, y: halfHeight }, { x: halfWidth, y: halfHeight }]
-                    : [{ x: -halfWidth * 2, y: 0 }, { x: halfWidth * 2, y: 0 },
-                        { x: 0, y: -halfHeight * 2 }, { x: 0, y: halfHeight * 2 }];
+                    ? [
+                        { x: -halfWidth, y: -halfHeight },
+                        { x: halfWidth, y: -halfHeight },
+                        { x: -halfWidth, y: halfHeight },
+                        { x: halfWidth, y: halfHeight },
+                    ]
+                    : [
+                        { x: -halfWidth * 2, y: 0 },
+                        { x: halfWidth * 2, y: 0 },
+                        { x: 0, y: -halfHeight * 2 },
+                        { x: 0, y: halfHeight * 2 },
+                    ];
                 /**
                  * 依次处理集合中的每个条目。
                  */
-                offsets.forEach( offset => positions.push({
+                offsets.forEach((offset) => positions.push({
                     x: (col - 0.5) * spacingX + rowShifts[row] + offset.x,
                     y: (1 - row) * spacingY + columnShifts[col] + offset.y,
                 }));
@@ -178,33 +190,72 @@ function buildLevelThreePositions(config, layoutSeed) {
         return positions;
     });
 }
-// Keep the old seed range reproducible for existing saves. New seeds use visibly
+// Keep the old seed range reproducible for existing saves. New seeds use
+// visibly
 // different formations and randomized ingredient placement, not small offsets.
 exports.RANDOM_LAYOUT_SEED_START = 2147483647;
 exports.RANDOM_LAYOUT_SEED_END = 4294967292;
+// A separate seed range keeps every existing saved board reproducible.
+exports.CONNECTED_LAYOUT_SEED_START = 4294967293;
+exports.CONNECTED_LAYOUT_SEED_END = 6442450938;
+exports.VARIED_LAYOUT_SEED_START = 6442450939;
+exports.VARIED_LAYOUT_SEED_END = 8589934584;
 exports.INGREDIENT_SEED_MAX = 2147483646;
 /**
  * 新局抽取整个食材组合；牛羊肉互斥，翻锅只重排该组合已有的牌。
  */
-function selectLevelIngredients(levelIndex, seed) {
-    const config = exports.LEVELS[levelIndex];
-    if (seed === 0)
-        /**
-         * 在当前操作完成后更新相关游戏状态。
-         */
-        return Array.from({ length: config.typeCount },  (_, i) => exports.INGREDIENTS[(i + (config.typeOffset || 0)) % 13].id);
+function selectLevelIngredients(levelIndex, seed, poolVersion = 4) {
+    const config = GameConfig_1.LEVELS[levelIndex];
+    /**
+     * 在当前操作完成后更新相关游戏状态。
+     */
+    if (seed === 0) {
+        return Array.from({ length: config.typeCount }, (_, i) => GameConfig_1.INGREDIENTS[(i + (config.typeOffset || 0)) % 13].id);
+    }
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const shuffled = shuffle(exports.INGREDIENTS.map( item => item.id), seededRandom(seed));
+    if (poolVersion === 4 && levelIndex === 2) {
+        const random = seededRandom(seed);
+        const selected = [];
+        let available = GameConfig_1.INGREDIENTS.slice();
+        while (selected.length < config.typeCount) {
+            const weight = (item) => item.hidden ? GameConfig_1.HIDDEN_INGREDIENT_WEIGHT : 1;
+            let ticket = random() * available.reduce((sum, item) => sum + weight(item), 0);
+            let chosen = available[available.length - 1];
+            for (const item of available) {
+                ticket -= weight(item);
+                if (ticket < 0) {
+                    chosen = item;
+                    break;
+                }
+            }
+            selected.push(chosen.id);
+            available = available.filter(item => item.id !== chosen.id
+                && !(chosen.id === 'beef' && item.id === 'lamb')
+                && !(chosen.id === 'lamb' && item.id === 'beef'));
+        }
+        return selected;
+    }
+    const shuffled = shuffle((poolVersion === 1 ? GameConfig_1.INGREDIENTS.slice(0, 23) : GameConfig_1.NORMAL_INGREDIENTS)
+        .map((item) => item.id), seededRandom(seed));
     const selected = [];
     for (const type of shuffled) {
-        if ((type === 'beef' && selected.indexOf('lamb') >= 0) ||
-            (type === 'lamb' && selected.indexOf('beef') >= 0))
+        if ((type === 'beef' && selected.indexOf('lamb') >= 0)
+            || (type === 'lamb' && selected.indexOf('beef') >= 0)) {
             continue;
+        }
         selected.push(type);
-        if (selected.length === config.typeCount)
+        if (selected.length === config.typeCount) {
             break;
+        }
+    }
+    // 独立随机源不改变 v1/v2 的历史抽取顺序，翻锅/恢复沿用本局种子。
+    if (poolVersion === 3 && levelIndex === 2) {
+        const rareRandom = seededRandom((seed + 104729) % exports.INGREDIENT_SEED_MAX);
+        if (rareRandom() < GameConfig_1.HIDDEN_ENCOUNTER_CHANCE) {
+            selected[selected.length - 1] = GameConfig_1.HIDDEN_INGREDIENTS[Math.floor(rareRandom() * GameConfig_1.HIDDEN_INGREDIENTS.length)].id;
+        }
     }
     return selected;
 }
@@ -212,16 +263,135 @@ function selectLevelIngredients(levelIndex, seed) {
  * 根据种子选取第三关的布局族。
  */
 function levelThreeLayoutFamily(seed = 0) {
-    return seed < exports.RANDOM_LAYOUT_SEED_START ? -1 : (seed - exports.RANDOM_LAYOUT_SEED_START) % 3;
+    if (seed >= exports.VARIED_LAYOUT_SEED_START) {
+        return (seed - exports.VARIED_LAYOUT_SEED_START) % 3;
+    }
+    if (seed >= exports.CONNECTED_LAYOUT_SEED_START) {
+        return (seed - exports.CONNECTED_LAYOUT_SEED_START) % 3;
+    }
+    return seed < exports.RANDOM_LAYOUT_SEED_START
+        ? -1
+        : (seed - exports.RANDOM_LAYOUT_SEED_START) % 3;
+}
+/** Compact, connected rows; alternating offsets reveal the lower layer. */
+function buildConnectedLevelThreePositions(config, seed) {
+    const family = levelThreeLayoutFamily(seed);
+    const shortRow = [0, 2, 4][family];
+    return config.layers.map((_, layer) => {
+        const direction = layer % 2 === 0 ? -1 : 1;
+        const positions = [];
+        for (let row = 0; row < 5; row++) {
+            const columns = row === shortRow ? 4 : 5;
+            for (let col = 0; col < columns; col++) {
+                positions.push({
+                    x: (col - (columns - 1) / 2) * 114 + direction * 26,
+                    y: (2 - row) * 96 + direction * 22,
+                });
+            }
+        }
+        return positions;
+    });
+}
+/** Fewer tiles per layer leave room for distinct, full-size silhouettes. */
+function buildVariedLevelThreePositions(config, seed) {
+    const family = levelThreeLayoutFamily(seed);
+    const shapes = [
+        // Diamond, flower and butterfly; all contain eighteen positions.
+        [[0], [-1, 0, 1], [-2, -1, 0, 1, 2],
+            [-2, -1, 0, 1, 2], [-1, 0, 1], [0]],
+        [[-.5, .5], [-2, -1, 0, 1, 2], [-2, -1, 1, 2],
+            [-2, -1, 0, 1, 2], [-.5, .5]],
+        [[-2, -1, 1, 2], [-2, -1, 1, 2], [-.5, .5],
+            [-2, -1, 1, 2], [-2, -1, 1, 2]],
+    ];
+    const rows = shapes[family];
+    const mask = [];
+    rows.forEach((columns, row) => columns.forEach(col => mask.push({
+        x: col * 114, y: ((rows.length - 1) / 2 - row) * 96,
+    })));
+    return config.layers.map((count, layer) => {
+        const direction = layer % 2 === 0 ? -1 : 1;
+        return Array.from({ length: count }, (_, i) => {
+            const point = mask[Math.floor(i * mask.length / count)];
+            return { x: point.x + direction * 26, y: point.y + direction * 22 };
+        });
+    });
+}
+/** Legal removal order, favoring newly exposed deeper tiles. */
+function buildLevelThreeRoute(tiles, seed) {
+    const random = seededRandom(seed);
+    const indices = new Map(tiles.map((tile, i) => [tile.id, i]));
+    const blocked = tiles.map(tile => tile.blockedBy.length);
+    const dependents = tiles.map(() => []);
+    tiles.forEach((tile, i) => tile.blockedBy.forEach(id => {
+        dependents[indices.get(id)].push(i);
+    }));
+    const available = tiles.map((_, i) => i).filter(i => blocked[i] === 0);
+    const route = [];
+    while (available.length) {
+        const lowest = Math.min(...available.map(i => tiles[i].layer));
+        const candidates = available.filter(i => tiles[i].layer === lowest);
+        const index = candidates[Math.floor(random() * candidates.length)];
+        available.splice(available.indexOf(index), 1);
+        route.push(index);
+        for (const lower of dependents[index]) {
+            if (--blocked[lower] === 0)
+                available.push(lower);
+        }
+    }
+    return route;
+}
+/** Preserve the exact food totals, with a six-slot legal route across layers. */
+function distributeConnectedTypes(tiles, seed) {
+    const counts = new Map();
+    tiles.forEach(tile => counts.set(tile.type, (counts.get(tile.type) || 0) + 1));
+    const groups = [];
+    counts.forEach((count, type) => {
+        for (let i = 0; i < count / 3; i++)
+            groups.push(type);
+    });
+    shuffle(groups, seededRandom(seed + 7919));
+    const route = buildLevelThreeRoute(tiles, seed);
+    let cursor = 0;
+    while (groups.length) {
+        const batch = [groups.pop()];
+        while (batch.length < 3 && groups.length) {
+            const different = groups.findIndex(type => !batch.includes(type));
+            batch.push(groups.splice(different < 0 ? 0 : different, 1)[0]);
+        }
+        // A B A C B C A B C reaches six occupied slots, then clears.
+        const pattern = batch.length === 3 ? [0, 1, 0, 2, 1, 2, 0, 1, 2]
+            : batch.length === 2 ? [0, 1, 0, 1, 0, 1] : [0, 0, 0];
+        for (const i of pattern)
+            tiles[route[cursor++]].type = batch[i];
+    }
 }
 /**
  * 根据种子生成第三关的随机布局。
  */
 function buildNewLevelThreePositions(config, seed) {
     const family = levelThreeLayoutFamily(seed);
-    const centers = family === 0 ? [{ x: -172, y: 235 }, { x: 172, y: 235 }, { x: -172, y: -235 }, { x: 172, y: -235 }]
-        : family === 1 ? [{ x: 0, y: 206 }, { x: 0, y: -206 }]
-            : [{ x: 0, y: 280 }, { x: -180, y: 0 }, { x: 180, y: 0 }, { x: 0, y: -280 }];
+    const centers = family === 0
+        ? [
+            { x: -172, y: 235 },
+            { x: 172, y: 235 },
+            { x: -172, y: -235 },
+            {
+                x: 172,
+                y: -235,
+            },
+        ]
+        : family === 1
+            ? [
+                { x: 0, y: 206 },
+                { x: 0, y: -206 },
+            ]
+            : [
+                { x: 0, y: 280 },
+                { x: -180, y: 0 },
+                { x: 180, y: 0 },
+                { x: 0, y: -280 },
+            ];
     const count = family === 1 ? 12 : 6;
     const radiusX = family === 1 ? 2.76 : 1.18;
     const radiusY = family === 1 ? 2.24 : 1.18;
@@ -231,58 +401,112 @@ function buildNewLevelThreePositions(config, seed) {
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    const phases = centers.map( () => Math.floor(random() * 2));
+    const phases = centers.map(() => Math.floor(random() * 2));
     // Alternating half-step rings cover every lower tile with at least two
     // upper tiles. Their tested radii prevent same-layer and incidental overlaps.
     /**
      * 将当前条目转换为后续处理所需的值。
      */
-    return config.layers.map( (_, layer) => {
+    return config.layers.map((_, layer) => {
+        /**
+         * 棋盘横坐标。
+         */
+        /**
+         * 棋盘纵坐标。
+         */
         const positions = [];
         /**
          * 依次处理集合中的每个条目。
          */
-        centers.forEach( (center, group) => {
+        centers.forEach((center, group) => {
             for (let i = 0; i < count; i += 1) {
-                const angle = (i + ((layer + phases[group]) % 2) / 2) * Math.PI * 2 / count;
-                positions.push({ x: center.x + Math.cos(angle) * radiusX * width,
-                    y: center.y + Math.sin(angle) * radiusY * height });
+                const angle = ((i + ((layer + phases[group]) % 2) / 2) * Math.PI * 2) / count;
+                positions.push({
+                    x: center.x + Math.cos(angle) * radiusX * width,
+                    y: center.y + Math.sin(angle) * radiusY * height,
+                });
             }
         });
         return positions;
     });
 }
+/** 尚未点亮任何珍藏图鉴时，新第三关持续保底，直到真正发现珍藏。 */
+function needsHiddenIngredientGuarantee(discovered) {
+    return !GameConfig_1.HIDDEN_INGREDIENTS.some(food => discovered.includes(food.id));
+}
+/** 保底局使用含珍藏的种子，存档仍按原 v4 算法重现。 */
+function guaranteedHiddenIngredientSeed(start = 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX)) {
+    let seed = start;
+    // Search only the small ingredient pool, never rebuild boards while searching.
+    do {
+        if (selectLevelIngredients(2, seed).some(id => GameConfig_1.HIDDEN_INGREDIENTS.some(food => food.id === id)))
+            return seed;
+        seed = seed === exports.INGREDIENT_SEED_MAX ? 1 : seed + 1;
+    } while (seed !== start);
+    throw new Error('无法生成珍藏食材');
+}
 // Explicit seeds restore exactly; retries request a different formation family.
 /**
  * 根据关卡配置和种子生成完整棋盘。
  */
-function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed) {
+function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed, ingredientPoolVersion = 4) {
     // 显式传入牌阵种子但未传食材种子时，保持旧版本的食材配比与顺序。
-    if (ingredientSeed === undefined)
-        ingredientSeed = layoutSeed === undefined
-            ? 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX) : 0;
+    if (ingredientSeed === undefined) {
+        ingredientSeed =
+            layoutSeed === undefined
+                ? 1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX)
+                : 0;
+    }
     if (layoutSeed === undefined) {
-        layoutSeed = levelIndex === 2 ? exports.RANDOM_LAYOUT_SEED_START + Math.floor(Math.random() * 2147483646) : 0;
-        if (levelIndex === 2 && previousLayoutSeed !== undefined &&
-            levelThreeLayoutFamily(layoutSeed) === levelThreeLayoutFamily(previousLayoutSeed)) {
-            layoutSeed = layoutSeed === exports.RANDOM_LAYOUT_SEED_END ? exports.RANDOM_LAYOUT_SEED_START : layoutSeed + 1;
+        layoutSeed =
+            levelIndex === 2
+                ? exports.VARIED_LAYOUT_SEED_START + Math.floor(Math.random() * 2147483646)
+                : 0;
+        if (levelIndex === 2
+            && previousLayoutSeed !== undefined &&
+            levelThreeLayoutFamily(layoutSeed) ===
+                levelThreeLayoutFamily(previousLayoutSeed)) {
+            layoutSeed =
+                layoutSeed === exports.VARIED_LAYOUT_SEED_END
+                    ? exports.VARIED_LAYOUT_SEED_START
+                    : layoutSeed + 1;
         }
     }
-    const config = exports.LEVELS[levelIndex];
+    const varied = levelIndex === 2 && layoutSeed >= exports.VARIED_LAYOUT_SEED_START;
+    const connected = levelIndex === 2 && layoutSeed >= exports.CONNECTED_LAYOUT_SEED_START;
+    const config = varied ? { ...GameConfig_1.LEVELS[levelIndex], tileScale: 1,
+        layers: [12, 12, ...Array(48).fill(18)] }
+        : connected ? { ...GameConfig_1.LEVELS[levelIndex], tileScale: 1 }
+            : GameConfig_1.LEVELS[levelIndex];
     const newLayout = config.level === 3 && layoutSeed >= exports.RANDOM_LAYOUT_SEED_START;
     const random = seededRandom(newLayout ? layoutSeed : 20260923 + config.level * 97);
-    const pool = ingredientSeed ? selectLevelIngredients(levelIndex, ingredientSeed) : undefined;
+    const pool = ingredientSeed
+        ? selectLevelIngredients(levelIndex, ingredientSeed, ingredientPoolVersion)
+        : undefined;
     const tiles = [];
     let id = 0;
     const stackedPositions = config.level === 3
-        ? newLayout ? buildNewLevelThreePositions(config, layoutSeed) : buildLevelThreePositions(config, layoutSeed)
+        ? varied
+            ? buildVariedLevelThreePositions(config, layoutSeed)
+            : connected
+                ? buildConnectedLevelThreePositions(config, layoutSeed)
+                : newLayout
+                    ? buildNewLevelThreePositions(config, layoutSeed)
+                    : buildLevelThreePositions(config, layoutSeed)
         : undefined;
     /**
      * 依次处理集合中的每个条目。
      */
-    config.layers.forEach( (count, layerIndex) => {
-        const positions = stackedPositions ? stackedPositions[layerIndex] : buildPositions(count, layerIndex, config.rows);
-        const types = buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random, pool);
+    // Keep the original food inventory so existing save validation and
+    // collection progress do not depend on how 888 tiles are split into layers.
+    const inventory = varied ? GameConfig_1.LEVELS[levelIndex].layers.flatMap((count, layer) => buildTypes(count, config.typeCount, config.typeOffset || 0, layer, random, pool)) : undefined;
+    let inventoryOffset = 0;
+    config.layers.forEach((count, layerIndex) => {
+        const positions = stackedPositions
+            ? stackedPositions[layerIndex]
+            : buildPositions(count, layerIndex, config.rows);
+        const types = inventory ? inventory.slice(inventoryOffset, inventoryOffset + count) : buildTypes(count, config.typeCount, config.typeOffset || 0, layerIndex, random, pool);
+        inventoryOffset += count;
         for (let i = 0; i < count; i += 1) {
             tiles.push({
                 id: `L${layerIndex}T${id++}`,
@@ -298,18 +522,61 @@ function createLevel(levelIndex, layoutSeed, previousLayoutSeed, ingredientSeed)
     const tileScale = config.tileScale || (config.rows === 8 ? 0.82 : 1);
     const tileWidth = 92 * 1.2 * tileScale;
     const tileHeight = 76 * 1.2 * tileScale;
-    for (const lower of tiles) {
-        for (const upper of tiles) {
-            if (upper.layer <= lower.layer)
-                continue;
-            if (Math.abs(lower.x - upper.x) < tileWidth && Math.abs(lower.y - upper.y) < tileHeight) {
-                lower.blockedBy.push(upper.id);
+    // Only neighbouring spatial cells can overlap. Iterate uppers in original
+    // order so saved layouts retain exactly the same ordered blocker lists.
+    const cells = new Map();
+    for (const tile of tiles) {
+        const key = `${Math.floor(tile.x / tileWidth)}:`
+            + `${Math.floor(tile.y / tileHeight)}`;
+        if (!cells.has(key)) {
+            cells.set(key, []);
+        }
+        cells.get(key).push(tile);
+    }
+    for (const upper of tiles) {
+        const cx = Math.floor(upper.x / tileWidth);
+        const cy = Math.floor(upper.y / tileHeight);
+        for (let dx = -1; dx <= 1; dx++) {
+            for (let dy = -1; dy <= 1; dy++) {
+                for (const lower of cells.get(`${cx + dx}:${cy + dy}`) || []) {
+                    if (upper.layer > lower.layer
+                        && Math.abs(lower.x - upper.x) < tileWidth
+                        && Math.abs(lower.y - upper.y) < tileHeight) {
+                        lower.blockedBy.push(upper.id);
+                    }
+                }
             }
         }
     }
-    return { config, tiles, total: tiles.length,
+    if (connected)
+        distributeConnectedTypes(tiles, layoutSeed);
+    return {
+        config,
+        tiles,
+        total: tiles.length,
         ...(ingredientSeed ? { ingredientSeed } : {}),
-        ...(config.level === 3 && layoutSeed !== 0 ? { layoutSeed } : {}) };
+        ...(ingredientSeed && ingredientPoolVersion >= 2
+            ? { ingredientPoolVersion } : {}),
+        ...(config.level === 3 && layoutSeed !== 0 ? { layoutSeed } : {}),
+    };
+}
+/** 手动重开只重排，保留食材种子、食材池版本及完整食材数量。 */
+function createRestartLevel(current) {
+    const index = current.config.level - 1;
+    const restarted = createLevel(index, undefined, current.layoutSeed, current.ingredientSeed || 0, current.ingredientPoolVersion || 1);
+    // 第一、二关沿用既有牌位，在各层内重排食材，维持每层三张成组。
+    if (index < 2) {
+        const random = seededRandom(1 + Math.floor(Math.random() * exports.INGREDIENT_SEED_MAX));
+        for (let layer = 0; layer < restarted.config.layers.length; layer++) {
+            const tiles = restarted.tiles.filter(tile => tile.layer === layer);
+            const types = shuffle(tiles.map(tile => tile.type), random);
+            const previous = current.tiles.filter(tile => tile.layer === layer);
+            if (types.every((type, i) => type === previous[i].type))
+                types.push(types.shift());
+            tiles.forEach((tile, i) => { tile.type = types[i]; });
+        }
+    }
+    return restarted;
 }
 /**
  * 按食材编号查找显示配置。
@@ -318,12 +585,12 @@ function getIngredient(type) {
     /**
      * 按条件筛选或判断条目：item.id === type。
      */
-    return exports.INGREDIENTS.find( (item) => item.id === type) || exports.INGREDIENTS[0];
+    return GameConfig_1.INGREDIENTS.find((item) => item.id === type) || GameConfig_1.INGREDIENTS[0];
 }
 /**
  * 只选择棋盘上未拿取的牌（含被遮挡的牌），不修改棋盘或托盘。
  */
-function selectBombTargets(tiles, random = Math.random) {
+function selectBombTargets(tiles, random = Math.random, maxCount = 6) {
     const groups = new Map();
     /**
      * 按条件筛选或判断条目：!tile.removed。
@@ -331,7 +598,9 @@ function selectBombTargets(tiles, random = Math.random) {
     /**
      * 依次处理集合中的每个条目。
      */
-    tiles.filter( (tile) => !tile.removed).forEach( (tile) => {
+    tiles
+        .filter((tile) => !tile.removed)
+        .forEach((tile) => {
         const group = groups.get(tile.type) || [];
         group.push(tile);
         groups.set(tile.type, group);
@@ -339,10 +608,11 @@ function selectBombTargets(tiles, random = Math.random) {
     /**
      * 按条件筛选或判断条目：group.length >= 3。
      */
-    const eligible = Array.from(groups.values()).filter( (group) => group.length >= 3);
-    if (eligible.length === 0)
+    const eligible = Array.from(groups.values()).filter((group) => group.length >= 3);
+    if (eligible.length === 0) {
         return [];
+    }
     const candidates = eligible[Math.floor(random() * eligible.length)].slice();
-    const count = candidates.length >= 6 ? 6 : 3;
+    const count = Math.min(Math.floor(candidates.length / 3) * 3, maxCount);
     return shuffle(candidates, random).slice(0, count);
 }

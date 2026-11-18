@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "width": 390,
+      "height": 844,
+      "changedBackgroundRatio": 0.9121212121212121,
+      "meanChannelDifference": 8.93030303030303,
+      "foodFixed": true,
+      "animationAdvanced": true
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "changedBackgroundRatio": 0.7678571428571429,
+      "meanChannelDifference": 3.6706349206349205,
+      "foodFixed": true,
+      "animationAdvanced": true
+    }
+  ],
+  "errors": []
+}

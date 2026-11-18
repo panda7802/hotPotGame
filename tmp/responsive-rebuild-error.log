@@ -1,0 +1,25 @@
+[Error: EPERM: operation not permitted, open 'E:\codex\hotpot\hotPotGame\hotPotGame\app\HotPot\temp\logs\project.log'] {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'open',
+  path: 'E:\\codex\\hotpot\\hotPotGame\\hotPotGame\\app\\HotPot\\temp\\logs\\project.log'
+}
+[36508:1031/211905.809:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211905.810:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211905.810:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211905.811:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211905.811:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[36508:1031/211905.812:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211905.812:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[36508:1031/211905.812:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211905.812:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+web-mobile 插件构建配置无版本号，将跳过数据迁移
+[36508:1031/211944.568:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211944.568:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211944.568:ERROR:cache_util_win.cc(20)] Unable to move the cache: 拒绝访问。 (0x5)
+[36508:1031/211944.574:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211944.574:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[36508:1031/211944.575:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211944.575:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2
+[36508:1031/211944.576:ERROR:disk_cache.cc(208)] Unable to create cache
+[36508:1031/211944.576:ERROR:gpu_disk_cache.cc(711)] Gpu Cache Creation failed: -2

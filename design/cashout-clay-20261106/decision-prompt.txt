@@ -1,0 +1,18 @@
+Use case: ui-mockup.
+Generate ONE finished high fidelity portrait 9:16 mobile game user interface, standalone screen edge to edge, for Chinese hotpot tile match game 锅里捞啥 new mode 捞到就收.
+Input image 1 is runtime layout reference only. Input image 2 is approved cream clay art STYLE reference only: use its exact warm visual family, NOT its triptych layout. Produce one single screen, no panels of multiple screens, no phone frame, no poster, no annotations.
+
+Art direction: soft handcrafted creamy clay / dough 3D, refined mobile casual game UI. Warm ivory ceramic and cream dough surfaces, apricot orange softly embossed rounded frames, tomato red clay logo with thick cream Chinese lettering and fresh green leaves, leafy green and apricot orange decision buttons. Warm small kitchen backdrop very softly out of focus with tiny vegetable corners; central play surface and information remain supremely legible. Cocoa brown Chinese typography, friendly rounded clean large Chinese glyphs; numerals highly legible. Gentle dimensional shadows, satin matte clay finish, generous whitespace. Avoid photorealism, hard plastic, neon, purple, metallic gold excess.
+
+Screen state: intermission AFTER completing segment 4 of 5, clear risk decision. Top compact brand logo exactly 锅里捞啥 with leaf decoration, directly below a small mode plaque exactly 捞到就收. A five-step slim progression 1 2 3 4 5, first four leaf-green completed circles with checkmarks, fifth hollow cream circle.
+
+Center: a dominant large warm cream rounded ceramic/clay decision panel in apricot frame, subtly above the old rounded gameboard visible behind at edges. At its top a small charming clay colander basket holding a few mushrooms/tofu/shrimp, modest confetti. Main headline large and exact: 这一锅，收不收？. Smaller subheading exact: 第4段已清空. Center a large clearly typeset number 90, with exact caption above 现在收锅可得 and below 收锅积分.
+
+Below amount, two equal-size equally prominent decision buttons next to each other, neither selected: leafy green button label 收锅带走 with 90 on its second line; apricot orange button label 继续下探.
+Under buttons, a clear inset compact cream information strip with TWO side-by-side cells. Left exact text 下一段成功 above large 150. Right exact text 下一段失败 above large 30. This 150 is final TOTAL retained on segment5 success, NEVER +150. Below strip exact small text 其中保底 30. Additional quiet explanatory note exact: 继续后，需清空下一段才能收锅.
+Panel must have visual hierarchy: 90 and title most salient; 150 and30 secondary yet legible; equal decision buttons.
+
+Under central panel a very small retained supplies preview in cocoa text: 撤回 1 · 炸 0 · 翻锅 0 · 复活剩余 0.
+At screen bottom a subtle quiet text button exactly 稍后决定 and tiny line 暂停并保存.
+
+All values consistent:90 available to bank now,150 final total if next segment successful,30 retained if failure. Do not invent gems, coins, advertisements, x2 multipliers, revive prompt, timers, countdowns, preselection, flashing arrows or nudges. No extra screen text. Absolutely single portrait screen, polished practical game UI, not a marketing poster.

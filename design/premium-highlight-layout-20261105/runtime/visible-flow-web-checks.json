@@ -1,0 +1,27 @@
+{
+  "build": "20261105-celadon-visible-flow",
+  "checks": [
+    {
+      "width": 390,
+      "height": 844,
+      "backgroundChangedRatio": 1,
+      "meanChannelRange": 38.65555555555556,
+      "foodFixed": true,
+      "animationAdvanced": true
+    },
+    {
+      "width": 320,
+      "height": 568,
+      "backgroundChangedRatio": 1,
+      "meanChannelRange": 38.83730158730159,
+      "foodFixed": true,
+      "animationAdvanced": true
+    }
+  ],
+  "logs": [
+    "[HotPot Cloud Dev] WEB_SDK_UNAVAILABLE ",
+    "[HotPot 20261105-celadon-visible-flow] level=1 nodes=18 loadMs=11",
+    "[HotPot 20261105-celadon-visible-flow] level=3 nodes=36 loadMs=12"
+  ],
+  "errors": []
+}
