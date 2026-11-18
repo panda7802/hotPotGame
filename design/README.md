@@ -4,6 +4,7 @@
 
 | 目录 | 保留用途 |
 | --- | --- |
+| [recipe-cards-four-themes-20261118/](recipe-cards-four-themes-20261118/) | 13 道菜的四主题菜谱设计，按简单、一般、困难各整理一张效果图。`source-art/` 收录三组菜品原图，`runtime/` 收录四主题菜谱和出锅结算的实机截图。游戏使用的 JPEG 图集位于 `app/HotPot/assets/resources/cooking-dishes/`。 |
 | [cooking-ring-four-themes-20261117/](cooking-ring-four-themes-20261117/) | 烹饪转环的四套最终设计稿，覆盖菜谱选择、开局准备、关卡、玩法说明、超时续时和出锅结算。奶油黏土按流程拆成三张图，市井朱红、青瓷雅韵和宣纸朱印各用一张总览图。 |
 | `four-style-previews-20261031/` | 四主题游戏界面预览与 `production-masters/` 高清美术。资源压缩工具仍从这里读取原图，不能当作缓存删除。 |
 | `fullscreen-menu-review-20261101/` | 最新连续全屏菜单设计，顶部与底部固定，中段自适应。 |
